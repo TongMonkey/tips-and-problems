@@ -242,3 +242,20 @@ open -n /Applications/Google\ Chrome.app/ --args --disable-web-security --user-d
 3. Reflect.has(obj,x)  // Obj如果不是对象会报错
 4. Obj.hasOwnProperty(x)
 ```
+
+### 16. [Tip] forEach 循环中，无法使用 return 完全跳出
+
+#### 解决： 在 for 循环中使用 return 可以直接跳出循环，使用 continue 可以跳出当前循环的剩余代码，直接进入下一次循环；在 forEach 中，使用 return 的结果跟 for 循环中的 continue 是一样的，跳出当前循环，而不能跳出整个循环，
+
+#### 跳出整个循环可以用 try-catch 实现
+
+```
+try{
+  Array.forEach(item=>{
+    ...
+    throw Error('这样跳出循环');
+  })
+}catch(e){
+  ...
+}
+```
