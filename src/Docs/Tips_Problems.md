@@ -259,3 +259,29 @@ try{
   ...
 }
 ```
+
+### 17. [Tip]判断所处环境
+
+```
+  function isAndroid() {
+      return 0 <= navigator.userAgent.toLowerCase().indexOf("android")
+  }
+  function isIos() {
+      return 0 <= navigator.userAgent.toLowerCase().indexOf("iphone")
+  }
+  function isInWb() {
+      return 0 <= navigator.userAgent.toLowerCase().indexOf("weibo")
+  }
+  function isInWX() {
+      return 0 <= navigator.userAgent.toLowerCase().indexOf("micromessenger")
+  }
+  function isInBdmini() {
+      return 0 <= navigator.userAgent.toLowerCase().indexOf("swan-baiduboxapp")
+  }
+  function isInQQ() {
+      return 0 <= navigator.userAgent.toLowerCase().replace("mqqbrowser", "").indexOf("qq")
+  }
+  function isInSafari() {
+      return isIos() && !!window.ApplePaySession
+  }
+```
