@@ -368,5 +368,23 @@ function viewSource() {
 看来微信允许打开mp.weixin.qq.com这个host下的网页，然后用js再打开真正的页面。
 现在简单了，将页面的代码写为：<a href=”http://mp.weixin.qq.com/mp/redirect?url=http%3A%2F%2Fitunes.apple.com%2Fus%2Fapp%2Fid399608199%23rd”>download</a>，在微信浏览器内可以打开app store的地址了。
 
+### 20.H5 吊起deeplink 未安装则跳转安装
+```
+var n = 1800;
+let timeStamp = + (new Date());
+let stopTimeouter = setTimeout(function () {
+	let res =  + (new Date()) - timeStamp;
+	document.write(res);
+	res < n + 300 && (window.location.href = downloadLink);
+}, n);
+window.onpagehide = function () {
+	document.write('onpagehide');
+	clearTimeout(stopTimeouter);
+};
+document.addEventListener("visibilitychange", function () {
+	document.write('visibilitychange');
+	(document.hidden || document.webkitHidden) && clearTimeout(stopTimeouter);
+}, false);
 
+```
 
