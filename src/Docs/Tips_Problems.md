@@ -311,3 +311,42 @@ copyToClipboard('Lorem ipsum');
 
 ```
 
+### 19.【Tip】在微信浏览器打开app store地址
+#### 背景：比如你页面写 <a href=”http://itunes.apple.com/us/app/id399608199″>download</a> ，在微信浏览器点击链接是没有反应的，但是如果是其他的链接地址，比如百度那就没有问题
+#### 分析：在微信官方后台编辑图文，把原文链接写为：http://itunes.apple.com/us/app/id399608199 ，那就可以打开了，发现微信页面的“查看原文”是一个function，如下
+
+```
+function viewSource() {
+var redirectUrl = sourceurl.indexOf('://') < 0 ? 'http://' + sourceurl : sourceurl;
+//redirectUrl = http://itunes.apple.com/us/app/id399608199
+redirectUrl = 'http://' + location.host + '/mp/redirect?url=' + encodeURIComponent(sourceurl);
+//此处是关键，redirectUrl = http://mp.weixin.qq.com/mp/redirect?url=http%3A%2F%2Fitunes.apple.com%2Fus%2Fapp%2Fid399608199%23rd
+var opt = {
+url: '/mp/advertisement_report' + location.search + '&report_type=3&action_type=0&url=' + encodeURIComponent(sourceurl) + '&uin=' + uin + '&key=' + key + '&__biz=' + biz + '&r=' + Math.random(),
+type: 'GET',
+async: !1
+};
+return tid ? opt.success = function (res) {
+try {
+res = eval('(' + res + ')');
+} catch (e) {
+res = {
+};
+}
+res && res.ret == 0 ? location.href = redirectUrl : viewSource();
+}
+: (opt.timeout = 2000, opt.complete = function () {
+location.href = redirectUrl;
+}),
+ajax(opt),
+!1;
+}
+
+```
+
+#### 说明：真正的url是：http://mp.weixin.qq.com/mp/redirect?url=http%3A%2F%2Fitunes.apple.com%2Fus%2Fapp%2Fid399608199%23rd
+看来微信允许打开mp.weixin.qq.com这个host下的网页，然后用js再打开真正的页面。
+现在简单了，将页面的代码写为：<a href=”http://mp.weixin.qq.com/mp/redirect?url=http%3A%2F%2Fitunes.apple.com%2Fus%2Fapp%2Fid399608199%23rd”>download</a>，在微信浏览器内可以打开app store的地址了。
+
+
+
