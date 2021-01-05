@@ -317,29 +317,49 @@ copyToClipboard('Lorem ipsum');
 
 ```
 function viewSource() {
-var redirectUrl = sourceurl.indexOf('://') < 0 ? 'http://' + sourceurl : sourceurl;
-//redirectUrl = http://itunes.apple.com/us/app/id399608199
-redirectUrl = 'http://' + location.host + '/mp/redirect?url=' + encodeURIComponent(sourceurl);
-//此处是关键，redirectUrl = http://mp.weixin.qq.com/mp/redirect?url=http%3A%2F%2Fitunes.apple.com%2Fus%2Fapp%2Fid399608199%23rd
-var opt = {
-url: '/mp/advertisement_report' + location.search + '&report_type=3&action_type=0&url=' + encodeURIComponent(sourceurl) + '&uin=' + uin + '&key=' + key + '&__biz=' + biz + '&r=' + Math.random(),
-type: 'GET',
-async: !1
-};
-return tid ? opt.success = function (res) {
-try {
-res = eval('(' + res + ')');
-} catch (e) {
-res = {
-};
-}
-res && res.ret == 0 ? location.href = redirectUrl : viewSource();
-}
-: (opt.timeout = 2000, opt.complete = function () {
-location.href = redirectUrl;
-}),
-ajax(opt),
-!1;
+	var redirectUrl =
+		sourceurl.indexOf("://") < 0 ? "http://" + sourceurl : sourceurl;
+	//redirectUrl = http://itunes.apple.com/us/app/id399608199
+	redirectUrl =
+		"http://" +
+		location.host +
+		"/mp/redirect?url=" +
+		encodeURIComponent(sourceurl);
+	//此处是关键，redirectUrl = http://mp.weixin.qq.com/mp/redirect?url=http%3A%2F%2Fitunes.apple.com%2Fus%2Fapp%2Fid399608199%23rd
+	var opt = {
+		url:
+			"/mp/advertisement_report" +
+			location.search +
+			"&report_type=3&action_type=0&url=" +
+			encodeURIComponent(sourceurl) +
+			"&uin=" +
+			uin +
+			"&key=" +
+			key +
+			"&__biz=" +
+			biz +
+			"&r=" +
+			Math.random(),
+		type: "GET",
+		async: !1,
+	};
+	return (
+		tid
+			? (opt.success = function (res) {
+					try {
+						res = eval("(" + res + ")");
+					} catch (e) {
+						res = {};
+					}
+					res && res.ret == 0 ? (location.href = redirectUrl) : viewSource();
+			  })
+			: ((opt.timeout = 2000),
+			  (opt.complete = function () {
+					location.href = redirectUrl;
+			  })),
+		ajax(opt),
+		!1
+	);
 }
 
 ```
