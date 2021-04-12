@@ -388,3 +388,12 @@ document.addEventListener("visibilitychange", function () {
 
 ```
 
+### 21.自定义一个数组反转方法
+```
+let reverse = function(nums, start, end){
+    while(start < end){
+        [nums[start++], nums[end--]] = [nums[end], nums[start]];
+    }
+}
+```
+
