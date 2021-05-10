@@ -88,7 +88,7 @@ dbRequest.onupgradeneeded = function (event) {
  * @returns objectStore
  */ 
 function createDB(dbName, paramObj) {
-	//判断当前没有同名表格
+	//判断当前没有同名库，没有就创建一个
 	if (!db.objectStoreNames.contains(dbName)) {
 		objectStore = db.createObjectStore(dbName, paramObj); //新建一个叫person的表格，主键叫id
 	}
