@@ -406,3 +406,5 @@ x = x ^ y // (a ^ b ^ a, a) => (b, a)
 ```
 #### 这是两个变量交换值的最快方法，不需要任何额外的空间。
 
+### 23.React 函数组件与类组件的区别
+`https://overreacted.io/zh-hans/how-are-function-components-different-from-classes/`
