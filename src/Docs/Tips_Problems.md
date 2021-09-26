@@ -408,3 +408,20 @@ x = x ^ y // (a ^ b ^ a, a) => (b, a)
 
 ### 23.React 函数组件与类组件的区别
 `https://overreacted.io/zh-hans/how-are-function-components-different-from-classes/`
+`https://overreacted.io/zh-hans/how-are-function-components-different-from-classes/`浏览器
+`https://overreacted.io/zh-hans/how-are-function-components-different-from-classes/`
+
+### 24.从浏览器调起App时会弹出确认框，不希望出现确认框
+####  阻止在有的浏览器中会有是否跳转到app的弹框出现
+```
+let e = window.event;
+if (e.preventDefault) {
+  e.preventDefault();
+} else {
+  e.returnValue = false;
+}
+window.location.href = universalDeeplink;
+
+```
+
+
