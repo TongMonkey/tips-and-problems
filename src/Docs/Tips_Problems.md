@@ -424,4 +424,7 @@ window.location.href = universalDeeplink;
 
 ```
 
+### 25. Array.filter(Boolean)的用法说明
+#### 过滤数组中所有true值。 理解的重点是`Boolean`是一个函数,返回true 或 false,`a.filter(Boolean)`相当于`a.filter(function(n){ return Boolean(n)})`
+
 
