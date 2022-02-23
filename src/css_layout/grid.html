@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .grid_root{
+            width:500px;
+            border: 1px solid black;
+            display: grid;
+            /* 网格很多时。这时，可以使用repeat()函数，简化重复的值.repeat()接受两个参数，第一个参数是重复的次数（上例是3），第二个参数是所要重复的值。 */
+            grid-template-columns: repeat(1, 30% 40% 30%);
+            /* 有时，单元格的大小是固定的，但是容器的大小不确定。如果希望每一行（或每一列）容纳尽可能多的单元格，这时可以使用auto-fill关键字表示自动填充。 */
+            grid-template-columns: repeat(auto-fill, 100px);
+            /* 为了方便表示比例关系，网格布局提供了fr关键字（fraction 的缩写，意为"片段"）。如果两列的宽度分别为1fr和2fr，就表示后者是前者的两倍。 */
+            grid-template-columns: repeat(2, 1fr 2fr);
+            /* auto关键字表示由浏览器自己决定长度。 */
+            grid-template-columns: 100px auto 100px;
+            /* 使用方括号，指定每一根网格线的名字，方便以后的引用。 */
+            grid-template-columns: [c1] 100px [c2] 100px [c3] auto [c4];
+            grid-template-rows: [r1] 100px [r2] 100px [r3] auto [r4];
+            /* grid-*-gap 设置间距 */
+            grid-row-gap: 30px;
+            grid-column-gap: 10px;
+            /* grid-gap 是合并简写 grid-gap: <grid-row-gap> <grid-column-gap>; */
+            grid-gap: 30px 10px;
+            /* 如果只设置了一个值，默认行列的间距都是这个值 */
+            grid-gap: 20px;
+            /* 网格布局允许指定"区域"（area），一个区域由单个或多个单元格组成。grid-template-areas属性用于定义区域。 */
+            grid-template-columns: 200px 100px 100px;
+            grid-template-rows: 100px 200px 100px;
+            /* 如果某些区域不需要利用，则使用"点"（.）表示。 */
+            /* 区域的命名会影响到网格线。每个区域的起始网格线，会自动命名为区域名-start，终止网格线自动命名为区域名-end */
+            grid-template-areas: 'a . c'
+                     'd . f'
+                     'g . i';
+            /* 决定是横着铺开还是竖着铺开 */
+            grid-auto-flow: column;
+            /* dense，表示尽可能紧密填满，尽量不出现空格。后面的小的会填补前面大的 */
+            grid-auto-flow: column dense;
+            /* justify-items属性设置单元格内容的水平位置（左中右）  align-items属性设置单元格内容的垂直位置（上中下）。 */
+            /* start：对齐单元格的起始边缘。end center stretch：拉伸，占满单元格的整个宽度（默认值） */
+            justify-items: end;
+            align-items: center;
+            /* 合并在一起 place-items: <align-items> <justify-items>; */
+            place-items: center end;
+            /* 如果只设置了一个值，默认两个值都是这个值 */
+            place-items: center;
+            /* justify-content属性是整个内容区域在容器里面的水平位置（左中右），align-content属性是整个内容区域的垂直位置 */
+            /* start | end | center | stretch | space-around | space-between | space-evenly; */
+            justify-content: end;
+            align-content: center;
+            /* 合并在一起 place-content: <align-content> <justify-content> */
+            place-content: center end;
+            /* 如果只设置了一个值，默认两个值都是这个值 */
+            place-content: center;
+            /* grid-auto-columns属性和grid-auto-rows属性用来设置，浏览器自动创建的多余网格的列宽和行高。它们的写法与grid-template-columns和grid-template-rows完全相同 */
+            grid-auto-columns：200px;
+        }
+        .grid_root div{
+            background-color: lightpink;
+        }
+    </style>
+</head>
+<body>
+    <div class="grid_root">
+        <div>1</div>
+        <div>2</div>
+        <div>3</div>
+        <div>4</div>
+        <div>5</div>
+        <div>6</div>
+        <div>7</div>
+        <div>8</div>
+        <div>9</div>
+        <div>10 多余</div>
+    </div>
+</body>
+</html>
