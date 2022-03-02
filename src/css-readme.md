@@ -1,10 +1,9 @@
 ### 1px问题 有几种解决方案
 ### 0.5px的线 怎么画
 1. height: 1px; transform: scaleY(0.5); transform-origin: 50% 100%;
-2. `<meta name="viewport" content="width=device-width,initial-sacle=0.5">` 缺点是页面都要设置为原来的两倍大小
+2. `<meta name="viewport" content="width=device-width,initial-scale=0.5">` + rem 实现：将border设置为1px,然后将页面根据设备的dpr缩小相应的倍数，接着将rem放大相应的倍数，这样页面中只有1px的边框缩小了，而其他内容经过缩小和扩大，还是原来的状态。(rem元素大小不变，仅仅是px元素会根据dpr进行缩放) 缺点是页面都要设置为原来的两倍大小
 3. height: 1px; background: linear-gradient(0deg, #fff, #000);
 4. border-image:url(...) 
-5. viewport + rem 实现：将border设置为1px,然后将页面根据设备的dpr缩小相应的倍数，接着将rem放大相应的倍数，这样页面中只有1px的边框缩小了，而其他内容经过缩小和扩大，还是原来的状态。(rem元素大小不变，仅仅是px元素会根据dpr进行缩放)
 
 ### 写个动画，一个盒子，开始时缩放是 0，50%时是 1，100%时是 0，开始结束都是慢速，持续 2 秒，延迟 2 秒，结束后固定在结束的效果
 
@@ -19,6 +18,19 @@
 
 ### css 选择器权重是如何计算的
 
+### 盒模型与DOCTYPE
+1. DOCTYPE 是 document type的简称，通知浏览器用什么模式来解析html htm文件
+   1. 页面中有DOCTYPE,将采用w3c标准
+   2. 页面中没声明，将由浏览器自己决定，IE9以下的将采用IE标准，其他浏览器大多采用w3c标准
+2. w3c VS IE 
+   1. w3c标准采用 标准盒模型
+   2. IE标准采用 怪异盒模型
+3. 盒模型：前提，一个页面Block由 content、padding、border、margin 构成
+   1. 标准盒模型：width 表示的是content的宽 高也一样
+   2. 怪异盒模型：width 表示的是 content+padding+border的宽 高也一样
+4. css中box-sizing可以手动设置盒模型
+   1. box-sizing:content-box; 相当于标准盒模型
+   2. box-sizing:border-box; 相当于怪异盒模型 所以当一个设置了width 且同时设有padding的块，当设置为border-box后，会缩小，因为实际宽度width值从原来的content width + padding 变成了 width 
 
 ### BFC VS IFC VS FFC VS GFC
 1. 背景
@@ -44,7 +56,7 @@
    1. html元素本身是一个BFC
    2. float的值不是none的 即 浮动元素是BFC
    3. 绝对定位元素, 即position 为 absolute 和 fixed 两个脱离文档流的是BFC
-   4. verflow的值不是visible 这种方案可能会对页面隐藏或者滚动造成影响
+   4. overflow的值不是visible 这种方案可能会对页面隐藏或者滚动造成影响
    5. display: flow-root 给父元素设置成一个BFC块，所有的子元素都将在该BFC中参与计算 是替代使用visible:auto的无副作用的优秀方案  名字理解：创造一个类似于根元素(html)的上下文，在在其中进行flow layout
    6. 行内块元素：display:inline-block
    7. 表格元素：display值为 tabel、table-cell、table-row 等
@@ -152,4 +164,30 @@ padding和margin的百分比，无论是垂直方向还是水平方向，都是�
 1. 以物体的中心点为origin
 2. 坐标轴跟普通坐标轴是不同的，计算机上 向右侧方向的是y轴，向下方向的是x轴
 3. skew(x偏移量, y偏移量)
+4. 
+### flex:1 是什么意思
+1. flex属性 是 flex-grow、flex-shrink、flex-basis三个属性的缩写。
+2. flex-grow：定义项目的的放大比例； 
+   1. 默认为0，即 即使存在剩余空间，也不会放大；
+   2. 所有项目的flex-grow为1：等分剩余空间（自动放大占位）；
+   3. lex-grow为n的项目，占据的空间（放大的比例）是flex-grow为1的n倍。
+3. flex-shrink：定义项目的缩小比例；
+   1. 默认为1，即 如果空间不足，该项目将缩小
+   2. 所有项目的flex-shrink为1：当空间不足时，缩小的比例相同；
+   3. flex-shrink为0：空间不足时，该项目不会缩小
+   4. flex-shrink为n的项目，空间不足时缩小的比例是flex-shrink为1的n倍。
+4. flex-basis： 定义在分配多余空间之前，项目占据的主轴空间（main size），浏览器根据此属性计算主轴是否有多余空间
+   1. 默认值为auto，即 项目原本大小
+   2. 设置后项目将占据固定空间。
+5. flex: *; 不同值组合的不同含义：
+   1. flex: 0 1 auto 不放大会缩小 占据默认值
+   2. flex: 0 0 auto  不放大也不缩小
+   3. flex: 1 1 auto  （放大且缩小）
+   4. flex为一个非负数字n： flex：n;  该数字为flex-grow的值 即flex-grow：n； flex-shrink：1； flex-basis：0%；
+   5. flex为一个长度或百分比L： flex: L; 视为flex-basis的值，即 flex-grow：0；flex-shrink：1；flex-basis：L；
+   6. flex为两个非负数字n1，n2： flex：n1 n2;分别为flex-grow和flex-shrink的值。即  flex-grow：n1；flex-shrink：n2；flex-basis：0%；
+   7.  flex为一个非负数字n和一个长度或百分比L：flex：n L； 分别为flex-grow和flex-basis的值， 即 flex-grow：n；flex-shrink：1；flex-basis：L;
+6. 所以 flex:1 就是 flex-grow:1; 自动放大占满剩余空间，实现自适应布局。
 
+
+### css 导入 import 和 link 的区别

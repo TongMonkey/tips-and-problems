@@ -241,19 +241,7 @@ V8 是谷歌开源的 JavaScript 引擎，被用于 Chrome 和 Node.js 。程序
 -o- （旧版Opera浏览器）
 -ms- （IE浏览器 和 Edge浏览器）
 
-### 盒模型与DOCTYPE
-1. DOCTYPE 是 document type的简称，通知浏览器用什么模式来解析html htm文件
-   1. 页面中有DOCTYPE,将采用w3c标准
-   2. 页面中没声明，将由浏览器自己决定，IE9以下的将采用IE标准，其他浏览器大多采用w3c标准
-2. w3c VS IE 
-   1. w3c标准采用 标准盒模型
-   2. IE标准采用 怪异盒模型
-3. 盒模型：前提，一个页面Block由 content、padding、border、margin 构成
-   1. 标准盒模型：width 表示的是content的宽 高也一样
-   2. 怪异盒模型：width 表示的是 content+padding+border的宽 高也一样
-4. css中box-sizing可以手动设置盒模型
-   1. box-sizing:content-box; 相当于标准盒模型
-   2. box-sizing:border-box; 相当于怪异盒模型 所以当一个设置了width 且同时设有padding的块，当设置为border-box后，会缩小，因为实际宽度width值从原来的content width + padding 变成了 width 
+
 
 ### 页面上的 加载相关事件  window.load VS document.DOMContentLoaded VS document.readyStateChange
 参考：https://juejin.cn/post/6914479519394955271

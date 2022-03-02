@@ -1,7 +1,5 @@
 ### 微前端了解么
 
-### 运营后台cms系统的架构是怎样的
-
 ### 聊聊每个项目的亮点：
 有亮点的项目最好多准备几个，最好是不同类型的，比如业务的、偏中后端的、组件库的、工程化的和新兴技术的，根据自己擅长的内容最起码准备两三个
 
@@ -17,19 +15,8 @@
 
 ### eslint 和 prettier 的冲突是如何解决的
 
-### 项目优化方向
-1. 渲染优化
-   1. 首屏SSR渲染
-   2. 页面预渲染 ❓❓❓❓❓❓
-2. 弱网优化
-   1. 懒加载
-   2. 使用离线包
-3. Webview优化
-   1. 打开webview的同时并行加载页面数据
 
 ### 如何做前端预渲染
-
-### 自己在项目中做了，使项目更好了
 
 ### 怎么做能让项目更好
 
@@ -42,22 +29,22 @@ https://blog.csdn.net/weixin_44368963/article/details/108264278
 1. http
    1. URL后面加反斜杠/ 减少服务器查询文件的过程，直接去查询目录
    2. dns预解析：最关键的连接使用 preconnect，而其他的则可以用 dns-prefetch
-      1. 使用dns-prefetch预解析：针对跨域域名的DNS查找有效 `<link rel="dns-prefetch" href="https://fonts.googleapis.com/"> ` 注意，多页面重复的DNS预解析会增加DNS查询次数，dsn-prefetch需慎用
+      1. dns-prefetch预解析：针对跨域域名的DNS查找有效 `<link rel="dns-prefetch" href="https://fonts.googleapis.com/"> ` 注意，多页面重复的DNS预解析会增加DNS查询次数，dsn-prefetch需慎用
       2. preconnect预连接: 针对HTTPS协议的跨域域名有效。因为如果站点是通过HTTPS服务的，则此过程包括DNS解析，建立TCP连接以及执行TLS握手。注意，提前链接所有请求并不合理，
-      3. 联合：最关键的连接使用 preconnect，而其他的则可以用 dns-prefetch； dns-prefetch 可以作为不支持预连接的浏览器的后备选择，同时配置它们两即可
+      3. 联合上述两个：最关键的连接使用 preconnect，而其他的则可以用 dns-prefetch； dns-prefetch 可以作为不支持预连接的浏览器的后备选择，同时配置它们两即可
       ```
       <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
       <link rel="dns-prefetch" href="https://fonts.gstatic.com/">
       ```
    3. 链接预解析：prefetch  preload  
-         1. `<link ref="preload" as="style" crossorigin href="">` preload会在不阻塞onload事件的前提下先下载资源。中途跳转页面preload中断
+         1. `<link ref="preload" as="style" crossorigin href="">` preload会在不阻塞onload事件的前提下，下载资源。中途跳转页面preload中断
          2. `<link ref="prefetch" as="style" crossorigin href="">` prefetch告诉浏览器我未来或者下个页面可能要使用的资源，由浏览器自己控制在空闲时下载。中途跳转页面prefetch可同步进行不中断，在新页面中继续用下载到的资源。
          3. 上述的as可以控制资源加载的优先级，跟随设置as设置的资源类型的优先级，例如as="style"的优先级就高于as="script"的优先级。如果不设置，就是个普通的异步，建议设置
          4. 建议始终设置crossorigin,否则可能引起两次请求
    4. CDN静态资源服务器：
    5. 减少请求：资源合并、promise.all并发
    6. 资源体积：webpack打包压缩 gzip压缩
-   7. 利用缓存：cdn、http缓存(长缓存/协商缓存)、本地缓存、nginx缓存.不经常变动的文件，通过加后缀的方式，可以在每次发布的时候才修改后缀实现更新。
+   7. 利用缓存：cdn、http缓存(长缓存/协商缓存)、本地缓存、nginx缓存.不经常变动的文件，通过加后缀的方式，可以在每次发布的时候才修改后缀实现更新、使用离线包
    8. 请求顺序：控制请求优先级不重要的可以异步请求、判断哪些是关键请求、关键请求并发执行，可以用lighthouse排查链式请求的问题，注意关键请求的数量
    9.  优先使用 https2 协议
    10. 资源按需引入：路由懒加载、组件按需加载
@@ -76,11 +63,11 @@ https://blog.csdn.net/weixin_44368963/article/details/108264278
    3. 使用 defer 异步加载js
    4. webWorker 多线程编程
 4. 图片：
-   1. 压缩图片：npm install imagemin
+   1. img标签提前定义好图片的宽高
+   2. 压缩图片：npm install imagemin
       1. 压缩jpg: npm install imagemin-mozjpeg
       2. 压缩png: npm install imagemin-pngquant
       3. 压缩webP: npm install imagemin-webp
-   2. img标签提前定义好图片的宽高
    3. 优先使用webP/AVIF图片、其次才是jpg/png图片 但webP兼容还不全面，两种方案
       1. 用css backgroud
          ```
@@ -115,10 +102,14 @@ https://blog.csdn.net/weixin_44368963/article/details/108264278
    2. font-display:swap. 设置字体没加载出来之前，先用系统默认字体展示(默认font-display:auto表示字体没加载出来之前内容content也不显示)
    3. 缓存字体、压缩字体
    4. 采用svg图片或者字体图标：因为字体图标或者SVG是矢量图，代码编写出来的，放大不会失真，而且渲染速度快。字体图标使用时就跟字体一样，可以设置属性，例如 font-size、color 等等，非常方便，还有一个优点是生成的文件特别小
-8. 服务器端ssr
+8. 渲染优化
+   1. 首屏SSR服务器端渲染
+   2. 页面预渲染 ？？？
 9. 精简代码: 
-   1.  提取公共代码： webpack的splitChunk插件
-   2.  剥离冗余代码：利用loader、tree-Shaking等
+   1. 提取公共代码： webpack的splitChunk插件
+   2. 剥离冗余代码：利用loader、tree-Shaking等
+10. Webview 优化
+    1. 打开webview的同时并行加载页面数据 ？？？
 
 
 ### 项目性能监控

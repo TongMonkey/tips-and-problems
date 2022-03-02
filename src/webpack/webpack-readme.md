@@ -183,8 +183,7 @@ function chunkA(){
 
 ### Plugin是什么
 1. 功能：plugin用来拓展webpack打包构建的能力
-2. 常用Plugin是什么
-3. 常用的plugin
+2. 常用的plugin
    1. SplitChunksPlugin 将公共的代码抽取成单独的chunkhook.memoizedState
    2. CleanWebpackPlugin 清理构建目录 默认删除output配置对应的文件目录
    3. ExtractTextWebpackPlugin 将css代码从js文件里抽取成单独的.css文件

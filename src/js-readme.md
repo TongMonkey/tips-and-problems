@@ -72,9 +72,20 @@
       7. WeakSet  new WeakSet() instanceof WeakSet // true
       8. Map  new Map() instanceof Map // true
       9. WeakMap  new WeakMap() instanceof WeakMap // true
-   2. 判断原型及派生原型的方法：所有原型链上出现过的原型都会被判为true
-      1. 实例 instanceof 原型 new Array() instanceOf Array //true
-      2. 原型.isPrototypeOf(实例) Array.prototype.isPrototypeOf(new Array()) //true
+   2. 判断原型及派生原型的方法：4种  
+      1. 示例代码：
+        ```
+        class A{};
+        class B extends A{}; 
+        class C extends B{}; 
+        let c = new C();
+        ```
+      2. 直接继承: extends继承来的 或者是 new 实例来的
+         1. c.constructor === C; //true   c.constructor === B; //false
+         2. c.__proto__ === C.prototype; //true   C.__proto__ === B; //true
+      3. 间接继承：所有原型链上出现过的原型都会被判为true
+         1. c instanceof A; //true
+         2. A.prototype.isPrototypeOf(c); //true
    3. 易错点： typeof function(){} == typeof class A{}; //true 都是'function'
    4. 给对象添加属性时，用到一个对象描述符 descriptor 有4个属性 + 2个方法
       1. configurable：当且仅当该属性的 configurable 键值为 true 时，该属性的描述符才能够被改变，同时该属性也能从对应的对象上被删除。默认为 false。
@@ -423,6 +434,7 @@ p1.constructor === Person; //true
    4. 调用next方法返回的是一个包含value和done两个属性的对象,value属性就是当前成员的值,done属性是一个布尔值用来表示遍历是否结束。
 
 ### for-in VS for-of
+
 
 
 ### Set
@@ -1083,8 +1095,8 @@ runPromises()
 1. Object.prototype.toString.call(obj) === '[object Array]'
 2. obj.__proto__ === Array.prototype; 
 3. Array.prototype.isPrototypeOf(obj); 
-4. obj.constructor === Array;
-5. obj instanceof Array; 
+4. obj instanceof Array; 
+5. obj.constructor === Array;
 6. Array.isArray(obj)
 
 
@@ -1094,7 +1106,7 @@ runPromises()
 2. indexOf
 3. includes
 4. sort排序后快慢指针
-5. ES6 Set
+5. ES6 Set：`[... new Set([1,1,2,3])]` 或者 `Array.from( new Set([1,1,2,3]))`
 6. ES6 Map
 7. filter+indexOf
 8. reduce+includes
@@ -1219,7 +1231,7 @@ console.log(o[a]); //2
 2. 解决：例如 10.1元，可以表示成 101毛， 尽量用整数换算
 
 
-### 大数加法如何实现
+### 大数加法 并打成独立npm工具包
 
 ### ES6 和 commonJS 的 的模块化的区别
 1. 加载时间/导入时机：
@@ -1247,9 +1259,69 @@ console.log(o[a]); //2
 3. 如何处理请求异常 ？？
 
 ### 举例一下 Map 和 object 的区别，如果需要一个字典的需求，都是 key: value 的形式，那应该怎么选择这两个呢
+1. 结论：使用Map
+2. 原因：
+   1. 字典有顺序要求 而Map会按照插入顺序排序 对象没有顺序
+   2. 字典收录数 也就是size属性 Map天然就有 对象没有
+   3. 其他 ？？
 
-### Map 和 WeakMap 有什么区别
+### Map VS WeakMap VS Object
+1. 相同：都有set get clear delete has forEach keys values entries方法
+2. Map VS WeakMap
+   1. 不同：Map有size属性 WeakMap没有
+   2. 不同：Map引用的对象不能够被释放内存 WeakMap引用的对象，无论是普通对象还是Dom 都不会影响其垃圾回收
+3. Map VS Object
+   1. size：Map 有size属性 对象没有size
+   2. 键类型：对象键必须是字符串、Map 键可以是任何数据类型
+   3. 键顺序：对象键没有很好地排序	Map 键按插入排序
+   4. 默认键：对象有默认键	Map 没有默认键
+4. Map 与其他类型转换
+   1. Map转Array:用拓展运算符 会得到一个二位数组 数组的每个元素，是一个有两个元素的数组
+      ```
+      const myMap = new Map().set(true, 7).set({foo: 3}, ['abc']);
+      [...myMap];  // [ [ true, 7 ], [ { foo: 3 }, [ 'abc' ] ] ]
+      ```
+   2. Array转Map: 二维数组作为 new Map的入参。这个二维数组的每个元素都是一个包含两个元素的数组 
+      ```
+      new Map([
+        [true, 7],
+        [{foo: 3}, ['abc']]
+      ])
+      // Map {
+      //   true => 7,
+      //   Object {foo: 3} => ['abc']
+      // }
+      ```
+   3. Map转Object:
+      1. 所有 Map 的键都是字符串，它可以无损地转为对象.如果有非字符串的键名，那么这个键名会被转成字符串，再作为对象的键名
+      ```
+      function strMapToObj(strMap) {
+        let obj = Object.create(null);
+        for (let [k,v] of strMap) {
+          obj[k] = v;
+        }
+        return obj;
+      }
+      const myMap = new Map()
+        .set('yes', true)
+        .set('no', false);
+      strMapToObj(myMap)
+      // { yes: true, no: false }
+      ```
+   4. Object转Map: 
+      1. Object.entries拿到所有的键值对后，依次放进map里
+      ```
+      // Object.entries({a:1,b:2}); [['a',1],['b',2]]
+      new Map(Object.entries(obj));
+      ```
+   5. Map转JSON:
+   6. JSON转Map:
+
+
 ### Set 和 WeakSet 有什么区别
+1. 相同：都有add clear delete has forEach keys values entries方法
+2. 不同：Set有size属性 WeakSet没有
+3. 不同：Set引用的对象不能够被释放内存 WeakSet引用的对象，无论是普通对象还是Dom 都不会影响其垃圾回收
 
 ### 写一个发布订阅模式的 on/emit/off
 7.1 如果需要把订阅者执行成功和失败的方法分开，需要怎么做
@@ -2258,3 +2330,25 @@ undefined
 1. 定义：Web Worker 是一个独立的线程（独立的执行环境），这就意味着它可以完全和 UI 线程（主线程）并行的执行 js 代码，从而不会阻塞 UI，
 2. 通信；它和主线程是通过 onmessage 和 postMessage 接进行通信的
 3. 用途：Web Worker 使得网页中进行多线程编程成为可能。当主线程在处理界面事件时，worker 可以在后台运行，帮你处理大量的数据计算，当计算完成，将计算结果返回给主线程，由主线程更新 DOM 元素
+
+### 实现一个函数add函数,使 add(1,2,3)(4)(5,6); 输出 21
+```
+let sum = 0;
+function add(){
+    sum += [...arguments].reduce((a,b)=>a+b, 0);
+    return arguments.callee;
+}
+add(1,2,3)(4)(5,6);
+sum; //21
+```
+
+### js对url编码
+1. encodeURL 
+   1. 适合对整个URL转码
+   2. 不会对 `ASCII字母、数字、~!@#$&*()=:/,;?+'` 这些字符编码，会对空格等进行编码
+2. encodeURLComponent
+   1. 适合对URL中的局部转码
+   2. 不会对 `ASCII字母、数字、~!*()'` 这些字符编码，其余遇到的所有字符全都会转码
+3. 应用：
+   1. 对整个url用 encodeURL
+   2. 对get请求的参数用 encodeURLComponent
