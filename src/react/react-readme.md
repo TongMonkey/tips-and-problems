@@ -222,21 +222,22 @@ this.setState((state, props)=>{...})
 ### state VS Props
 
 ### 元素的key是什么，为什么很重要
-#### key帮助React识别哪些元素改变了，比如被添加或者删除, 开发者设置Key值是React实现Diff算法的前提
-1. 所以应该给每一个数组中的元素赋予一个确定的标识，
-2. 最好是在列表中独一无二的字符串，万不得已才用index
-3. 如果列表中的元素之间顺序可能会变化，那么不建议使用Index
-4. key在兄弟节点中必须唯一
-5. key这个属性名已经被React内置使用，请使用其他属性名传递同样的值
-6. 有两个文档 关于key的要读完 `https://medium.com/@robinpokorny/index-as-a-key-is-an-anti-pattern-e0349aece318` `https://zh-hans.reactjs.org/docs/reconciliation.html#recursing-on-children`
+1. 定义：key帮助React识别哪些元素改变了，比如被添加或者删除, 开发者设置Key值是React实现Diff算法的前提
+2. 使用：
+   1. 所以应该给每一个数组中的元素赋予一个确定的标识，
+   2. 最好是在列表中独一无二的字符串，万不得已才用index
+   3. 如果列表中的元素之间顺序可能会变化，那么不建议使用Index
+   4. key在兄弟节点中必须唯一
+   5. key这个属性名已经被React内置使用，请使用其他属性名传递同样的值
+   6. 关于key的文档 `https://zh-hans.reactjs.org/docs/reconciliation.html#recursing-on-children`
 
 ### 说一说协调算法即diffing算法
-#### 在某一时间节点调用 React 的 render() 方法，会创建一棵由 React 元素组成的树。在下一次 state 或 props 更新时，相同的 render() 方法会返回一棵不同的树。React 需要基于这两棵树之间的差别来判断如何高效的更新 UI，以保证当前 UI 与最新的树保持同步。此算法有一些通用的解决方案，即生成将一棵树转换成另一棵树的最小操作次数。然而，即使使用最优的算法，该算法的复杂程度仍为 O(n^3)，其中 n 是树中元素的数量
-React 在以下两个假设的基础之上提出了一套 O(n) 的启发式算法：
-1. 先比较同一个节点的key值，如果key值相同再比较类型，key值不同直接删除当前节点及整棵子树
-2. 两个不同类型的元素会产生出不同的树
-   1. 对比类型不同的react元素时：会产生出不同的树。当根节点为不同类型的元素时，React 会拆卸原有的整棵树并且建立起新的树，触发一个完整的重建流程。当卸载一棵树时，组件实例将执行 componentWillUnmount() 方法，对应的 DOM 节点被销毁，。当建立一棵新的树时，对应的 DOM 节点会被创建以及插入到 DOM 中，之后组件实例将执行 UNSAFE_componentWillMount() 方法，紧接着 componentDidMount() 方法。所有与之前的树相关联的 state 也会被销毁。
-   2. 对比类型相同的react元素时，React 会保留 DOM 节点，仅比对及更新有改变的属性。当一个组件更新时，组件实例会保持不变，因此可以在不同的渲染时保持 state 一致。React 将更新该组件实例的 props 以保证与最新的元素保持一致，并且调用该实例的 UNSAFE_componentWillReceiveProps()、UNSAFE_componentWillUpdate() 以及 componentDidUpdate() 方法。
+1. 背景：在某一时间节点调用 React 的 render() 方法，会创建一棵由 React 元素组成的树。在下一次 state 或 props 更新时，相同的 render() 方法会返回一棵不同的树。React 需要基于这两棵树之间的差别来判断如何高效的更新 UI，以保证当前 UI 与最新的树保持同步。此算法有一些通用的解决方案，即生成将一棵树转换成另一棵树的最小操作次数。然而，即使使用最优的算法，该算法的复杂程度仍为 O(n^3)，其中 n 是树中元素的数量
+2. diff: React 在以下两个假设的基础之上提出了一套 O(n) 的启发式算法：
+   1. 对比元素类型：
+      1. 对比类型不同的react元素时：会产生出不同的树。当根节点为不同类型的元素时，React 会拆卸原有的整棵树并且建立起新的树，触发一个完整的重建流程。当卸载一棵树时，组件实例将执行 componentWillUnmount() 方法，对应的 DOM 节点被销毁，。当建立一棵新的树时，对应的 DOM 节点会被创建以及插入到 DOM 中，之后组件实例将执行 UNSAFE_componentWillMount() 方法，紧接着 componentDidMount() 方法。所有与之前的树相关联的 state 也会被销毁。
+      2. 对比类型相同的react元素时，React 会保留 DOM 节点，仅比对及更新有改变的属性。当一个组件更新时，组件实例会保持不变，因此可以在不同的渲染时保持 state 一致。React 将更新该组件实例的 props 以保证与最新的元素保持一致，并且调用该实例的 UNSAFE_componentWillReceiveProps()、UNSAFE_componentWillUpdate() 以及 componentDidUpdate() 方法。
+   2. 对比元素Key
 
 ### cloneElement() 干嘛的
 #### 克隆一个元素

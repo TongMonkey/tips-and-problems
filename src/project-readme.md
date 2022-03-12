@@ -112,7 +112,7 @@ https://blog.csdn.net/weixin_44368963/article/details/108264278
     1. 打开webview的同时并行加载页面数据 ？？？
 
 
-### 项目性能监控
+### 项目性能监控指标 都有哪些
 1. 分析工具：lighthouse web-vitals
 2. 底层API：performance
 3. 白屏时间：指的是从输入网址， 到页面开始显示内容的时间
@@ -130,3 +130,21 @@ https://blog.csdn.net/weixin_44368963/article/details/108264278
       }
    </script>
    ```
+
+### debug 的方式
+1. 先判断是前端问题还是后端问题。可以查看接口是否正确、根据报错信息提示 在network面板搜索关键字 
+2. 如果是前端问题，也可以在source面板下全局搜索关键字
+3. 由于 线上js 大多是混淆过的，可以手动添加 .soucemap文件。 参考链接：https://mp.weixin.qq.com/s/YLdHyX0lh123dqHxijlM2w
+   1. 先通过配置webpack打包，得到对应的.sourcemap文件
+   2. 安装一个http-server
+   3. 通过开启一个http-server本地服务，将.sourcemap文件放在这个本地服务下，使能在浏览器中访问到这个本地 .sourcemap
+   4. 在浏览器有错误的混淆js页面中，右键单击，会有一个"Add source map..."的选项，填入本地服务中sourcemap文件的地址
+   5. 关联后，浏览器Sources面板下将会多出几个文件夹，跟本地代码的文件结构目录一致，可以看到源代码，就可以查找问题了
+4. 如果有些代码修改后，想知道在浏览器是否能正常运行，可以使用 本地重写 Overrides 功能：
+   1. 在Sources面板下，左侧跟Page等并列的一个功能叫Overrides。可以添加一个要重写的文件路径，
+   2. 选择之后，浏览器会询问是否同意授权更改文件，同意即可
+   3. 然后就修改对应的代码即可，修改好后文件名会带一个星，表示修改过，此时要保存后，星星会消失，刷新浏览器才会更新。更新的效果就是重新后的代码。
+   4. 如果想取消，右键后会有remove的指令选项
+5. 打断点 breakpoints
+   1. 直接在文件行数上可以打
+   2. 在代码中也可以通过 单击右键-add if breakpoints -写条件判断语句 来设置条件断点

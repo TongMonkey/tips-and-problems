@@ -61,6 +61,23 @@
         str instanceof String; // true
       ```
       1. 建议：不要显示第调用包装类生成对象，容易让人分不清在处理原始基本类型还是引用类型的值
+   5. 判断是Number类型
+      1. 不是数字类型的会被转成NaN。
+         1. 历史遗留问题：在Es5中 NaN==NaN;//false 
+         2. 弥补错误：在ES6中新增了一个Number.isNaN，用来判断 NaN, 只有本身是NaN的才会返回true
+      2. isNaN: 实际上是window.isNaN方法 是ES5中的方法
+         1. window.NaN 实际上是一个全局属性，该属性的初始值就是NaN
+         2. 重点：判断一个值是不是NaN，本身和强制转化后的NaN都会判断为true
+      3. Number.isNaN: 是ES6新增的方法
+         1. Number.NaN 实际上是一个Number类的属性，该属性的初始值也是NaN
+         2. 重点：只有本身是NaN的才会返回true
+      4. 易错点： 混淆 isNaN 与 Number.isNaN
+        ```
+        isNaN(NaN);                  // true 本身和强制转化后的NaN都会判断为true
+        isNaN('hello world');        // true 
+        Number.isNaN(NaN);           // true  只有本身是NaN的才会返回true
+        Number.isNaN('hello world'); // false  
+        ```
 2. 唯一引用类型：Object。 
    1. Object 类型派生了一系列类型 2-8 用typeof 求类型都是 'object'
       1. Function 函数类型 有点特殊 typeof ()=>{} // ‘function' 
@@ -133,7 +150,11 @@
       })
       p.push(1);  // 此时浏览器会打印 get get set set 各自被调用了两次，分别是：get数组的push方法 get数组的length set数组元素值 set数组长度
       ```
-2. 
+2. 遍历Object
+   1. for in 对象自身+继承的 不包含Symbol属性的 只包含可枚举属性 的属性
+   2. Object.keys()  返回一个数组，元素为：对象自身的 不包含Symbol属性的 只包含可枚举属性 的属性
+   3. Object.getOwnPropertyNames(obj) 返回一个数组，元素为：对象自身的 不包含Symbol属性的 无论是否可枚举 的属性
+   4. Reflect.ownKeys(obj) 返回一个数组，元素为：对象自身的，无论是否为Symbol的 无论是否可枚举 的属性
 
 
 
@@ -308,7 +329,7 @@ p1.constructor === Person; //true
    3. 作用域链 是由词法作用域决定的
    4. outer指针：根据词法作用域决定的函数位置，存储在某执行上下文中的变量环境中,指向其外部的执行上下文
    5. 总结：根据outer指针，在作用域中不断查找变量时的查找链条，就叫做作用域链。作用域链与函数调用顺序无关：由于outer是由词法作用域决定的，词法作用域又是在编译阶段根据开发顺序决定的，所以作用域链，也是在编译阶段就决定了的
-4. 作用域链查变量的顺序：ES6中的let/const声明变量可以实现块级作用域，所以词法变量里也是栈结果,而且各个代码块里的变量互相不影响，例如下图的变量1和变量2如果来自两个代码块，那他们完全可以使用同样的命名 ![浏览器里查找变量的顺序](/src/assets/调用栈查找变量顺序.png) 
+4. 作用域链查变量的顺序：ES6中的let/const声明变量可以实现块级作用域，所以词法变量里也是栈结果,而且各个代码块里的变量互相不影响，例如下图的变量1和变量2如果来自两个代码块，那他们完全可以使用同样的命名 
    1. 求输出
       ```
       var i = 1
@@ -321,23 +342,24 @@ p1.constructor === Person; //true
       }
       a(); // 1
       ```
+   2. ![浏览器里查找变量的顺序](/src/assets/调用栈查找变量顺序.png) 
 5. 闭包：
    1. 定义：根据词法作用域的规则，内部函数总是可以访问外部函数中的变量。当通过调用一个外部函数返回一个内部函数后，即使该外部函数已经执行结束了，但是内部函数引用的属于外部函数的变量依然保存在内存中，我们就把这些变量的集合称为闭包。
    2. 闭包是怎么产生的：(前提：变量在内存中，普通类型放在栈中，引用类型放在堆中)
       1. 当JS引擎执行一个外部函数，先编译它，创建一个空的执行上下文
       2. 在编译代码块过程中，遇到内部函数时，会对内部函数做一次“快速词法扫描”，这个过程就是预解析，预解析的作用是发现语法错误+发现闭包。如果发现该内部函数引用了外部函数的变量，由于这是内部函数引用外部函数的变量，所以JS引擎会判断这是一个闭包，于是在堆空间里创建一个闭包对象Closure，里面只保存被内部函数引用的外部函数的变量
       3. 内部函数对闭包在堆中的地址进行引用，以后当内部函数被调用的时候，在内部函数创建的执行上下文中，可以通过对闭包的引用地址，到堆中找到闭包，从而查找其中变量
-      4. 外部函数执行完毕后，其执行上下文被弹出调用栈并销毁。调用栈在内存的栈中、而闭包被保存在堆中。所以闭包并没有随所处的执行上下文一起被销毁。
+      4. 外部函数执行完毕后，其执行上下文被弹出调用栈并销毁。调用栈在内存的栈中、而闭包被保存在内存的堆中。所以闭包并没有随所处的执行上下文一起被销毁。
    3. 如果有闭包，怎么查找作用域链：当前执行上下文 => 闭包 => ...更外层执行上下文
 
 ### 变量提升的原理
 1. 在编译过程中，将var声明的变量、function声明的函数 放进变量环境；此时，变量的值都只是声明，所以值为undefined,函数会整体被提升；只有在执行可执行代码时才会给变量赋值。这种能在代码顶层访问到的效果就是变量提升/函数提升
-2. 将let、const声明的变量放进词法环境。这里的变量和函数不提升，叫做暂时性死区，在未赋值之前调用会报错。
+2. 将let、const声明的变量放进词法环境。这里的变量和函数不提升，叫做暂时性死区，在未赋值之前调用会报错。let和const会产生块级作用域，所以在词法环境中，其实也是个栈的结构。
 
 
 
 ### 原型链
-1. 定义：一个构造函数的prototype属性指向一个原型对象，原型对象的constrctor指向构造函数，构造函数的实例的__proto__属性指向原型对象。让原型对象称为另一个类型的实例，那么就会形成一条通过__proto__不断指向的原型链 实例=>__proto__=>原型对象兼实例=>__proto__=>原型对象兼实例=>__proto__=>Object.prototype
+1. 定义：一个构造函数的prototype属性指向一个原型对象，原型对象的constrctor指向构造函数，构造函数的实例的__proto__属性指向原型对象。让原型对象成为另一个类型的实例，那么就会形成一条通过__proto__不断指向的原型链 实例=>__proto__=>原型对象兼实例=>__proto__=>原型对象兼实例=>__proto__=>Object.prototype
 2. Function 与 Object 哪个是原型链的尽头：所有引用类型默认都继承了Object, 所有函数的默认原型都是Object的实例，因此默认原型都会有一个__proto__指向Object.prototype。所以所有的自定义类型都默认有toString和valueOf方法，都是来自Object.prototype的(参考js高程第三版p164)  ![原型链尽头](assets/原型链尽头.png)
 3. 在ES6的类继承中，Super = Object.getPrototypeOf(Sub) 
 
@@ -434,7 +456,51 @@ p1.constructor === Person; //true
    4. 调用next方法返回的是一个包含value和done两个属性的对象,value属性就是当前成员的值,done属性是一个布尔值用来表示遍历是否结束。
 
 ### for-in VS for-of
-
+1. for of
+   1. 在所有具有 Iterator 接口的对象上创建一个迭代循环。
+   2. 可迭代对象：Array Map Set String arguments DOM集合 等 
+   3. 终止迭代： break、continue、throw...、return 都可以
+   4. 注意：Object默认不带有 Iterator接口
+   5. 给对象显示添加一个迭代器接口
+      ```
+      let obj = {
+        [Symbol.iterator](){
+          return { //返回一个具有next方法的迭代器对象，对象具有 value 和 done 两个属性
+            i=0,
+            next(){
+              return { value: this.i++, done: false }
+            }
+          }
+        }
+      }
+      ```
+   6. 用for of遍历数组的时候，怎么拿到数组下标？
+      1. 利用 Array.entries()
+         ```
+         for(let [k,v] of arr.entries()){
+           // k即下标
+         }
+         ```
+      2. 利用 Array.map()
+         ```
+         let newArr = arr.map((item,index)=>[index,item])
+         for(let [k,v] of newArr){
+           // k即下标
+         }
+         ```
+2. for in
+   1. 以任意顺序遍历一个对象中，除了Symbol以外的所有可枚举属性，包括继承来的。
+   2. 注意：Array一般不用for in来遍历，1如果这个数组对象含别的属性或者继承了别的属性，都会被遍历出来。2另外数组的元素，属性名是字符串类型的下标，在操作时要注意。3数组遍历出来的顺序可能是错乱的，因为for in遍历对象是按照任意顺序遍历
+   3. 只关注对象本身的对象，
+      1. 可以在遍历内用 Object.getOwnPropertyNames() 或者 Object.hasOwnProperty()来确认某属性是否是对象本身的属性，
+      2. 或者用 propertyIsEnumerable()判断是否是可枚举的。 
+      3. 或者用 Object.keys()先获取独享的实力属性组成的数组
+          ```
+          for (let key of Object.keys(obj)) {
+            console.log(key, obj[key]);
+          }
+          ```
+   4. 想遍历
 
 
 ### Set
@@ -1233,25 +1299,56 @@ console.log(o[a]); //2
 
 ### 大数加法 并打成独立npm工具包
 
-### ES6 和 commonJS 的 的模块化的区别
-1. 加载时间/导入时机：
-   1. commonJS require 运行时加载，只有在运行时才能加载整个对象，取用其中的方法或属性
-   2. es6 import 静态加载，在编译时就能确定模块的依赖关系
-2. export输出的类型 export VS module.exports
-   1. commonJS 模块是对象，使用属性或方法就是查找对象的属性或方法 module.exports = {*}
-   2. es6 模块不是对象，是通过export命令指定输出的代码，再通过import输入 export default *
-3. export输出的内容
-   1. commonJS 输出的是值的缓存，不存在动态实时更更新
-   2. es6 输出值的引用，接口与其值是动态绑定的关系，通过接口可以取得实时值 (export 是es6 对外的接口，必须与模块内部的‘变量’建立一一对应的关系，不能直接输出值例如 export 1)
-4. 书写顺序的影响
-   1. commonJS 模块加载的顺序，按照其在代码中出现的顺序
-   2. es6 import命令具有提升效果，会提升到整个模块的头部首先执行
-5. 多次导入语句
-   1. commonJS 多次require，会将第一次执行的结果缓存起来，后面执行都是直接取用缓存，如果想再次执行需要先清缓存
-   2. es6 多次imoort 只会执行一次，不会执行多次
-6. import 语法
-   1. commonJS 可以使用表达式和变量
-   2. import 不能使用在运行时才能得到结果的语法结构，例如表达式和变量
+### 模块打包方式：
+1. AMD: Asynchronous Module Definition 异步模块定义
+   ```
+    // （ 定义模块名，依赖数组，回调函数 ）
+    define('getSum', ['math'], function(math){
+      return {
+        sum: function (a,b){
+          console.log("sum:", math.sum(a,b));
+        }
+      }
+    })
+    // 加载模块
+    require(['getSum'],function(module){
+      module.sum(1,2);
+    })
+    ```
+2. CommonJS：
+   ```
+   const math = require('./math'); //用require函数引入
+   exports.getSum = function(a,b){ // 用 exports对象导出
+     return a+b;
+   }
+   ```
+3. ES6：
+   ```
+   import math from './math'; //用import 引入
+   export function getSum(a,b){  //用export 导出
+     return a+b;
+   }
+   ```
+4. ES6 和 commonJS 的 的模块化的区别:
+   1. 加载时间/导入时机：
+      1. commonJS require 运行时加载，只有在运行时才能加载整个对象，取用其中的方法或属性
+      2. es6 import 静态加载，在编译时就能确定模块的依赖关系
+   2. export输出的类型 export VS module.exports
+      1. commonJS 模块是对象，使用属性或方法就是查找对象的属性或方法 module.exports = {*}
+      2. es6 模块不是对象，是通过export命令指定输出的代码，再通过import输入 export default *
+   3. export输出的内容
+      1. commonJS 输出的是值的缓存，不存在动态实时更更新
+      2. es6 输出值的引用，接口与其值是动态绑定的关系，通过接口可以取得实时值 (export 是es6 对外的接口，必须与模块内部的‘变量’建立一一对应的关系，不能直接输出值例如 export 1)
+   4. 书写顺序的影响
+      1. commonJS 模块加载的顺序，按照其在代码中出现的顺序
+      2. es6 import命令具有提升效果，会提升到整个模块的头部首先执行
+   5. 多次导入语句
+      1. commonJS 多次require，会将第一次执行的结果缓存起来，后面执行都是直接取用缓存，如果想再次执行需要先清缓存
+      2. es6 多次imoort 只会执行一次，不会执行多次
+   6.  import 语法
+      3. commonJS 可以使用表达式和变量
+      4. import 不能使用在运行时才能得到结果的语法结构，例如表达式和变量
+5. 未来趋势：现在浏览器端一般遵守ES6规范，Node环境遵守CommonJs规范。但Node已经在逐渐向全面支持ES6方向改变。
 
 ### 聊聊 axios
 1. axios 是个同构的工具，它是如何实现区分 Node 和浏览器环境的 ？？
@@ -1341,15 +1438,16 @@ console.log(o[a]); //2
 2. 异步加载JS的方案
    1. `<script defer>` 
       1. 只适用于外部脚本，新开一个线程执行下载，
-      2. 页面渲染完再执行执行脚本；
+      2. 页面渲染完再执行执行脚本； 是个小乖乖
       3. 执行顺序即书写顺序
    2. `<script async>` 
       1. 只适用于外部脚本，新开一个线程执行下载，
-      2. 不等页面渲染，下载完就执行，执行后再接着渲染
+      2. 不等页面渲染，下载完就执行，执行后再接着渲染。 不如 defer 乖
       3. 执行顺序不可控
-   3. `<script type="module">`：表示这是一个ES6模块，不限制本地/外部脚本，默认就是异步下载 等同于打开了defer 渲染完再执行、顺序可控
-   4. 拼接js到dom中，动态请求脚本资源
-   5. 动态import 还在提案阶段
+   3. `<script type="module">`：表示这是一个ES6模块，等同于defer 下载后等渲染完再执行、顺序可控。是ES6脚本就行，不限制本地/外部脚本，默认就是异步下载
+   4. `<script type="module" async>`: 表示这是一个ES6模块，等同于 async 下载完就执行。是ES6脚本就行，不限制本地/外部脚本，默认就是异步下载
+   5. 拼接js到dom中，动态请求脚本资源
+   6. 动态import 还在提案阶段
 3. 拓展：
    1. js加载会阻塞html解析，那css加载呢？：不会阻塞html解析。当GUI渲染线程解析html遇到link标签，就开启下载线程异步下载css，同时GUI继续解析html,边下载边解析边渲染
    2. 那css外部link 会不会阻塞渲染：有可能。因为渲染需要先将html和css都解析完后再布局、绘制，如果在css的解析阶段出现问题卡住了，就会阻塞后续的渲染流程，同时因为GUI线程没有挂起，也无法执行js
@@ -1780,12 +1878,12 @@ function myTypeof(obj) {
    ```
 
 
-### Class
-1. 定义：Es6的类完全可以看做构造函数的另一种写法，
+### Class 类
+1. 定义：Es6的类完全可以看做构造函数的另一种写法，但类不能变量提升
    ```
    class B{};
    let b = new B();
-   b.constrctor === B.prototype.constructot;
+   b.constrctor === B.prototype.constructor;
    typeof B; // 'function' //类就是函数
    B === B.prototype.constructor; //true // 类本身就指向构造函数
    B.prototype.constructor === B; //true prototype对象的constructor属性直接指向类本身
@@ -1811,6 +1909,7 @@ function myTypeof(obj) {
     ```
 3. 类及类的方法声明
       ```
+      let propName = 'valueOf'; //先声明后使用 否则会报unexpected identifier
       class Point {
         // constructor是个默认函数，如果没有手动开发，则会自动创建一个空的构造函数constrctor(){} 在打印出来后看得到，源码中看不到
         constructor(x, y) {
@@ -1824,21 +1923,20 @@ function myTypeof(obj) {
           return '(' + this.x + ', ' + this.y + ')';
         }
         // 属性名可以用表达式
-        let propName = 'valueOf'; //先声明后使用 否则会报unexpected identifier
         [propName](){
           console.log('valueOf');
         }
       }
       Object.getOwnPropertyNames(Point); // ["length","name","prototype"]
-      Object.getOwnPropertyNames(Point.prototype); // ["constructor","toString"]
+      Object.getOwnPropertyNames(Point.prototype); // ["constructor","toString","valueOf"]
       ```
      1. 类的表达式定义法
       ```
       // 这个类的名字是Me，但是Me只在 Class 的内部可用，指代当前类。在 Class 外部，这个类只能用MyClass引用
       const MyClass = class Me {
         getClassName() {
-          return Me.name;
-        }
+          return Me.name;   // 此时 new MyClass().getClassName(); 调用得到结果：”Me“
+        } 
       };
       // 如果内部没有用到Me,也可以忽略命名
       const MyClass = class { /* ... */ };
@@ -1861,8 +1959,8 @@ function myTypeof(obj) {
         typeof Point; //"function"
         Point === Point.prototype.constructor; //true
         ```
-        1. 类不存在函数提升、Es5的普通函数声明可以
-        2. 类里默认就是严格模式
+        2. 类不存在函数提升、Es5的普通函数声明可以
+        3. 类里默认就是严格模式
 4. 类的方法：
    1. 给一个类添加方法，可以添加到类的原型对象上，
     ```
@@ -1870,7 +1968,7 @@ function myTypeof(obj) {
         toString(){}, //也没用function 声明
       })
     ```
-    2. ES6中类的内部的方法，都是不可枚举的。注意：这个特性跟ES5中表现不一样
+    1. ES6中类的内部的方法，都是不可枚举的。注意：这个特性跟ES5中表现不一样
     ```
     // es6
     class Point{}
@@ -1891,18 +1989,24 @@ function myTypeof(obj) {
    1. 类的方法内部如果含有this，它默认指向类的实例
     ```
     class Logger {
+      constructor(name="init"){
+        this.name = name;
+      }
       printName(name = 'there') {
-        console.log(`Hello ${name}`);
+        console.log(this.name);
       }
     }
     const logger = new Logger();
-    logger.printName(); // Hello there
+    logger.printName(); // Hello init
     ```
    2. 本来this是指向实例，但如果单独将类的方法导出，在外部环境调用，类的方法的this是该方法运行时的环境；而类内部是严格模式，顶层运行环境为undefined
     ```
     class Logger {
-      printName(name = 'there') {
-        console.log(`Hello ${name}`);
+      constructor(name="init"){
+        this.name = name;
+      }
+      printName(name) {
+        console.log(this.print);
       }
       print(text) {
         console.log(text);
@@ -1912,12 +2016,12 @@ function myTypeof(obj) {
     const { printName } = logger;
     printName(); // TypeError: Cannot read property 'print' of undefined
     ```
-    3. 解决this指向问题：
+   3. 解决上述第2点，导出方法中this指向顶层undefined的问题：
     ```
       // 1. 在构造方法中绑定this
       class Logger {
         constructor() {
-          this.printName = this.printName.bind(this); // 由于.bind函数后返回一个新函数，在执行构造函数时，this就是实例对象，所以能实现绑定
+          this.printName = this.printName.bind(this); // 由于.bind函数后返回一个新函数，在执行构造函数时，this就是实例对象，所以新函数就绑定了this实例
         }
         printName(name = 'there') {
           console.log(`Hello ${name}`);

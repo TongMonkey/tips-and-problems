@@ -1,44 +1,46 @@
 ### AST 是什么
-#### AST 是抽象语法树
-文档来源:
- ` https://github.com/jamiebuilds/babel-handbook/blob/master/translations/zh-Hans/plugin-handbook.md#toc-asts `  
- AST 的每一层结构被叫做一个 Node 节点 一个 AST 可以由单一的节点或是成百上千个节点构成。它们组合在一起可以描述用于静态分析的程序语法
-
-```
-//每个节点都有接口：
-interface Node{
-    type: string;
-}
-// 每个node可能有如下属性：
-{
-    type:"...",
-    id:{
-        type: "...",
-        name: "..."
-    },
-    params: [
-        {
-            type: "...",
-            name: "..."
-        },
-        {
-            type: "...",
-            name: "..."
-        },
-    ],
-    body: {...},
-    operator: ...,
-    left: {...},
-    right: {...},
-    // Babel 还为每个节点额外生成了一些属性，用于描述该节点在原始代码中的位置,每个节点都有start, end, loc这几个属性
-    start: 0,
-    end: 0,
-    loc: {
-        start: {line:0, column:0},
-        end: {line:0, column:0},
+1. 定义：AST 是抽象语法树，简称语法树，是源代码语法结构的一种抽象表示。
+2. 特点：它以树状的形式表现编程语言的语法结构，树上的每个节点都表示源代码中的一种结构。每个节点是一个Node,一个 AST 可以由单一的Node或是成百上千个Node构成。
+3. 伪代码：
+  ```
+    //每个节点都有接口：
+    interface Node{
+      // 每个节点都可能有很多属性，不完全列举如下：
+      type:"...",
+      id:{
+          type: "...",
+          name: "..."
+      },
+      params: [
+          {
+              type: "...",
+              name: "..."
+          },
+          {
+              type: "...",
+              name: "..."
+          },
+      ],
+      body: {...},
+      operator: ...,
+      left: {...},
+      right: {...},
+      // Babel 还为每个节点额外生成了一些属性，用于描述该节点在原始代码中的位置,每个节点都有start, end, loc这几个属性
+      start: 0,
+      end: 0,
+      loc: {
+          start: {line:0, column:0},
+          end: {line:0, column:0},
+      }
     }
-}
-```
+    ```
+4. AST 可以做什么
+   1. babel
+   2. webpack
+   3. sass/less
+   4. ESLint
+   5. TypeScript
+
 
 #### AST中的一些关键词
 1. Visitor: 获取具体节点的方式是采用访问者模式，用一个 visitor 的概念，访问节点，在进入、退出节点时都可以调用访问者方法。
@@ -109,8 +111,3 @@ t.binaryExpression("*", t.identifier("a"), t.identifier("b"));
 
 
 
-### AST 还可以做什么
-#### 还可以：
-使用 UglifyJS 来压缩代码 、css 预处理器、Eslint 检查等，都用到 AST
-
-### AST 怎么转化为 js code

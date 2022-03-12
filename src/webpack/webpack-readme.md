@@ -1,13 +1,38 @@
 ## Webpack
 
 ### webpack是什么
-####  webpack是一个js应用程序静态模块打包工具。会从应用内部一个或多个入口点构建一个依赖图(dependency grarph),然后将项目中夺得每个模块合成一个或多个bundles.
-Es6中的 import 和 export 已经被webpack^4.0天然支持, 其余语法特性需要类似于Bable这种转译器先转译成es5
+1. webpack是一个js应用程序静态模块打包工具。会从应用内部一个或多个入口点构建一个依赖图(dependency grarph),然后将项目中夺得每个模块合成一个或多个bundles.
+2. Es6中的 import 和 export 已经被webpack^4.0天然支持, 其余语法特性需要类似于Bable这种转译器先转译成es5
+
+
+### webpack命令行 与 npm包
+1. webpack
+   1. 在命令行中执行 webpack index.js 实际上是做了什么？
+      1. npm 会让命令行工具查找webpack的命令脚本。 如果webpack是在全局安装的，将会进入 user_local/.bin里找。如果是在项目中安装的webpack，就进入 当前项目/node_modules/.bin目录下查找是否存在webpack.sh(mac系统) 或者 webpack.cmd(window系统) 文件。如果存在就执行，不存在就抛出错误。 
+      2. 找到node_modules/webpack包后，查看到package.json里 “bin”属性引用的地址是“./bin/webpack.js”，
+      3. 所以最终可以在这个路径下找到webpack: node_modules/webpack/bin/webpack.js
+   2. eslint ./src && webpack 是做了什么？ (srcipts:{"build":"eslint ./src && webpack"})
+      1. 先对 src 文件夹下所有代码用eslint校验
+      2. 然后再执行 webpack index.js 操作。因为默认入口文件就是 index.js, 所以可以省略直接写 webpack
+2. npm 包 
+   1. 版本号：
+      1. ^1.*.*: ^表示 除了第一位的主版本号，后面中、小 两位版本号都查找最新版本的安装
+      2. ～1.1.* ～表示 除了前两位，后面最后一位 小版本号 查找最新的版本安装
+      3. 1.1.0 没有任何前缀的版本号，表示安装特定版本号
+   2. npm install 的过程
+      1. 查找当前项目中的 package.json 版本信息文件
+      2. 在package.json中，查找依赖项 有 dependencies 和 devDependencies 两个部分
+      3. 如果发现了新包，就下载并更新package.json
+
+
+
+
 
 ### webpack打包流程是什么
 #### 大方向分为：初始化、编译、输出文件
-1. 初始化
-   1. 初始化参数： 从配置配件+Shell语句中读取并合并参数，得到最终的参数
+1. 前提：先找到项目的package.json文件下载好各个依赖的npm包
+2. 初始化
+   1. 初始化参数： 从配置文件webpack.config.js(默认)+Shell语句中读取并合并参数，得到最终的参数
    ```
    // 通过npm脚本语句执行打包，先查找webpack工具 进入node_module\.bin中找webpack.sh或webpack.cmd文件，如果存在就执行，不存在就抛出错误
    npm run dev //开发环境
@@ -19,13 +44,13 @@ Es6中的 import 和 export 已经被webpack^4.0天然支持, 其余语法特性
    //读取Resolver
    // ...等
    ```
-   2. 初始化编译实例：通过初始化得到的参数，初始化一个Compiler。
+   1. 初始化编译实例：通过初始化得到的参数，初始化一个Compiler。
    ```
    // Compiler负责文件监听和启动编译。Compiler 实例中包含了完整的 Webpack 配置，全局只有一个Compiler实例
    let globalSingleCompiler = new Compiler(configs);
    ```
-   3. 初始化系统文件读取：应用文件系统到compiler对象，方便后续文件查找和读取
-   4. 初始化所有Plugin:plugin本质是类，有一个apply方法。
+   1. 初始化系统文件读取：应用文件系统到compiler对象，方便后续文件查找和读取
+   2. 初始化所有Plugin:plugin本质是类，有一个apply方法。
    ```
    // 依次调用插件的apply方法，让插件可以监听后续的所有事件节点。
    // 给插件传入compiler的实例引用，方便插件通过compiler调用webpack提供的api
@@ -34,73 +59,80 @@ Es6中的 import 和 export 已经被webpack^4.0天然支持, 其余语法特性
        plugin.apply(globalSingleCompiler);
    })
    ```
-   5. 初始化Resolver，负责在文件系统中寻找指定路径的文件。
-2. 编译：
+   1. 初始化Resolver，负责在文件系统中寻找指定路径的文件。
+3. 编译：
    1. 启动编译：
    ```
    globalSingleCompiler.run(); //启动一次新的编译 globalSingleCompiler.watchRun(); //在监听模式下启动的编译，在这个事件中可以获取是那些文件发生了变化导致了重新启动了
    compile(); //告诉插件一次新的编译要启动了，同时给插件带上compiler对象
    let compilation = new Compilation(); // 创建一个编译阶段对象，一个compilation包含了下面2、3、4的步骤。开发模式下，每当检测到文件变化，就会创建一个新的compilation。包含了当前的模块资源、编译生成资源、变化的文件等信息
    ```
-   2. entry:当一个compilation创建完，就开始从Entry开始找到所有入口文件module
-   3. 调动loader翻译：对每个module串行调用配置的所有loader翻译文件内容。在loader翻译完一个module后，将翻译后的内容进行解析(Babel中用的是@babel/parser)，输出对应的抽象语法书AST, 以便webpack后面对代码进行分析。
-   4. 递归: 从配置的入口模块开始，分析其AST，当遇到导入语句导入了新的module，就将其加入依赖列表，同时对新找到的module翻译并递归(即重复3.4.步骤)，最终所有module都用loader翻译完成，并找到所有模块的依赖关系。
-3. 输出文件
+   1. 找到entry:当一个compilation创建完，先找到入口文件，再根据依赖关系找到整个依赖模块图关系。找entry:去配置文件webpack.config.js里找entry属性配置的地址，如果没有，默认是index.js
+   2. 调动loader翻译：对每个module串行调用配置的所有loader翻译文件内容。在loader翻译完一个module后，将翻译后的内容进行解析(Babel中用的是@babel/parser)，输出对应的抽象语法书AST, 以便webpack后面对代码进行分析。
+   3. 递归: 从配置的入口模块开始，分析其AST，当遇到导入语句导入了新的module，就将其加入依赖列表，同时对新找到的module翻译并递归(即重复3.4.步骤)，最终所有module都用loader翻译完成，并找到所有模块的依赖关系。
+4. 输出文件
    1. 合成chunk:根据入口文件和文件之间的依赖关系，相关模块会组装成chunk, 最终输出多个chunk
    2. 一个chunk就是一个文件：把每个chunk转换成一个单独的文件加入到输出列表。这步是可以修改输出内容的最后一个机会。
    3. 输出完成:根据配置文件output设置，输出到文件系统对应路径下
-4. 整个过程中：Webpack会在特定的时间点广播出特定的事件，插件在监听到感兴趣的事件后会执行特定的逻辑，插件可以调用Webpack提供的API
+5. 整个过程中：Webpack会在特定的时间点广播出特定的事件，插件在监听到感兴趣的事件后会执行特定的逻辑，插件可以调用Webpack提供的API
+
+
+### webpack compilation 是什么
+
+
 
 ### 模块打包原理
 #### 官网例子:实时创建一个简单打包工具`https://www.youtube.com/watch?v=Gc9-7PBqOC8` 简单工具的详细说明`https://github.com/ronami/minipack`
 
 
 ### webpack打包后都会产生什么
-#### 打包后的结果代码，是一个自执行函数
+打包后的结果代码，是一个自执行函数
 ```
-// 基础版打包-大概逻辑：
-// 前提：入口文件为模块1, 在模块1中import了模块2 忽略了检查模块缓存优化的部分
-function chunkA(){
-   var _webpack_modules_ = {
-      "模块ID1": function(__unused_webpack_module, __webpack_exports__, __webpack_require__){
-         var code1 = "
-            ```
-            var code2 = __webpack_require__("模块ID2"); //对应源代码中的import
-            "执行模块1的代码块";
-            "调用模块2的代码code";
-            ```
-         ";
-         eval(code1);
-      },
-      "模块ID2": function(__unused_webpack_module, __webpack_exports__, __webpack_require__){
-         var code2 = "代码块";
-         eval(code2);
-      }
-   }
-   function __webpack_require__("模块ID"){
-      function o = (obj, prop) => Object.prototype.hasOwnProperty.call(obj, prop);
-      function r = (exports) => {
-         if (typeof Symbol !== "undefined" && Symbol.toStringTag) {
-            Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+   // 基础版打包-大概逻辑：
+   // 前提：入口文件为模块1, 在模块1中import了模块2 忽略了检查模块缓存优化的部分
+   function chunkA(){
+      // 根据文件依赖关系，将各个文件存储在文件集合对象中
+      var _webpack_modules_ = {
+         "模块ID1": function(__unused_webpack_module, __webpack_exports__, __webpack_require__){
+            var code1 = "
+               ```
+               var code2 = __webpack_require__("模块ID2"); //对应源代码中的import  有依赖关系的代码之间会迭代执行
+               "执行模块1的代码块";
+               "调用模块2的代码code";
+               ```
+            ";
+            eval(code1);
+         },
+         "模块ID2": function(__unused_webpack_module, __webpack_exports__, __webpack_require__){
+            var code2 = "代码块";
+            eval(code2);
          }
-         Object.defineProperty(exports, "__esModule", { value: true });
       }
-      function d = (exports, definition) => {
-         for (var key in definition) {
-            if (
-               o(definition, key) && !o(exports, key)
-            ) {
-               Object.defineProperty(exports, key, {
-                  enumerable: true,
-                  get: definition[key],
-               });
+      // 入参是入口模块对应在 _webpack_modules_对象中的Id, 由于模块间有依赖关系，所以这里只需要调用一次入口文件即可，
+      function __webpack_require__(moduleId){  
+         function o = (obj, prop) => Object.prototype.hasOwnProperty.call(obj, prop);
+         function r = (exports) => {
+            if (typeof Symbol !== "undefined" && Symbol.toStringTag) {
+               Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+            }
+            Object.defineProperty(exports, "__esModule", { value: true });
+         }
+         function d = (exports, definition) => {
+            for (var key in definition) {
+               if (
+                  o(definition, key) && !o(exports, key)
+               ) {
+                  Object.defineProperty(exports, key, {
+                     enumerable: true,
+                     get: definition[key],
+                  });
+               }
             }
          }
       }
-   }
-   __webpack_require__("模块ID1"); //模块1为入口文件
-}();
-```
+      __webpack_require__("模块ID1"); //模块1为入口文件
+   }();
+   ```
 
 ### Loader是什么
 1. 前提：webpack默认只支持.js和.json两种文件类型，其他类型的都无法处理
@@ -182,28 +214,34 @@ function chunkA(){
 ### 自己编写loader 
 
 ### Plugin是什么
-1. 功能：plugin用来拓展webpack打包构建的能力
-2. 常用的plugin
+1. 作用：插件plugin用来拓展webpack打包构建的能力。用户不需要但开发者需要的功能，一般就会封装成plugin使用。
+2. Plugin的实现原理
+   1. 通过注册事件、事件监听机制，在不同的位置都留有“钩子”,增强打包的功能。
+   2. 基于Tapable库的注册机制. 原话大概是 tapable can expose Hook classes,and create hooks for plugins.
+3. 调用顺序：正序调用
+4. 用法：
+   ```
+   module.exports = {
+      plugins:[
+         new PluginName();
+      ]
+   }
+   ```
+5. 常用的plugin
    1. SplitChunksPlugin 将公共的代码抽取成单独的chunkhook.memoizedState
    2. CleanWebpackPlugin 清理构建目录 默认删除output配置对应的文件目录
    3. ExtractTextWebpackPlugin 将css代码从js文件里抽取成单独的.css文件
    4. autoprefixer插件 跟postcss-loader结合使用自动补齐css前缀
    5. CopyWebpackPlugin 将文件或者文件夹拷贝到构建的输出目录
    6. HtmlWebpackPlugin 创建html模版文件用来承载输出bundle
-   7. UglifyjsWebpackPlugin 压缩js
+   7. UglifyjsWebpackPlugin 压缩打包后的bundle.js的体积 
    8. ZipWebpackPlugin 将打包的资源生成一个.zip包
-
-### Plugin的实现原理
-#### 钩子机制，webpack工作过程中有很多环节，都预留了钩子，通过在钩子上挂载不同的插件以拓展打包能力
+   9. webpackBundleAnalyzer 打包资源分析器
 
 ### 我们在webpack中配置了那么多plugins，webpack是怎么知道该在何时调用这些plugins的呢?
 
 ### 编写Plugin
 
-### Loader VS Plugin
-1. 功能上的区别
-2. 调用顺序
-3. 
 
 ### Source map是什么
 #### 
@@ -280,12 +318,12 @@ module.export = {
 2. 方案2: 是方案1的进阶，通过glob库动态计算有多少个entry，动态生成多个html-webpack-plugin的数组，添加在配置文件中
 
 ### 文件监听是什么
-#### 文件监听是在发现源码发生变化时，自动重新构建出新的输出文件
-1. 开启监听模式，有两种方法
+1. 定义文件监听是在发现源码发生变化时，自动重新构建出新的输出文件
+2. 开启监听模式，有两种方法
    1. 启动webpack命令时，带上`--watch`参数
    2. 配置文件文件中设置`watch：true`
-2. 缺陷：不会自动刷新浏览器，需要额外手动刷新
-3. 文件监听构建出的代码存储位置：本地磁盘文件
+3. 缺陷：不会自动刷新浏览器，需要额外手动刷新
+4. 文件监听构建出的代码存储位置：本地磁盘文件
 
 ### 文件监听的原理是什么
 #### webpack轮询判断文件的最后编辑时间是否变化
@@ -301,32 +339,55 @@ module.export = {
 }
 ```
 
-### WDS(webpack-dev-server)是什么 HMR(HotModuleReplacement)是什么
-#### WDS是热更新，HMR是热模块替换 用WDS启动HMR功能
-1. 做了什么：相比于文件watch监听模式不能刷新浏览器，热更新在检测到文件变化后，会自动构建并更新浏览器
-2. 输出位置：WDS放在内存中,不用写入磁盘，所以有速度优势
-3. 如何使用：有两种方式都可以
-   1. 使用HotModuleReplacementPlugin插件，这样开启热更新有2个必要条件：使用HotModuleReplacementPlugin插件 + 设置devServer.hot为 true。注意在v4之后内置了HotModuleReplacementPlugin，看起来好像没使用，但其实是必须的。这种方式的热更新开启后，在浏览器页面就能够查看所有打包后的文件
+### webpack-dev-server 本底开发服务器 
+1. 安装：npm install --save-dev weback-dev-server
+2. 用处：开启一个本地服务做热更新，可以对文件的变化实时监听，然后重新打包。
+3. 配置：在webpack.config.js里 设置 devServer属性，可以设置 port publicPath 等配置
    ```
-   // package.json
-   script: { 
-      "dev": "webpack-dev-serve --open" // --open命令：每次构建完成后自动开启一个浏览器页面
-   }
-   // 通过命令行`npx webpack serve --hot`或者通过webpack.config.js
    module.export = {
-      plugins:[
-         // new webpack.HotModuleReplacementPlugin(), //设置了hot为true后，就不需要手动添加该插件了，在V4之后默认使用了
-      ],
       devServer:{
-         hot: true, //启用热更新
+         hot: true, //启用热更新 文件改变后 自动重新打包放在内存中，不产出打包文件
       }
    }
-   ``` 
+   ```
+4. 注意：光是开启devServer 并不会产生新的打包文件，而是在内存中，开发者可以看到页面效果，无新文件
+5. 包所在位置：./node_modules/.bin/webpack-dev-server.js
+
+###  HMR(HotModuleReplacement)是什么
+参考链接：https://zhuanlan.zhihu.com/p/30669007
+1. 定义：HMR是热模块替换 用WDS(webpack-dev-server)启动HMR功能,之后就可以在不刷新页面的前提下更改页面效果
+2. 做了什么：相比于文件watch监听模式不能刷新浏览器，热更新在检测到文件变化后，会自动构建并更新浏览器
+3. 输出位置：WDS放在内存中,不用写入磁盘，所以有速度优势
+4. 如何使用：有两种方式都可以
+   1. 使用HotModuleReplacementPlugin插件，这样开启热更新有2个必要条件：使用HotModuleReplacementPlugin插件 + 设置devServer.hot为 true。注意在v4之后内置了HotModuleReplacementPlugin，看起来好像没使用，但其实是必须的。这种方式的热更新开启后，在浏览器页面就能够查看所有打包后的文件
+      ```
+      // package.json
+      script: { 
+         "dev": "webpack-dev-serve --open" // --open命令：每次构建完成后自动开启一个浏览器页面
+      }
+      // 通过命令行`npx webpack serve --hot`或者通过webpack.config.js
+      module.export = {
+         plugins:[
+            // new webpack.HotModuleReplacementPlugin(), //设置了hot为true后，就不需要手动添加该插件了，在V4之后默认使用了
+         ],
+         devServer:{
+            hot: true, //启用热更新
+         }
+      }
+      ``` 
    2. 使用webpack-dev-middleware搭配使用将输出文件传输给服务器。使用这种方式，还需要额外使用Express或者Koa等Node服务器来提供一个本地服务。
+5. 错误监控
+   1. 开启热替换后，在生效范围内的任意文件中都可以监测错误
+   ```
+   if(module.hot){
+      module.hot.accept(error=>{
+         if(error) console.log("热替换出现错误",error);
+      })
+   }
+   ```
    
 
 ### HMR热更新的原理/流程是什么
-#### 
 1. WDS中的参与角色
    1. Webpack Compiler: 在Webpack端运行，将源代码js编译成bundle.js输出文件,分别给到HMR Server和Bundle Server
    2. Bundle Server: 在Webpack端运行的服务器，提供浏览器对bundle.js输出文件的服务器方式的访问能力
@@ -410,63 +471,64 @@ module.export = {
 ```
 
 ### 如何提取页面公共资源
-#### 有几种情况
-1. 第三方库：例如react/react-dom等基础库
-   1. 方案：使用html-webpack-externals-plugin插件，配置直接通过cdn引入，不打入bundle中。
-   ```
-   module.export = {
-      plugins:[
-         new HtmlWebpackExternalsPlugin({
-            {
-               module:'react',
-               entry: '..第三方库地址', 
-               global: 'React',
-            },
-            {
-               module:'react-dom',
-               entry: '..第三方库地址',
-               global: 'ReactDOM',
-            },
-         })
-      ]
-   }
-   ```
-2. 代码中含有公共脚本，需要提取分离成单独文件 这种方式也能将第三方库单独提取
-   1. 方案：利用SplitChunksPlugin插件，配置webpack在打包时做代码分割(V4之前用CommonsChunksPlugin,官方建议不再用)
-   ```
-   module.export = {
-      optimization:{
-         splitChunks:{
-            //通用规则---start---
-            chunks:'async', // 选项：[async(默认), initial, all(推荐)] async 只对异步引入的库分离；initial只对同步引入的库分离；all引入的库都进行分离
-            minSize:30000, //生成的公共chunk大小必须>=30000 单位Byte
-            maxSize:0, //抽离的公共chunk体积如果大于maxSize就分成较小的chunks
-            minChunks:1, //至少被引用的1次才会抽离
-            maxAsyncRequests: 5, //浏览器按需加载文件时的最大并行请求数
-            maxIntialRequests:3, //浏览器加载入口文件时的最大并行请求数
-            automaticNameDelimiter: '~', // 表示拆分出的chunk的名称连接符。默认为~。如chunk~vendors.js
-            name: true,// 设置chunk的文件名。默认为true。当为true时，splitChunks基于chunk和cacheGroups的key自动命名。
-            // 通用规则---end---\
-            cacheGroups:{ //单独配置的分割规则，缓存组里的配置可以继承和覆盖上面splitChunks.*的任何配置,但test、priority、reuseExistingChunk只能在缓存组级别上配置
-               commons:{
-                  test:/(react | react-dom)/,  //将react和react-dom分成一个单独的chunk
-                  name:'vendors', //打出来的包名称是vendors开头的 例如vendors.34nf45if.js
-                  chunks: 'all', //跟splitChunks.chunks通用规则一样，配置对什么样的库进行分离
-                  priority: -9， //一个模块可能属于多个缓存组，打包时优先考虑优先级更高的缓存组。默认为负数，自定义的缓存组默认优先级是0
+1. 有几种情况
+   1. 第三方库：例如react/react-dom等基础库
+      1. 方案：使用html-webpack-externals-plugin插件，配置直接通过cdn引入，不打入bundle中。
+      ```
+      module.export = {
+         plugins:[
+            new HtmlWebpackExternalsPlugin({
+               {
+                  module:'react',
+                  entry: '..第三方库地址', 
+                  global: 'React',
                },
-               vendors: {
-                  test: /[\\/]node_modules[\\/]/,
-                  priority: -10，
+               {
+                  module:'react-dom',
+                  entry: '..第三方库地址',
+                  global: 'ReactDOM',
                },
-               default: {
-                  name:'common',
-                  priority: 20，
-               },
+            })
+         ]
+      }
+      ```
+   2. 代码中含有公共脚本，需要提取分离成单独文件 这种方式也能将第三方库单独提取
+      1. 方案：利用SplitChunksPlugin插件，配置webpack在打包时做代码分割(V4之前用CommonsChunksPlugin,官方建议不再用)
+      2. 代码：
+         ```
+         module.export = {
+            optimization:{
+               splitChunks:{
+                  //通用规则---start---
+                  chunks:'async', // 选项：[async(默认), initial, all(推荐)] async 只对异步引入的库分离；initial只对同步引入的库分离；all引入的库都进行分离
+                  minSize:30000, //生成的公共chunk大小必须>=30000 单位Byte
+                  maxSize:0, //抽离的公共chunk体积如果大于maxSize就分成较小的chunks
+                  minChunks:1, //至少被引用的1次才会抽离
+                  maxAsyncRequests: 5, //浏览器按需加载文件时的最大并行请求数
+                  maxIntialRequests:3, //浏览器加载入口文件时的最大并行请求数
+                  automaticNameDelimiter: '~', // 表示拆分出的chunk的名称连接符。默认为~。如chunk~vendors.js
+                  name: true,// 设置chunk的文件名。默认为true。当为true时，splitChunks基于chunk和cacheGroups的key自动命名。
+                  // 通用规则---end---\
+                  cacheGroups:{ //单独配置的分割规则，缓存组里的配置可以继承和覆盖上面splitChunks.*的任何配置,但test、priority、reuseExistingChunk只能在缓存组级别上配置
+                     commons:{
+                        test:/(react | react-dom)/,  //将react和react-dom分成一个单独的chunk
+                        name:'vendors', //打出来的包名称是vendors开头的 例如vendors.34nf45if.js
+                        chunks: 'all', //跟splitChunks.chunks通用规则一样，配置对什么样的库进行分离
+                        priority: -9， //一个模块可能属于多个缓存组，打包时优先考虑优先级更高的缓存组。默认为负数，自定义的缓存组默认优先级是0
+                     },
+                     vendors: {
+                        test: /[\\/]node_modules[\\/]/,
+                        priority: -10，
+                     },
+                     default: {
+                        name:'common',
+                        priority: 20，
+                     },
+                  }
+               }
             }
          }
-      }
-   }
-   ```
+         ```
 
 
 ### 代码分割是什么，原理是什么
@@ -476,7 +538,7 @@ module.export = {
    2. 脚本懒加载，使初始化代码下载量更小
 2. 懒加载的方式
    1. CommonJS语法：require.ensure
-   2. ES6: 动态import (目前原生还没有支持，需要Babal翻译，使用插件@babel/plugin-syntax-dynamic-import)
+   2. ES6: 动态import (目前原生还没有支持，需要Babel翻译，使用插件@babel/plugin-syntax-dynamic-import)
    3. 配置
       ```
       module.export = {
@@ -488,16 +550,9 @@ module.export = {
 
 ### 使用动态import时，webpack是怎么工作的 || 动态import的实现原理
 
-### Tree-Shaking 是什么，原理是什么
-#### 摇树优化，
-1. 背景：一个模块中可能有多个方法，如果引用了其中一个方法，也需要将整个模块导入，并全部都打入到bundle中。
-2. 作用：Tree-Shaking 就是只把用到的方法打入到bundle中，剩余没有用到的死代码就算是被import了，但是没有执行，例如`import a...if(false){ a() }` 也会在webpack的Uglify阶段就删除掉。
-3. 使用：`optimization:{usedExports: true}`webpack的production模式默认支持了TreeShaking; dev环境下默认没有开启
-4. 原理：本质是先对代码静态分析，然后将没有用的删除掉，在使用 tree shaking 时必须有 ModuleConcatenationPlugin 的支持，production模式 默认启动了它，其他模式需要手动添加
-5. 注意：只支持ES6语法，不支持CommonJS.在一些项目中用到了babel，例如babel-loader或者@babel/preset-env中可能会讲代码翻译成CommonJs语法的，就会导致Tree-Shaking失败
 
-### Scope-Hoisting是什么，原理是什么
-#### 区域提升
+
+### Scope-Hoisting 区域提升，原理是什么
 1. 背景：webpack生产环境下默认打包出来的的格式是一个自执行函数,多个模块之间采用迭代的方式依次调用。如果模块很多，会产生多个作用域，占用内存较大。
 2. 作用：Scope-Hoisting 使多个模块之间的调用变成串联执行，都包裹在同一个作用域内
 3. 使用：production模式下默认支持,其他模式需要手动配置。
@@ -526,13 +581,92 @@ module.exports={
 
 ### 如何持久化缓存
 
+### Tree-Shaking 摇树优化
+1. 背景：一个模块中可能有多个方法，如果引用了其中一个方法，也需要将整个模块导入，并全部都打入到bundle中。
+2. 作用：Tree-Shaking 就是只把用到的方法打入到bundle中，剩余没有用到的死代码就算是被import了，但是没有执行，例如`import a...if(false){ a() }` 也会在webpack的Uglify阶段就删除掉。
+3. 原理：本质是先对代码静态分析，然后将没有用的删除掉，在使用 tree shaking 时必须有 ModuleConcatenationPlugin 的支持，production模式 默认启动了它，其他模式需要手动添加
+4. 注意：
+   1. 只支持ES6语法，不支持CommonJS.
+   2. 如果用了第三方资源，注意兼容性。有一些库例如babel-loader或者@babel/preset-env，会将代码翻译成CommonJs语法的，就会导致Tree-Shaking失败
+5. 使用：`optimization:{usedExports: true}`webpack的production模式默认支持了TreeShaking; dev环境下默认没有开启
+
 ### Webpack做前端性能优化的方向
-1. 图片优化
-2. 动态懒加载
-3. 减少代码量：提取公共代码、TreeShaking
-4. 多进程并行压缩代码
-5. 缓存
-6. 清楚console.log
+1. 解析优化
+   1. 减少解析工作量：配置中的module中，noParse 排除不参与解析的文件;include 白名单指定要转译的范围；exclude 黑名单排除不参与loader转译的文件
+   2. 实例：
+      ```
+      module.export = {
+         module:{
+            noParse: /node_modules\/(*\.js)/,  //排除解析
+            rules:[
+               {
+                  test: /.css$/,
+                  include: /src\/*/, //指定转译
+                  exclude: /node_modules\/(*\.js)/, //排除转译
+                  use: [
+                     'style-loader', 
+                     "css-loader", 
+                  ],
+               },
+            ]
+         }
+      }
+      ```
+2. 构建优化
+   1. 用一些插件例如 TerserPlugin 清除打印、调试、无用代码
+   2. 图片优化
+   3. Tree-Shaking
+   4. 多通道并行压缩代码 
+      1. fast-sass-loader 可以并行处理sass文件
+      2. tread-loader 多线程执行
+         1. 原理：维护一个worker线程池，每次webpack解析一个模块，thread-loader会将它及它的依赖分配给一个线程池
+         2. 注意：tread-loader必须写在所有loader的前面。由于loader是倒序调用的，也可以理解为要保证它在最后被调用
+         3. 用法：
+            ```
+            module.export = {
+               module:{
+                  rules:[
+                     {
+                        test: /.css$/,
+                        use: [
+                           'tread-loader', //务必放在第一个位置
+                           'style-loader', 
+                           "css-loader", 
+                        ],
+                     },
+                  ]
+               }
+            }
+            ```
+      3. happypack 多线程执行 用多进程实现多线程
+         1. 原理：由于js是单线程语言，webpack依托于Node.js也是单线程执行，所以想要并发执行，只能依赖于计算机系统的多进程实现多线程。但是在聊webpack打包时，只关注多线程这个概念。
+         2. 用法：
+            ```
+            const HappyPack = require('happypack');
+            // 根据CPU的数量创建一个线程池
+            const happyThreadPool = HappyPack.ThreadPool({
+               size: OscillatorNode.cpus().length
+            })
+            module.export = {
+               plugins:[
+                  new HappyPack({
+                     id:'jsx',
+                     treads: happyThreadPool, //自定义线程池
+                     loader:['babel-loader'], // 注意这个loader需要支持happypack
+                  })
+               ]
+               
+            }
+            ```
+   5. 预编译 
+3. 组装优化
+   1. splitChunks
+   2. 动态懒加载 
+4. 导出优化
+   1. 压缩 例如UglifyPlugin、TerserPlugin
+5. 缓存优化
+
+   
    
 ### 如何分析webpack的构建成果
 #### 
@@ -574,35 +708,10 @@ module.exports={
    }
    ```
 
-### 如何提高webpack构建速度
-1. 开启多进程/多实例构建
-   1. tread-loader:
-      1. 原理：每次webpack解析一个模块，thread-loader会将它及它的依赖分配给worker线程中
-      2. 用法：
-      ```
-      module: {
-         rules: [
-            {
-               loader: "tread-loader",
-               options: {
-                  workers: 3,
-               },
-            },
-            // 其他loader
-         ],
-      },
-      ```
-   2. parallel-webpack
-2. 其他 ❓❓❓❓❓❓
 
-### 如何减小webpack构建体积
-1. 多进程并行压缩代码
-
-### splitChunks 怎么用的
 
 ### webpack 打 polyfill有几种方式
 
-### 自己开发一个npm包，在此过程中需要注意哪些事情
 
 ### 如何配置一个文件夹下所有的js各为一个入口
 
@@ -618,7 +727,6 @@ module.exports={
 
 ### 编译的具体阶段 得看源码
 
-### tapable 相关
 
 ### split chunks 用了哪些函数实现 得看源码
 
@@ -626,16 +734,21 @@ module.exports={
 
 ### 其他打包工具 比如vite
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+### 自己实现一个webpack   简易实现：/tips-and-problems/src/webpack/custom_webpack/webpack.js
+1. webpack 读取入口文件，得到入口文件源码
+2. 使用@babel/parser包，将入口文件js源码解析，得到入口文件的AST树，传递给步骤3开始分析依赖。
+   1. 注意：webpack默认不理解import export关键字，需要在配置对象中指出是module类型的sourceType.
+3. 使用@babel/traverse包，根据文件的AST树，分析并找到该文件直接依赖的其他文件。
+   1. 参考 createAsset 方法
+   2. 主键ID:查找依赖关系时，每个导入的文件都有自己的相对路径。在不同的层级下，文件可以重名，所以相对路径字符串有可能是相同的。为了区别，就需要给每个文件设置了一个唯一编号id。
+4. 使用@babel/core包，将ES6代码转换成ES5代码
+   1. 参考 createAsset 方法
+   2. 注意：ES6的import export关键字将会被转化为CommonJs模块规范中的require module exports 等关键字
+5. 遍历创建关系图：把步骤3里找到的每一个文件，都重新执行3～5步骤，遍历互相依赖的所有文件，最终形成一个“图”。
+   1. 注意：没有使用递归法，而是用队列循环(队列概念是用数组实现的)
+   2. 参考 createGraph 方法
+   3. 在存储图关系的时候，用一个mapping对象存储 {相对路径: 对应的依赖包id} 之间的映射。这样就可以通过路径找到id，再用id找到对应的模块
+6. 把最终的ES5代码图打包为bundle.js
+   1. 参考 bundle 方法
+   2. 注意：输出一段一个立即执行函数的字符串代码 可以使用eval()执行
+   3. 重写require：为了快速得到依赖的文件的code和id, 使用数组存储对象需要先遍历对象求其mapping才能找到目标，很繁琐，所以新建了一个modules的映射对象，以id为健，以`[code,mapping]`为值。 转化后的原生Es5的require的入参是相对路径，但是webpack为了快速查找到模块代码，入参希望是模块id,像 require(0) 这样调用，所以需要适配器，对require进行重写，参考 localRequire 方法
