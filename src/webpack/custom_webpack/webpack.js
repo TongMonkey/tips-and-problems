@@ -61,7 +61,7 @@ function createGraph(entry){
 }
 
 //6.
-// 输出一个自执行函数；
+// 输出一个自执行函数的代码字符串
 function bundle(graph){
     // modules 对象 {id:[code,mapping]} 方便快速查找 
     // ${JSON.stringify(mod.mapping)} 是方便拼接字符串，直接就能变成 “k:v” 格式
@@ -98,8 +98,14 @@ function bundle(graph){
     return res;
 }
 
-const graph = createGraph('./index.js');
-const result = bundle(graph);
+//7.
+function bundleOutput(content,outputPath){
+    fs.writeFileSync(outputPath, content, 'utf-8');
+}
 
-// console.log(result);
-eval(result)
+const graph = createGraph('./index.js');
+const bundleContent = bundle(graph);
+const outputPath = path.join(__dirname, './dist', 'bundle.js')
+bundleOutput(bundleContent, outputPath);
+
+console.log(bundleContent);

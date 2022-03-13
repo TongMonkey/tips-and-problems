@@ -734,8 +734,8 @@ module.exports={
 
 ### 其他打包工具 比如vite
 
-### 自己实现一个webpack   简易实现：/tips-and-problems/src/webpack/custom_webpack/webpack.js
-1. webpack 读取入口文件，得到入口文件源码
+### 基于babel实现一个webpack   简易实现：/tips-and-problems/src/webpack/custom_webpack/webpack.js
+1. 使用node的fs模块读取入口文件，得到入口文件源码
 2. 使用@babel/parser包，将入口文件js源码解析，得到入口文件的AST树，传递给步骤3开始分析依赖。
    1. 注意：webpack默认不理解import export关键字，需要在配置对象中指出是module类型的sourceType.
 3. 使用@babel/traverse包，根据文件的AST树，分析并找到该文件直接依赖的其他文件。
@@ -752,3 +752,4 @@ module.exports={
    1. 参考 bundle 方法
    2. 注意：输出一段一个立即执行函数的字符串代码 可以使用eval()执行
    3. 重写require：为了快速得到依赖的文件的code和id, 使用数组存储对象需要先遍历对象求其mapping才能找到目标，很繁琐，所以新建了一个modules的映射对象，以id为健，以`[code,mapping]`为值。 转化后的原生Es5的require的入参是相对路径，但是webpack为了快速查找到模块代码，入参希望是模块id,像 require(0) 这样调用，所以需要适配器，对require进行重写，参考 localRequire 方法
+7. 把代码输出到打包文件中 默认 ./dist/bundle.js
