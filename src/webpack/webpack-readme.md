@@ -139,7 +139,7 @@
 2. loader是翻译器，将不支持的其他文件类型，转化为webpack可以处理的模块，在weboack读取后，添加到依赖关系图中
 3. 本质：loader是一个函数，入参是源文件，返回转换后的结果
 4. 常用Loader有什么：
-   1. babel-loader 转换ES6及更高版本或React等js特殊语法 使用babel的时候，需要搭配babel一起使用配置文件.babelrc或者babel.config.js文件
+   1. babel-loader 使webpack中能运行babel的插件。用来转换ES6及更高版本或React等js特殊语法 使用babel的时候，需要搭配babel一起使用配置文件.babelrc或者babel.config.js文件
    2. css-loader 加载和解析css文件(less-loader)
    3. postcss-loader 跟autoprefixer结合使用补充css前缀
       ```
@@ -233,8 +233,8 @@
    3. ExtractTextWebpackPlugin 将css代码从js文件里抽取成单独的.css文件
    4. autoprefixer插件 跟postcss-loader结合使用自动补齐css前缀
    5. CopyWebpackPlugin 将文件或者文件夹拷贝到构建的输出目录
-   6. HtmlWebpackPlugin 创建html模版文件用来承载输出bundle
-   7. UglifyjsWebpackPlugin 压缩打包后的bundle.js的体积 
+   6. UglifyjsWebpackPlugin 压缩打包后的bundle.js的体积 
+   7. HtmlWebpackPlugin 创建html模版文件用来承载输出bundle
    8. ZipWebpackPlugin 将打包的资源生成一个.zip包
    9. webpackBundleAnalyzer 打包资源分析器
 
@@ -734,22 +734,233 @@ module.exports={
 
 ### 其他打包工具 比如vite
 
-### 基于babel实现一个webpack   简易实现：/tips-and-problems/src/webpack/custom_webpack/webpack.js
-1. 使用node的fs模块读取入口文件，得到入口文件源码
-2. 使用@babel/parser包，将入口文件js源码解析，得到入口文件的AST树，传递给步骤3开始分析依赖。
-   1. 注意：webpack默认不理解import export关键字，需要在配置对象中指出是module类型的sourceType.
-3. 使用@babel/traverse包，根据文件的AST树，分析并找到该文件直接依赖的其他文件。
-   1. 参考 createAsset 方法
-   2. 主键ID:查找依赖关系时，每个导入的文件都有自己的相对路径。在不同的层级下，文件可以重名，所以相对路径字符串有可能是相同的。为了区别，就需要给每个文件设置了一个唯一编号id。
-4. 使用@babel/core包，将ES6代码转换成ES5代码
-   1. 参考 createAsset 方法
-   2. 注意：ES6的import export关键字将会被转化为CommonJs模块规范中的require module exports 等关键字
-5. 遍历创建关系图：把步骤3里找到的每一个文件，都重新执行3～5步骤，遍历互相依赖的所有文件，最终形成一个“图”。
-   1. 注意：没有使用递归法，而是用队列循环(队列概念是用数组实现的)
-   2. 参考 createGraph 方法
-   3. 在存储图关系的时候，用一个mapping对象存储 {相对路径: 对应的依赖包id} 之间的映射。这样就可以通过路径找到id，再用id找到对应的模块
-6. 把最终的ES5代码图打包为bundle.js
-   1. 参考 bundle 方法
-   2. 注意：输出一段一个立即执行函数的字符串代码 可以使用eval()执行
-   3. 重写require：为了快速得到依赖的文件的code和id, 使用数组存储对象需要先遍历对象求其mapping才能找到目标，很繁琐，所以新建了一个modules的映射对象，以id为健，以`[code,mapping]`为值。 转化后的原生Es5的require的入参是相对路径，但是webpack为了快速查找到模块代码，入参希望是模块id,像 require(0) 这样调用，所以需要适配器，对require进行重写，参考 localRequire 方法
-7. 把代码输出到打包文件中 默认 ./dist/bundle.js
+### 基于babel实现一个webpack   简易实现：/tips-and-problems/src/webpack/custom_webpack/*
+1. 文件位置： 
+   1. 基础版：能对js文件打包 commonjs版本在/tips-and-problems/src/webpack/custom_webpack/webpack_commonjs.js中  
+   2. 自定义loader版：es6版本在/tips-and-problems/src/webpack/custom_webpack/webpack_es6.js中
+2. 流程：用CommonJS模块规范写的 在/tips-and-problems/src/webpack/custom_webpack/webpack_commonjs.js
+   1. 使用node的fs模块读取入口文件，得到入口文件源码
+   2. 使用@babel/parser包，将入口文件js源码解析，得到入口文件的AST树，传递给步骤3开始分析依赖。
+      1. 注意：webpack默认不理解import export关键字，需要在配置对象中指出是module类型的sourceType.
+   3. 使用@babel/traverse包，根据文件的AST树，分析并找到该文件直接依赖的其他文件。
+      1. 参考 createAsset 方法
+      2. 主键ID:查找依赖关系时，每个导入的文件都有自己的相对路径。在不同的层级下，文件可以重名，所以相对路径字符串有可能是相同的。为了区别，就需要给每个文件设置了一个唯一编号id。
+   4. 使用@babel/core包，将ES6代码转换成ES5代码
+      1. 参考 createAsset 方法
+      2. 注意：ES6的import export关键字将会被转化为CommonJs模块规范中的require module exports 等关键字
+   5. 遍历创建关系图：把步骤3里找到的每一个文件，都重新执行3～5步骤，遍历互相依赖的所有文件，最终形成一个“图”。
+      1. 注意：没有使用递归法，而是用队列循环(队列概念是用数组实现的)
+      2. 参考 createGraph 方法
+      3. 在存储图关系的时候，用一个mapping对象存储 {相对路径: 对应的依赖包id} 之间的映射。这样就可以通过路径找到id，再用id找到对应的模块
+   6. 把最终的ES5代码图打包为bundle.js
+      1. 参考 bundle 方法
+      2. 注意：输出一段一个立即执行函数的字符串代码 可以使用eval()执行
+      3. 重写require：为了快速得到依赖的文件的code和id, 使用数组存储对象需要先遍历对象求其mapping才能找到目标，很繁琐，所以新建了一个modules的映射对象，以id为健，以`[code,mapping]`为值。 转化后的原生Es5的require的入参是相对路径，但是webpack为了快速查找到模块代码，入参希望是模块id,像 require(0) 这样调用，所以需要适配器，对require进行重写，参考 localRequire 方法
+   7. 把代码输出到打包文件中 默认 ./dist/bundle.js
+   8. #### 用loader处理非.js类型的文件。用ES6模块开发一个json-loader  es6版本在/tips-and-problems/src/webpack/custom_webpack/webpack_es6.js中
+   9. 换了模块规范开发，先进行一部分准备
+      1. 参考webpackConfig：添加一个配置文件，用来模拟webpack.config.js读取后的配置结果，指定解析.json文件的函数是jsonLoader
+      2. commonJs的require语法都改成了es6的import
+      3. __dirname 改成用 process.cwd()+filename
+   10. 定义loader
+       1.  参考 /tips-and-problems/src/webpack/custom_webpack/json-loader.js
+       2.  本质：就是一函数,入参是要翻译的文件源文本代码,经过一系列核心代码转换后，返回翻译过的代码文本
+       3.  模块化输出：输出代码要用 `export default code`
+       4.  链式传递：loader函数返回的代码作为下一个loader的基础代码
+       5.  注意：避免绝对路径
+   11. 执行loader
+       1. 调用顺序：loader按照书写顺序倒序调用
+   12. #### 用plugin增加一些打包行为。 
+       1.  基于 Tapable 库
+           1.  Tapable 的四种类型钩子
+               1.  基本钩子：只是简单的调用每个tap传进去的函数
+               2.  waterfall钩子：也会调用每个tap传进去的函数，不同的是，它会从每一个函数中返回的值作传递给下一个函数
+               3.  Bail钩子：允许更早的退出。当传进来的钩子里return了任何值，就停止其他函数的执行。
+               4.  loop钩子：如果某个函数有返回值，就会循环之前的事件
+           2. 三种注册方式： 
+              1. .tap 生产同步hook .tap(name, callback)
+              2. .tapAsync 生产带callback回调的异步hook .tapAsync(name,callback) 最后一个参数必须是回调函数
+              3. .tapPromise 生产带promise回调的异步hook .tapPromise(name) 必须返回一个promise实例
+           3. 与注册对应的三种消费方式：
+              1. .call 调用注册的同步hook
+              2. .callAsync
+              3. .promise
+           4. Tapable hooks 有三类API
+              1. 同步的：
+                 1. SyncHook,
+                    1. demo:tap
+                         ```
+                         const syncHk = new SyncHook(['name','age']);
+                         // 多处生产
+                         syncHk.tap('plugin1',(name,age)=>{
+                            console.log('plugin1', name, age);
+                         })
+                         syncHk.tap('plugin2',(name,age)=>{
+                            console.log('plugin2', name, age);
+                         })
+                         // 多处消费
+                         syncHk.call('jack',28);
+                         // 输出
+                         // 'plugin1', 'jack',28
+                         // 'plugin2', 'jack',28
+                         ```
+                 2. SyncBailHook,
+                 3. SyncWaterfallHook,
+                 4. SyncLoopHook
+              2. 异步并行的
+                 1. AsyncParallelHook,
+                    1. demo1:tapAsync
+                       ```
+                       const queue1 = new AsyncParallelHook(['name']);
+                       queue1.tapAsync('1', (name,cb)=>{
+                          setTimeout(()=>{
+                             console.log(name,1);
+                             cb('error', '1');
+                          },2000) //延迟2秒
+                       })
+                       queue1.tapAsync('2', (name,cb)=>{
+                          setTimeout(()=>{
+                             console.log(name,2);
+                             cb(null, '2');
+                          },1000) //延迟1秒
+                       })
+                       queue1.callAsync('tapAsync', (err,res)=>{
+                          console.log('err',err);
+                          console.log('res',res);
+                       })
+                       // 输出
+                       // tapAsync 2 当然是只延迟了1秒的先输出
+                       // tapAsync 1
+                       // 'err', 'error'
+                       // 'res', undefined
+                       ```
+                    2. demo2:tapPromise
+                       ```
+                       const queue2 = new AsyncParallelHook(['name']);
+                       queue2.tapPromise('1', (name)=>{
+                          return  new Promsie((resolve,reject)=>{
+                            setTimeout(()=>{
+                               console.log(name,1);
+                               resolve('1');
+                            },2000) //延迟2秒
+                          })
+                       })
+                       queue2.tapPromise('2', (name)=>{
+                          return  new Promsie((resolve,reject)=>{
+                            setTimeout(()=>{
+                               console.log(name,2);
+                               reject('2error');
+                            },1000) //延迟1秒
+                          })
+                       })
+                       queue2
+                       .promise('tapPromise')
+                       .then(res=>{
+                          console.log('res',res);
+                       })
+                       .catch(err=>{
+                          console.log('error',err);
+                       })
+                       // 如果一个是resolve 一个是reject 输出:
+                       // tapPromise 2 //延迟时间短的先输出
+                       // 'error' '2error' 
+                       // tapPromise 1
+
+                       // 如果两个都是resolve  输出:
+                       // tapPromise 2 //延迟时间短的先输出
+                       // tapPromise 1
+                       // 'res' undefined
+                       ```
+                 2. AsyncParallelBailHook
+              3. 异步串行的
+                 1. AsyncSeriesHook,
+                 2. AsyncSeriesBailHook,
+                 3. AsyncSeriesWaterfallHook 
+       2. 封装一个 plugin
+           1.  遵守的规则：
+               1.  一个 JavaScript 命名函数或 JavaScript 类。
+               2.  在插件函数的 prototype 上定义一个 apply 方法。
+               3.  指定一个绑定到 webpack 自身的事件钩子。
+               4.  处理 webpack 内部实例的特定数据。
+               5.  功能完成后调用 webpack 提供的回调。
+           2.  plugin的本质：plugin是满足上述要求的类的实例。
+           3.  plugin初始化：在安装插件时，这个原型上的apply方法会被webpack compiler调用一次。apply方法可以接收一个webpack compiler对象的引用，从而可以在回调函数中访问到compiler对象
+               1.  安装插件就是在webpack.config.js配置文件的 plugins:[new Plugin()]数组中添加该插件的实例
+               2.  compiler 是什么：是webpack的内置对象，plugin将会把各个事件钩子挂在到 webpack compiler 上去。
+                   1.  compiler的本质
+                       ```
+                       class Compiler extends Tapable{
+                          constrctor(){
+                             this.hooks = {
+                                compilation: new SyncHook(["compilation", "params"]),
+                                shouldEmit: new SyncBailHook(["compilation"]),
+                                make: new AsyncParallelHook(["compilation"]),
+                                done: new AsyncSeriesHook(["stats"]),
+                                // 等等 很多
+                             }
+                          }
+                       }
+                       const compiler = new Compiler();
+                       ```
+                   2.  挂载到compiler
+                        ```
+                        class MyPlugin {
+                           // 在插件函数的 prototype 上定义一个 `apply` 方法，以 compiler 为参数。
+                           apply(compiler) {
+                              // 指定一个挂载到 webpack 自身的事件钩子done。也给done用.tapAsync绑定了一个事件
+                              compiler.hooks.done.tapAsync('MyPlugin', (compilation, cb) => {});
+                           }
+                        }
+                        ```
+               3.  compilation是什么：   
+                     ```
+                     class HelloCompilationPlugin {
+                        apply(compiler) {
+                           // 指定一个挂载到 compilation 的钩子，回调函数的参数为 compilation 。
+                           compiler.hooks.compilation.tap('HelloCompilationPlugin', (compilation) => {
+                              // 现在可以通过 compilation 对象绑定各种钩子
+                              compilation.hooks.optimize.tap('HelloCompilationPlugin', () => {
+                                 console.log('资源已经优化完毕。');
+                              });
+                           });
+                        }
+                     }
+                     module.exports = HelloCompilationPlugin;
+                     ```   
+               4.  compiler 与 compilation的区别   参考代码：/webpack/lib/Compiler.js /webpack/lib/Compilation.js 源码
+                   1.  compiler 是 一开始就创建的，由webpack读取config文件之后创建，参与整个webpack的生命周期：before - run - beforeCompiler - complie - make - finishMake - afterComplier - done
+                   2.  compilation 是webpack到了compile编译阶段才创建的
+                   3.  区别：可以理解为compilation是为了完成核心编译阶段而单独取出来的一块逻辑，就像手脚，这样当源代码变化了，就可以直接用compilation来完成新的编译，而只有项目的配置改变了这种全局的东西才用conpiler来完成，就像一个人。 手脚属于人，手脚只用来做一部分的事，人来支配手脚
+                   4.  源码截取
+                        ```
+                        // 源码位置： /webpack/lib/Compiler.js
+                        compile(callback) {
+                           const params = this.newCompilationParams();
+                           this.hooks.beforeCompile.callAsync(params, err => {
+                              if (err) return callback(err);
+
+                              this.hooks.compile.call(params);
+
+                              const compilation = this.newCompilation(params);
+
+                              this.hooks.make.callAsync(compilation, err => {
+                                 if (err) return callback(err);
+
+                                 compilation.finish(err => {
+                                    if (err) return callback(err);
+
+                                    compilation.seal(err => {
+                                       if (err) return callback(err);
+
+                                       this.hooks.afterCompile.callAsync(compilation, err => {
+                                          if (err) return callback(err);
+
+                                          return callback(null, compilation);
+                                       });
+                                    });
+                                 });
+                              });
+                           });
+                        }
+                        ``` 
+                   5.  
