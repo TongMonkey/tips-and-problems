@@ -1461,10 +1461,67 @@ console.log(o[a]); //2
    6. JSON转Map:
 
 
-### Set 和 WeakSet 有什么区别
+### Set & WeakSet 
 1. 相同：都有add clear delete has forEach keys values entries方法
 2. 不同：Set有size属性 WeakSet没有
 3. 不同：Set引用的对象不能够被释放内存 WeakSet引用的对象，无论是普通对象还是Dom 都不会影响其垃圾回收
+4. 实现一个Set:
+```
+class Set {
+	constructor() {
+		this.items = {};
+	}
+	has(value) {
+		return this.items.hasOwnProperty(value);
+	}
+	add(value) {
+		if (!this.has(value)) {
+			this.items[value] = value;
+			return true;
+		} else {
+			return false;
+		}
+	}
+	remove(value) {
+		if (this.has(value)) {
+			delete this.items[value];
+			return true;
+		} else {
+			return false;
+		}
+	}
+	clear() {
+		this.items = {};
+	}
+	size() {
+		let count = 0;
+		for (let key in this.items) {
+			if (this.items.hasOwnProperty(key)) {
+				++count;
+			}
+		}
+		return count;
+	}
+	keys() {
+		let keys = [];
+		for (let key in this.items) {
+			if (this.items.hasOwnProperty(key)) {
+				keys.push(key);
+			}
+		}
+		return keys;
+	}
+	values() {
+		let values = [];
+		for (let value in this.items) {
+			if (this.items.hasOwnProperty(value)) {
+				values.push(this.items[value]);
+			}
+		}
+		return values;
+	}
+}
+```
 
 ### 写一个发布订阅模式的 on/emit/off
 7.1 如果需要把订阅者执行成功和失败的方法分开，需要怎么做
@@ -1579,7 +1636,7 @@ console.log(o[a]); //2
       }
       return result;
     }
-    console.log(flatten(a));  //  [1, 2, 3, 4，5]
+    console.log(flatten(arr));  //  [1, 2, 3, 4，5]
    ```
 2. 用reduce实现
    ```
@@ -1622,7 +1679,7 @@ console.log(o[a]); //2
     }
     console.log(flatten(arr)); //  [1, 2, 3, 4，5]
    ```
-6. Array.prototype.flat ES6的api
+6. Array.prototype.flat([depth]) 按照设置的深度递归遍历数组，拼接成新数组 depth可选 默认为1
    ```
    let arr = [1, [2, [3, 4]]];
     function flatten(arr) {
@@ -1639,12 +1696,17 @@ console.log(o[a]); //2
 ### 手写实现一下filter
 ### 手写实现一下every
 ### 手写实现一下some
-### 手写实现一下find/findIndex
 ### 手写实现一下indexOf
 
-### 实现一个sort 排序方式有5种，对应的各自复杂度是啥(手写五种排序算法)
+### 手写实现一下find/findIndex 手写二分查找+分析复杂度
+
+### 实现一个sort 手写五种排序算法+分析复杂度
+1. 冒泡排序
+2. 
+3. 快速排序
 
 ### 写代码 判断一个对象是否是循环引用对象
+
 ### 深拷贝/浅拷贝  
 参考链接https://blog.csdn.net/cc18868876837/article/details/114918262
 1. 深拷贝
@@ -1870,7 +1932,7 @@ const jsonp = ({ url, params, callbackName }) => {
 }
 ```
 
-### 实现一个Set
+
 
 ### 实现一个Map
 
