@@ -1,5 +1,6 @@
 ### ![网络面试题合集](assets/网络面试题合集.png)
 
+### https 的加解密过程
 
 ### https，为什么 https 可以防中间人攻击
 
@@ -276,24 +277,30 @@
    6. 地址编码：GET请求只能进行url编码，而POST支持多种编码方式。
    7. 参数字符：GET只接受ASCII字符的参数的数据类型，而POST没有限制
 
+### 浏览器缓存
+1. HTTP缓存：
+2. 内存缓存：
+3. Service Worker 缓存
+4. Push 缓存
+
 ### http 304 与 缓存
 1. 缓存存在哪：
-   1. 内存缓存 memory cache:退出程序时会清除；内存缓存读取更快；空间有限；一般将脚本、字体、图片放在内存中；
-   2. 磁盘缓存 disk cache: 退出后不清楚；磁盘没有内存读得快；磁盘空间比内存大；一般非脚本例如css文件会放在磁盘
-   3. 读取顺序：会先从内存中找对应的缓存，找不到再找磁盘，再找不到就向服务器重新请求
+   1. 浏览器缓存
+   2. 内存缓存 memory cache:退出程序时会清除；内存缓存读取更快；空间有限；一般将脚本、字体、图片放在内存中；
+   3. 磁盘缓存 disk cache: 退出后不清楚；磁盘没有内存读得快；磁盘空间比内存大；一般非脚本例如css文件会放在磁盘
+   4. 读取顺序：会先从内存中找对应的缓存，找不到再找磁盘，再找不到就向服务器重新请求
 2. 强缓存：
    1. 定义：浏览器在请求某一资源时，会先获取该资源缓存的header信息，判断是否命中强缓存。 强缓存即强制缓存，是由服务端返回的response header里设置了一系列配置，就是给资源设置个过期时间，客户端每次请求资源时只会看是否过期；只有在过期后，才会去询问服务器，未到时间之前，就算资源更新了，客户端也不会请求服务端
-   2. 相关header字段：优先级 Pragma > cache-control > espires
-      1. Pragma: no-cache 跟cache-control:no-cache一样，但是pragma没有明确的规范，所以不建议使用
-      2. expires: 值为一个绝对时间，表示在此时间之前，本地缓存有效，
-      3. cache-control: 
-         1. no-store：优先级最高 任何终端都不会缓存
+   2. 相关header字段：优先级 cache-control > espires
+      1. expires: 值为一个绝对时间，表示在此时间之前，本地缓存有效，
+      2. cache-control: 
+         1. no-store：优先级最高 任何终端都不会存储
          2. no-cache：一般如果你做了强缓存，只有在强缓存失效了才走协商缓存的，设置了no-cache就不会走强缓存了，每次请求都回询问服务端
          3. max-age:* 表示自请求开始后资源缓存的时长，单位为秒，所以经过计算的缓存失效时间是一个相对值。在此时间之前，请求同样资源会从缓存中拿，但如果用户手动F5刷新，就会想服务器发起http请求
          4. immutable：immutable表示该资源永远不变，但是实际上该资源并不是永远不变，它这么设置的意思是为了让用户在手动刷新页面的时候不要去请求服务器
          5. public:表示可以被浏览器和代理服务器缓存,代理服务器一般可用nginx来做
          6. private：只让客户端可以缓存该资源；代理服务器不缓存
-      4. cache-control多个值的组合：
+      3. cache-control多个值的组合：
          1. cache-control: max-age=xxxx，public
          客户端和代理服务器都可以缓存该资源；
          客户端在xxx秒的有效期内，如果有请求该资源的需求的话就直接读取缓存,statu code:200 ，如果用户做了刷新操作，就向服务器发起http请求
@@ -388,11 +395,19 @@
 
 
 
-### Cookie VS Session
+### Cookie VS Session VS LocalStorage
+https://www.cnblogs.com/l199616j/p/11195667.html
 1. session 保存在服务器端 识别用户
 2. cookie 保存在浏览器端 识别用户
-3. 关系：每次HTTP请求的时候，客户端都会发送相应的Cookie信息到服务端。实际上大多数的应用都是用 Cookie 来实现Session跟踪的，第一次创建Session的时候，服务端会在HTTP协议中告诉客户端，需要在 Cookie 里面记录一个Session ID，以后每次请求把这个会话ID发送到服务器，我就知道你是谁了。有人问，如果客户端的浏览器禁用了 Cookie 怎么办？一般这种情况下，会使用一种叫做URL重写的技术来进行会话跟踪，即每次HTTP交互，URL后面都会被附加上一个诸如 sid=xxxxx 这样的参数，服务端据此来识别用户。
+3. Cookie VS Session关系：每次HTTP请求的时候，客户端都会发送相应的Cookie信息到服务端。实际上大多数的应用都是用 Cookie 来实现Session跟踪的，第一次创建Session的时候，服务端会在HTTP协议中告诉客户端，需要在 Cookie 里面记录一个Session ID，以后每次请求把这个会话ID发送到服务器，我就知道你是谁了。有人问，如果客户端的浏览器禁用了 Cookie 怎么办？一般这种情况下，会使用一种叫做URL重写的技术来进行会话跟踪，即每次HTTP交互，URL后面都会被附加上一个诸如 sid=xxxxx 这样的参数，服务端据此来识别用户。
 
+
+
+
+
+### 打开两个页面，一个对localstorage修改，怎么让另一个事实监听
+1. 同源的 window.addEventListener('storage', resolveFunction)
+2. 不同源的 可以用 messageChannel实现
 
 ### 常用的协议及默认端口号
 1. http 80
@@ -719,3 +734,6 @@
 第四种方式：window.postMessage；window.postMessages是html5中实现跨域访问的一种新方式，可以使用它来向其它的window对象发送消息，无论这个window对象是属于同源或不同源。
 第五种方式：CORS；CORS背后的基本思想，就是使用自定义的HTTP头部让浏览器与服务器进行沟通，从而决定请求或响应是应该成功还是应该失败。
 第六种方式：Web Sockets；web sockets原理：在JS创建了web socket之后，会有一个HTTP请求发送到浏览器以发起连接。取得服务器响应后，建立的连接会使用HTTP升级从HTTP协议交换为web sockt协议。
+
+
+### 大文件分片上传原理 断点续传原理

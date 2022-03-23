@@ -18,29 +18,44 @@
 
 ### 如何做前端预渲染
 
-### 怎么做能让项目更好
-
 ### 埋点+监控方案
 
+
 ### 前端优化
-参考：https://segmentfault.com/a/1190000018392559
-https://segmentfault.com/a/1190000018828048
-https://blog.csdn.net/weixin_44368963/article/details/108264278
+#### 参考：
+   1. https://segmentfault.com/a/1190000018392559
+   https://segmentfault.com/a/1190000018828048
+   https://blog.csdn.net/weixin_44368963/article/details/108264278
+   2. https://www.jianshu.com/p/a32b890c29b1
 1. http
    1. URL后面加反斜杠/ 减少服务器查询文件的过程，直接去查询目录
    2. dns预解析：最关键的连接使用 preconnect，而其他的则可以用 dns-prefetch
       1. dns-prefetch预解析：针对跨域域名的DNS查找有效 `<link rel="dns-prefetch" href="https://fonts.googleapis.com/"> ` 注意，多页面重复的DNS预解析会增加DNS查询次数，dsn-prefetch需慎用
       2. preconnect预连接: 针对HTTPS协议的跨域域名有效。因为如果站点是通过HTTPS服务的，则此过程包括DNS解析，建立TCP连接以及执行TLS握手。注意，提前链接所有请求并不合理，
       3. 联合上述两个：最关键的连接使用 preconnect，而其他的则可以用 dns-prefetch； dns-prefetch 可以作为不支持预连接的浏览器的后备选择，同时配置它们两即可
-      ```
-      <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
-      <link rel="dns-prefetch" href="https://fonts.gstatic.com/">
-      ```
-   3. 链接预解析：prefetch  preload  
-         1. `<link ref="preload" as="style" crossorigin href="">` preload会在不阻塞onload事件的前提下，下载资源。中途跳转页面preload中断
-         2. `<link ref="prefetch" as="style" crossorigin href="">` prefetch告诉浏览器我未来或者下个页面可能要使用的资源，由浏览器自己控制在空闲时下载。中途跳转页面prefetch可同步进行不中断，在新页面中继续用下载到的资源。
-         3. 上述的as可以控制资源加载的优先级，跟随设置as设置的资源类型的优先级，例如as="style"的优先级就高于as="script"的优先级。如果不设置，就是个普通的异步，建议设置
-         4. 建议始终设置crossorigin,否则可能引起两次请求
+         ```
+         <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+         <link rel="dns-prefetch" href="https://fonts.gstatic.com/">
+         ```
+   3. 链接预解析：prefetch  preload  prerender
+         1. `<link ref="preload" as="style" crossorigin href="">` preload类似一个声明式的fetch，会在不阻塞onload事件的前提下，要求浏览器下载资源，浏览器会将该资源缓存在内存中。中途跳转页面preload中断。使用了preload获取的资源最好能在页面利用上，否则浏览器会提醒做了无用功 for nothing。
+            1. 监测preload是否被支持
+               ```
+               const preloadSupported = () => { 
+                  const link = document.createElement('link'); 
+                  const relList = link.relList; 
+                  if (!relList || !relList.supports) return false; 
+                  return relList.supports('preload'); 
+               };
+               ```
+            2. 将加载到的资源设置立即生效，比如css:
+               ```
+               <link rel="preload" href="style.css" onload="this.rel=stylesheet">
+               ```
+         2. `<link ref="prefetch" as="style" crossorigin href="">` prefetch告诉浏览器我未来或者下个页面可能要使用的资源，把主动权交给浏览器，由浏览器自己控制在空闲时下载，并且缓存在内存中5分钟。中途跳转页面prefetch可同步进行不中断，在新页面中继续用下载到的资源。
+         3. 还有个ref的值为prerender 表示预渲染，但是兼容性特别差，firefox safari 都不支持
+         4. 上述的as可以控制资源加载的优先级，跟随设置as设置的资源类型的优先级，例如as="style"的优先级就高于as="script"的优先级。如果不设置，就是个普通的异步，建议设置。as的值可以有 style image font script 等
+         5. 建议始终设置crossorigin,否则可能引起两次请求
    4. CDN静态资源服务器：
    5. 减少请求：资源合并、promise.all并发
    6. 资源体积：webpack打包压缩 gzip压缩
@@ -107,29 +122,44 @@ https://blog.csdn.net/weixin_44368963/article/details/108264278
    2. 页面预渲染 ？？？
 9. 精简代码: 
    1. 提取公共代码： webpack的splitChunk插件
-   2. 剥离冗余代码：利用loader、tree-Shaking等
+   2. 剥离冗余代码：缩小loader的应用范围，避免不必要的转译；TreeShaking摇树优化
 10. Webview 优化
     1. 打开webview的同时并行加载页面数据 ？？？
 
 
 ### 项目性能监控指标 都有哪些
-1. 分析工具：lighthouse web-vitals
-2. 底层API：performance
-3. 白屏时间：指的是从输入网址， 到页面开始显示内容的时间
-   ```
-   // 代码放在<head></head>里
-   <script>
-      let t = + new Date() - performance.timing.navigationStart
-   </script>
-   ```
-4. 首屏时间：指从输入网址， 到首屏页面内容渲染完毕的时间。
-   ```
-   <script>
-      window.onload = () =>{
-         let t = + new Date() - performance.timing.navigationStart;
-      }
-   </script>
-   ```
+1. 分析工具：Chrome-devTools 中 lighthouse web-vitals performance 新加入了一个recorder功能
+2. 分析方向：网络层面 + 渲染层面，细分下来就是 时间层面 + 体积层面
+3. 渲染耗时：
+   1. 白屏时间：指的是从输入网址， 到页面开始显示内容的时间
+      ```
+      // 代码放在<head></head>里
+      <script>
+         let t = + new Date() - performance.timing.navigationStart
+      </script>
+      ```
+   2. 首屏时间：指从输入网址， 到首屏页面内容渲染完毕的时间。放在 load 事件里监听
+      ```
+      <script>
+         window.addEventListener('load',() =>{
+            let t = + new Date() - performance.timing.navigationStart;
+         })
+      </script>
+      ```
+   3. `FP (First Paint) 首次绘制 `: 标记浏览器渲染任何在视觉上不同于导航前屏幕内容之内容的时间点.
+   4. `FCP (First Contentful Paint) 首次内容绘制 ` 标记浏览器渲染来自 DOM 第一位内容的时间点，该内容可能是文本、图像、SVG 甚至 元素.
+   5. `LCP (Largest Contentful Paint)` 最大内容渲染 代表在viewport中最大的页面元素加载的时间. LCP的数据会通过PerformanceEntry对象记录, 每次出现更大的内容渲染, 则会产生一个新的PerformanceEntry对象
+   6. `DCL (DomContentloaded) `: 当 HTML 文档被完全加载和解析完成之后，DOMContentLoaded 事件被触发，无需等待样式表、图像和子框架的完成加载.
+   7. `L (onLoad)`：当依赖的资源, 全部加载完毕之后才会触发
+   8. `FMP(First Meaningful Paint) 首次有效绘制`：主要元素的首次绘制时间
+   9.  `TTI (Time to Interactive) 可交互时间` : Time to interactive is the amount of time it takes for the page to become fully interactive.
+   10. `TBT (Total Blocking Time) 页面阻塞总时长`: js线程超50ms之后的task都会被记录视作阻塞时间，某进程主线程运行时间的总和中，阻塞task的时间总长就是TBT
+       1.  ![TBT页面阻塞总时长](assets/TBT页面阻塞总时长.png)
+   11. `FID (First Input Delay) 首次输入延迟`: 指标衡量的是从用户首次与您的网站进行交互（即当他们单击链接，点击按钮等）到浏览器实际能够访问之间的时间
+       1. ![FID首次输入延迟](assets/FID首次输入延迟.png
+   12. `SI (Speed Index)`: 页面可见速度 Speed Index shows how quickly the contents of a page are visibly populated.
+   13. `CLS (Cumulative Layout Shift)` Cumulative Layout Shift measures the movement of visible elements within the viewport.
+
 
 ### debug 的方式
 1. 先判断是前端问题还是后端问题。可以查看接口是否正确、根据报错信息提示 在network面板搜索关键字 
@@ -148,3 +178,38 @@ https://blog.csdn.net/weixin_44368963/article/details/108264278
 5. 打断点 breakpoints
    1. 直接在文件行数上可以打
    2. 在代码中也可以通过 单击右键-add if breakpoints -写条件判断语句 来设置条件断点
+
+
+### EsBuild 打包方式
+1. 使用go语言开发
+2. 天然支持多线程
+3. 功能节制：
+   1. 支持 
+      ```
+      js、ts、jsx、css、json、文本、图片等资源
+      增量更新
+      Sourcemap
+      开发服务器支持
+      代码压缩
+      Code split
+      Tree shaking
+      插件支持
+      ```
+   2. 不支持
+      ```
+      Elm, Svelte, Vue, Angular 等代码文件格式
+      Ts 类型检查
+      AST 相关操作 API
+      Hot Module Replace
+      ```
+4. 非定制：Esbuild 起了个头，选择完全重写整套编译流程所需要用到的所有工具。而不是像webpack利用了babel Tapable等各种第三方库来完成打包
+5. 数据结构一致性：在打包的全程都是同一种数据类型。不像webpack一样，从code转化成ast，再翻译成更低版本的ast，再转回code...
+6. 性能第一，但不适合直接用于生产环境，只适合于作为其他功能的一个基础依赖
+   
+
+### 怎么部署项目
+1. 方案：
+   1. 针对 html 文件：不开启缓存，把 html 放到自己的服务器上，关闭服务器的缓存，自己的服务器只提供 html 文件和数据接口
+   2. 针对静态的 js，css，图片等文件在名字后面加 hash 值。开启 cdn 和缓存，将静态资源上传到 cdn 服务商，对资源开启长期缓存，因为名字不同不会被覆盖，老用户还能用。
+   3. 每次发布更新的时候，先将静态资源(js, css, img) 传到 cdn 服务上，然后再上传 html 文件，这样既保证了老用户能否正常访问，又能让新用户看到新的页面。
+2. 缓存：可以在 http 响应头加上 Cache-control 或 Expires 字段来设置缓存

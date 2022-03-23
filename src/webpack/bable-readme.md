@@ -58,9 +58,8 @@ babel-polyfill是对Es6+所有特性的全部集合的引入，全部添加到�
 plugin是js片段，是转换规则； preset是提前预设好的一组plugins。 
 #### 优先级/执行顺序：
 1. 先插件再预设 
-2. 插件是顺序执行【A，B】先执行A再执行B
+2. 插件是顺序执行【A，B】先执行A再执行B   ？？
 3. 预设是倒序执行【A，B】先执行B再执行A。
 
 
-
-### babel的核心原理 得看源码 比如 core.js
+### @babel/core @babel/traverse 等核心模块都做了什么，原理，源码

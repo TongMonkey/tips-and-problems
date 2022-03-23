@@ -9,8 +9,11 @@
 
 ### 如果让你做一个动画，一个地球本身在自转，外面有个飞机围着它转，飞机的螺旋桨自己也在转，有哪些需要考虑的点
 
-### CSS 实现一个扇形
-
+### CSS 实现一个扇形 transform: skew
+1. 以物体的中心点为origin
+2. 坐标轴跟普通坐标轴是不同的，计算机上 向右侧方向的是y轴，向下方向的是x轴
+3. skew(x偏移量, y偏移量)
+4. ![skew](assets/skew.png)
 
 ### 如果实现一个三栏布局，需要三栏占同样的宽度，放多个元素时会自动换行，有哪些做法
 
@@ -159,12 +162,7 @@ padding和margin的百分比，无论是垂直方向还是水平方向，都是�
 
 ### vh单位
 
-### transform: skew的用法
-![skew](assets/skew.png)
-1. 以物体的中心点为origin
-2. 坐标轴跟普通坐标轴是不同的，计算机上 向右侧方向的是y轴，向下方向的是x轴
-3. skew(x偏移量, y偏移量)
-4. 
+
 ### flex:1 是什么意思
 1. flex属性 是 flex-grow、flex-shrink、flex-basis三个属性的缩写。
 2. flex-grow：定义项目的的放大比例； 
@@ -191,3 +189,60 @@ padding和margin的百分比，无论是垂直方向还是水平方向，都是�
 
 
 ### css 导入 import 和 link 的区别
+
+### css选择器
+1. :root 根选择器匹配文档根元素。在 HTML 中，根元素始终是 html 元素。
+2. * 所有元素
+3. .类名
+   1. .classA.classB: 同时有 classA classB 两个类的元素
+   2. .classA .classB: 选择 类名 classA后面 所有类名为 classB 的元素
+4. ‘#id名’
+5. element 就是Html原生的标签
+6. elementA.classA 选择类为classA的标签A
+7. element,element: 逗号表示 和 
+8. elementA elementB 选择标签A`内部`的所有标签B
+9. elementA>elementB 选择父亲是标签A的元素中的标签B, 一层亲父子
+10. elementA+elementB 表示跟紧标签A的首个标签B
+11. `[attribute]` 带有对应属性的所有元素 也可以`[attribute]=value`
+12. ...还有超多
+
+### css中的变量
+1. sass： 用 $ 声明
+2. less： 用 @ 声明
+3. 原生css： 
+   1. 用 -- 声明 变量名大小写敏感
+      ```
+      body{
+         --color:red;
+         --Color:blue;
+         --font-stack: fangsong;
+      }
+      ```
+   2. 用 var(变量, (可选)默认值) 读取变量，只能做属性值，不能做属性名
+      ```
+      div {
+         color: var(--color,);
+         color: var(--Color,#545454); //第二个参数可选 //第二个参数不处理内部的逗号或空格，都视作参数的一部分
+         --logo-text: var(--font-stack); //读取后用于声明新的变量
+         <!-- var(--font-stack):'';  //Error:不能做属性名 -->
+      }
+      ```
+   3. 变量类型
+      1. 字符串类型：支持拼接
+         ```
+         div {
+            --bar: 'hello';
+            --foo: var(--bar)' world'; // ‘hello word’
+         }
+         ```
+      2. 数值类型： 不能直接与单位连用，必须用calc()函数
+         ```
+         div {
+            --gap: 20;
+            <!-- margin-top: var(--gap)px;  //无效 -->
+            margin-top: calc(var(--gap) * 1px);
+         }
+         ``` 
+   4. 作用域：
+      1. 变量的作用域，就是它所在的选择器的有效范围。所以全局的变量通常放在根元素 :root里面，确保任何选择器都可以读取它们。
+      2. 同一个css变量，可以在多处声明。读取的时候，优先级最高的生效。跟 CSS 本身的样式层叠规则是一致的。与JS的作用域不同，注意不要混淆。

@@ -13,7 +13,6 @@ let ID = 0;
 const webpackConfig = {
   module: {
     rules: [
-      { test: /\.css$/, use: ["style-laoder", "css-loader"] },
       //11.
       { test: /\.json$/, use: jsonLoader },
     ],

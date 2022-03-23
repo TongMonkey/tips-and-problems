@@ -30,7 +30,7 @@ function createAsset(filename) {
   //4.
   // 将ES6代码转换成ES5代码 返回的是一个对象，只关注里面的code属性引用的代码源码
   const { code } = babel.transformFromAstSync(ast, null, {
-    presets: ["@babel/preset-env"],
+    presets: ["@babel/preset-env"], //@babel/preset-env里预设了一组转换的规则，覆盖基本的Es6/Es5转换。
   });
 
   let id = ID++;

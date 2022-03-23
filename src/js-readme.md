@@ -1,9 +1,15 @@
 ## Javascript
-## 参考面经
+参考面经
 `https://mp.weixin.qq.com/s/o9v3q88Ga8shNh1RyZRetQ`
 
 
-
+### 用 es5 实现 const
+1. const的特征：
+   1. 不可更改：就连 const a = 123; a=a或者 a = 123. 只要是重新赋值的语法就不行 TypeError: Assignment to constant variable.
+   2. 块级作用域
+   3. 暂时性死区
+   4. 不是挂载在全局环境对象window上，
+2. 实现：??
 
 ### JS 中的基本数据类型 及 判断方式
 1. 原始类型 与 原始类型的包装类
@@ -104,57 +110,77 @@
          1. c instanceof A; //true
          2. A.prototype.isPrototypeOf(c); //true
    3. 易错点： typeof function(){} == typeof class A{}; //true 都是'function'
-   4. 给对象添加属性时，用到一个对象描述符 descriptor 有4个属性 + 2个方法
-      1. configurable：当且仅当该属性的 configurable 键值为 true 时，该属性的描述符才能够被改变，同时该属性也能从对应的对象上被删除。默认为 false。
-      2. enumerable：当且仅当该属性的 enumerable 键值为 true 时，该属性才会出现在对象的枚举属性中。默认为 false
-      3. writable：当且仅当该属性的 writable 键值为 true 时，属性的值，也就是上面的 value，才能被赋值运算符改变。默认为 false。
-      4. value：该属性对应的值。可以是任何有效的 JavaScript 值（数值，对象，函数等）。默认为 undefined。
-      5. get(){} 当读取该属性时，会调用get方法。 函数默认为 undefined。
-      6. set(v){} 当给该属性赋值，会调用set方法。 函数默认为 undefined。
-
-
-### Object
-1. Object.defineProperty
-   1. 定义：定义对象的某个属性 Object.defineProperty(target, property, descriptor);
-   2. 缺点：不能监听数组的下标变化，怎么解决:可以用Proxy
-   3. 代码：
-      ```
-      var Obj = {}
-      Object.defineProperty(Obj, 'a', {
-          get: function () {
-              console.log('get');
-              return v
-          },
-          set: function (val) {
-              console.log('set');
-              v = val
-          }
-      });
-      Obj.a = [] 		// set
-      Obj.a.push('1') 	// get（缺点,没存进去）下标问题
-      Obj.a[0] = 1 	// get（缺点,没存进去）
-      Obj.a.pop(1) 	// get（缺点,没存进去）
-      Obj.a = [1, 2, 3] // set
-      ============================================================
-      var arr = [];
-      var p = new Proxy(arr, {
-          get: (target, key) => {
-              console.log('get')
-              return key in target ? target[key] : undefined
-          },
-          set: (target, key, value) => {
-              console.log('set')
-              target[key] = value
-              return true
-          }
-      })
-      p.push(1);  // 此时浏览器会打印 get get set set 各自被调用了两次，分别是：get数组的push方法 get数组的length set数组元素值 set数组长度
-      ```
-2. 遍历Object
-   1. for in 对象自身+继承的 不包含Symbol属性的 只包含可枚举属性 的属性
-   2. Object.keys()  返回一个数组，元素为：对象自身的 不包含Symbol属性的 只包含可枚举属性 的属性
-   3. Object.getOwnPropertyNames(obj) 返回一个数组，元素为：对象自身的 不包含Symbol属性的 无论是否可枚举 的属性
-   4. Reflect.ownKeys(obj) 返回一个数组，元素为：对象自身的，无论是否为Symbol的 无论是否可枚举 的属性
+   4. 对象的 属性描述符+存取方法
+      1. 定义：给对象添加属性时，用到一个对象描述符 descriptor 有4个属性 + 2个方法
+         1. descriptor 有4个属性 可用`Object.getOwnPropertyDescriptor( obj, "property-name" )`获取
+            1. configurable：当且仅当该属性的 configurable 键值为 true 时，该属性的描述符才能够被改变，同时该属性也能从对应的对象上被删除。默认为 false。
+            2. enumerable：当且仅当该属性的 enumerable 键值为 true 时，该属性才会出现在对象的枚举属性中。默认为 false
+            3. writable：当且仅当该属性的 writable 键值为 true 时，属性的值，也就是上面的 value，才能被赋值运算符改变。默认为 false。
+            4. value：该属性对应的值。可以是任何有效的 JavaScript 值（数值，对象，函数等）。默认为 undefined。
+         2. 2个方法
+            1. get(){} 当读取该属性时，会调用get方法。 函数默认为 undefined。
+            2. !!! set(v){} 当给该属性赋值，会调用set方法。 函数默认为 undefined。
+      2. 注意：
+         1. 创建属性时，configurable enumerable writable 默认都是false。但是当 obj = {..} 这样直接创建时，这三个属性都是true
+         2. 当设置了set get方法 就不能设置 writabe value了 互斥
+   5. 相关方法：
+      1. Object.defineProperty
+         1. 定义：定义对象的某个属性 Object.defineProperty(target, property, descriptor); 
+         2. 注意：descriptor里的属性如果没有手动设置为true,默认为false
+         3. 缺点：不能监听数组的下标变化，怎么解决:可以用Proxy
+            ```
+            var Obj = {}
+            Object.defineProperty(Obj, 'a', {
+                get: function () {
+                    console.log('get');
+                    return v
+                },
+                set: function (val) {
+                    console.log('set');
+                    v = val
+                }
+            });
+            Obj.a = [] 		// set
+            Obj.a.push('1') 	// get（缺点,没存进去）下标问题
+            Obj.a[0] = 1 	// get（缺点,没存进去）
+            Obj.a.pop(1) 	// get（缺点,没存进去）
+            Obj.a = [1, 2, 3] // set
+            ============================================================
+            var arr = [];
+            var p = new Proxy(arr, {
+                get: (target, key) => {
+                    console.log('get')
+                    return key in target ? target[key] : undefined
+                },
+                set: (target, key, value) => {
+                    console.log('set')
+                    target[key] = value
+                    return true
+                }
+            })
+            p.push(1);  // 此时浏览器会打印 get get set set 各自被调用了两次，分别是：get数组的push方法 get数组的length set数组元素值 set数组长度
+            ```
+      2. Object.defineProperties(target, descriptorObject);
+         1. 注意：descriptor里的属性如果没有手动设置为true,默认为false
+          ```
+          var obj = {};
+          Object.defineProperties(obj, {
+            'property1': {
+              value: true,
+              writable: true
+            },
+            'property2': {
+              value: 'Hello',
+              writable: false
+            }
+            // etc. etc.
+          });
+          ```
+      3. 遍历Object
+         1. for in 对象自身+继承的 不包含Symbol属性的 只包含可枚举属性 的属性
+         2. Object.keys()  返回一个数组，元素为：对象自身的 不包含Symbol属性的 只包含可枚举属性 的属性
+         3. Object.getOwnPropertyNames(obj) 返回一个数组，元素为：对象自身的 不包含Symbol属性的 无论是否可枚举 的属性
+         4. Reflect.ownKeys(obj) 返回一个数组，元素为：对象自身的，无论是否为Symbol的 无论是否可枚举 的属性
 
 
 
@@ -344,13 +370,19 @@ p1.constructor === Person; //true
       ```
    2. ![浏览器里查找变量的顺序](/src/assets/调用栈查找变量顺序.png) 
 5. 闭包：
-   1. 定义：根据词法作用域的规则，内部函数总是可以访问外部函数中的变量。当通过调用一个外部函数返回一个内部函数后，即使该外部函数已经执行结束了，但是内部函数引用的属于外部函数的变量依然保存在内存中，我们就把这些变量的集合称为闭包。
+   1. 定义：根据词法作用域的规则，内部函数总是可以访问外部函数中的变量。当通过调用一个外部函数返回一个内部函数后，即使该外部函数已经执行结束了，但是内部函数引用的属于外部函数的自由变量依然保存在内存中，我们就把这些变量的集合称为闭包。
    2. 闭包是怎么产生的：(前提：变量在内存中，普通类型放在栈中，引用类型放在堆中)
       1. 当JS引擎执行一个外部函数，先编译它，创建一个空的执行上下文
       2. 在编译代码块过程中，遇到内部函数时，会对内部函数做一次“快速词法扫描”，这个过程就是预解析，预解析的作用是发现语法错误+发现闭包。如果发现该内部函数引用了外部函数的变量，由于这是内部函数引用外部函数的变量，所以JS引擎会判断这是一个闭包，于是在堆空间里创建一个闭包对象Closure，里面只保存被内部函数引用的外部函数的变量
       3. 内部函数对闭包在堆中的地址进行引用，以后当内部函数被调用的时候，在内部函数创建的执行上下文中，可以通过对闭包的引用地址，到堆中找到闭包，从而查找其中变量
       4. 外部函数执行完毕后，其执行上下文被弹出调用栈并销毁。调用栈在内存的栈中、而闭包被保存在内存的堆中。所以闭包并没有随所处的执行上下文一起被销毁。
    3. 如果有闭包，怎么查找作用域链：当前执行上下文 => 闭包 => ...更外层执行上下文
+   4. 产生闭包的方式
+      1. 捕获了外部自由变量的函数被调用时。
+      2. setTimeout(cb,timeout)；cb里引用外部变量
+      3. setInternal 同上
+      4. IIFE立即执行函数
+   5. 怎么清除闭包：把对外部自由变量的引用切断。ref = null;
 
 ### 变量提升的原理
 1. 在编译过程中，将var声明的变量、function声明的函数 放进变量环境；此时，变量的值都只是声明，所以值为undefined,函数会整体被提升；只有在执行可执行代码时才会给变量赋值。这种能在代码顶层访问到的效果就是变量提升/函数提升
@@ -1066,7 +1098,7 @@ plus(1)(2) // 输出 4
         console.log(results); // [-1, Infinity]
       });
     ```
-### Promise.prototype上的方法：
+### Promise.prototype上的方法：,
 1. Promise.prototype.then()
    1. 是在原型对象上的方法,可能有两个函数参数，第一个处理resolve的情况， 第二个可选，处理异常
    2. .then()返回一个新的Promise实例,不是之前那个
@@ -1293,12 +1325,19 @@ console.log(o[a]); //2
       }
     }
    ```
-4. 
+
+### 大数相加问题
+1. 原因：js的Number是64-bits的双精度数值。在2^53即以内的整数都是精确的，但是超过了这个范围就会出现精度丢失
+2. 解决：
+   1. 转化成字符串，按位相加，逢10进位
 
 
 ### 0.1 + 0.2 为什么不等于 0.3，为什么会有误差，如何解决 浮点数问题
 1. 问题原因：浮点的误差来自十进制小数跟二进制小数之间的转换，有些十进制的小数 变成 二进制的小数时，成了无限循环的小数了，例如，十进制 0.2 换算为二进制：0.0011 0011 0011 0011 ...... (0011 无限循环)。 取舍后精度就会不准确
-2. 解决：例如 10.1元，可以表示成 101毛， 尽量用整数换算
+2. 解决：
+   1. 将小数转换成整数计算：例如 10.1元，可以表示成 101毛， 尽量用整数换算
+   2. 如果一定要小数，就约定小数转化为二进制后的数位，例如 (0.1+0.2).toFixed(12) == 0.3;// true
+   3. 
 
 
 ### 大数加法 并打成独立npm工具包
@@ -1337,21 +1376,24 @@ console.log(o[a]); //2
    1. 加载时间/导入时机：
       1. commonJS require 运行时加载，只有在运行时才能加载整个对象，取用其中的方法或属性
       2. es6 import 静态加载，在编译时就能确定模块的依赖关系
-   2. export输出的类型 export VS module.exports
-      1. commonJS 模块是对象，使用属性或方法就是查找对象的属性或方法 module.exports = {*}
-      2. es6 模块不是对象，是通过export命令指定输出的代码，再通过import输入 export default *
+   2. export输出的类型 
+      1. commonJS 单个值导出，导出一个对象，使用属性或方法就是查找对象的属性或方法 module.exports = {*} 
+      2. es6 模块可以导出多个值，导出的不是对象
    3. export输出的内容
-      1. commonJS 输出的是值的缓存，不存在动态实时更更新
+      1. commonJS 输出的是值的缓存/拷贝，不存在动态实时更更新
       2. es6 输出值的引用，接口与其值是动态绑定的关系，通过接口可以取得实时值 (export 是es6 对外的接口，必须与模块内部的‘变量’建立一一对应的关系，不能直接输出值例如 export 1)
-   4. 书写顺序的影响
-      1. commonJS 模块加载的顺序，按照其在代码中出现的顺序
-      2. es6 import命令具有提升效果，会提升到整个模块的头部首先执行
+   4. 是否提升：
+      1. es6 import命令具有提升效果，不管在哪import的模块，都会提升到整个模块的头部首先执行
+      2. commonJS 模块加载的顺序，按照其在代码中出现的顺序，不会提升
    5. 多次导入语句
       1. commonJS 多次require，会将第一次执行的结果缓存起来，后面执行都是直接取用缓存，如果想再次执行需要先清缓存
-      2. es6 多次imoort 只会执行一次，不会执行多次
-   6.  import 语法
-      3. commonJS 可以使用表达式和变量
-      4. import 不能使用在运行时才能得到结果的语法结构，例如表达式和变量
+      2. es6模块是单例的。多次import 只会加载一次，不会多次加载
+   6. 导入语法：
+      1. commonJS 可以使用表达式和变量
+      2. import 不能使用在运行时才能得到结果的语法结构，例如表达式和变量
+   7. 严格模式
+      1. CommonJs中 没有自动严格模式，例如this指的是当前整个module对象
+      2. Es6 默认采用严格模式，禁止this指向全局对象，在Es6模块中，顶层this指向undefined，所以用var定义也不会添加到全局window对象中。对arguments callee caller 等使用都有限制
 5. 未来趋势：现在浏览器端一般遵守ES6规范，Node环境遵守CommonJs规范。但Node已经在逐渐向全面支持ES6方向改变。
 
 ### 聊聊 axios
@@ -1850,7 +1892,6 @@ function instance_of(Case, Constructor) {
 }
 ```
 
-### 实现千分位分隔符
 
 ### 把一个JSON对象的key从下划线形式（Pascal）转换到小驼峰形式（Camel）
 
@@ -1870,20 +1911,20 @@ function myTypeof(obj) {
     return new Promise(resolve => setTimeout(()=>{
       resolve(fn) //这么写的前提是，这个fn函数对象没有then方法，因为在promise里对resolve(*) 参数不同类型时resolve处理方法不同，有then方法的对象会调用自己的then方法
     }),time))
-  }
-  sleep(1000,callback).then(fn=>fn())
+    }
+    sleep(1000,callback).then(fn=>fn())
    ```
 2. ES5实现
    ```
    function sleep(callback,time) {
-    if(typeof callback === 'function')
-      setTimeout(callback,time)
-  }
+      if(typeof callback === 'function')
+        setTimeout(callback,time)
+    }
    ```
 
 
 ### Class 类
-1. 定义：Es6的类完全可以看做构造函数的另一种写法，但类不能变量提升
+1. 定义：Es6的类完全可以看做构造函数的另一种写法，但类不能变量提升。类相当于实例的原型。
    ```
    class B{};
    let b = new B();
@@ -2053,11 +2094,19 @@ function myTypeof(obj) {
       const logger = selfish(new Logger());
     ```
 8. 类的静态方法：
-   1. 定义：只能用类调用，不能用实例调用的，属于类自己的方法，用一个static关键字标识
-   2. 子类可继承父类的静态方法，
+   1. 定义：类相当于实例的原型，所有在类中的方法都会被实例继承。如果在一个方法前加上static关键字，就表示该方法不会被实例继承，而是直接通过类调用
+   2. 子类可继承父类的静态方法，而实例不可以。注意 子类 和 实例 不是一个对象哦
    3. 子类继承后可以调用父类的静态方法 static Fn(){}，通过super对象取得, 在子类中执行super.Fn()
    4. 实例调用静态方法回报错
-9. 类的实例属性：在类中直接用等式写入的属性, 不需要let之类的声明, 在A的实例上可以读到,子类的实例上也可以
+   5. 类的静态方法里的this指向的是该类本身
+9. 类的静态属性： 在实例属性前面加上static就是静态属性，只能类来调用，不能用在实例上
+    ```
+    class A{
+      static name = 'aa'  // 第一种写法(推荐)
+    }
+    A.age = 34 //第二种写法
+    ```
+10. 类的实例属性：在类中直接用等式写入的属性, 不需要let之类的声明, 在A的实例上可以读到,子类的实例上也可以
    ```
    class A{
      name = 'aa'
@@ -2065,17 +2114,16 @@ function myTypeof(obj) {
    class B extends A{}
    new B().name; //'aa'
    ```
-10. 类的静态属性： 在实例属性前面加上static就是静态属性，只能类来调用，不能用在实例上
-    ```
-    class A{
-      static name = 'aa'  // 第一种写法(推荐)
-    }
-    A.age = 34 //第二种写法
-    ```
-11. new.target: 在构造函数内部可以通过 new.target判断当前调用构造函数的真正类是谁 
+11. new.target: 在构造函数内部可以通过 new.target判断当前构造函数是不是用new 调用的 
     1.  如果是 new 构造函数的就会返回构造函数，否则返回undefined
     2.  如果子类继承父类，实现子类时，即使在父类的构造函数里打印，new.target的值也是子类
     3.  只能在构造函数里调用，否则报错
+      ```
+      class Person(name){
+        if(new.target!==undefined) this.name = name;
+        else throw new Error('必须使用new生成实例')
+      }
+      ```
 12. super：可以做对象or函数
     1. 作为对象：
        1. 在静态方法中,super就是父类，子类继承后可以调用父类的静态方法 static Fn(){}，通过super对象取得, 在子类中执行super.Fn()
@@ -2312,19 +2360,37 @@ koa-compose
 
 ### 自己实现一个 defineOwnProperty 
 
+### Immutable Object 不可变对象
+1. 定义：不可更改的对象
+2. 基础实现：Object.freeze
+3. ImmutableJS库：
+  1. 作用：对 Immutable object的修改，都会返回一个新的 Immutable object
+  2. 原理：这个库并不是用Object.freeze实现的，而是应用一种叫做"结构共享"的思想，会创建一棵树，每个节点最多有32个分支。只会对有修改的节点进行更新，复用其他节点。参考链接：https://zhuanlan.zhihu.com/p/29983598
+  3. 应用：在react中有用。比如 useEffect(cb,depsArr) 中的依赖depsArr遍历判断元素变化的方法是 Object.is，是一个浅比较方法，只要对象地址没变就不会重新调用cb，但这是错误的；如果手动深度遍历对象去比较，性能又很差。使用ImumutableObject就可以解决这个问题，只要每次更改deps元素都是返回一个新的immutableobject,地址是变化的，就可以准确监听到了。而且“结构共享”的特点使其性能优异。
+
 ### Object.freeze VS Object.seal
 1. freeze：冷冻对象，返回该对象
-   1. 所有属性都不可配置、不可泻， 所以 增、删、改 都不行
+   1. 所有属性都不可配置、不可写， 所以 增、删、改 都不行
    2. 如果属性是对象， 对象的地址不可更改，但对象的属性可以更改，除非该属性对象也是冷冻对象 Object.isFrozen()可以判断
-   3. 如果属性是数组，数组地址不可更改，数组元素不可更改
+      ```
+      obj = Object.freeze({score:[1,2,3]}); obj.score.push(4); // obj.score为[1,2,3,4]
+      ```
+   3. 如果属性是数组：数组地址不可更改，数组元素不可更改
+      ```
+      obj = Object.freeze([1,2]); obj.push(3); //TypeError: object is not extensible
+      ```
    4. 原型不可修改： __proto__指向或者 setPrototypeof 都不行
    5. es5 与 es6 的差异： Object.freeze(1) 在ES5会报错， es6里当成普通对象返回1
 2. seal: 密封对象， 返回该对象 
    1. 不能添加新属性
    2. 旧属性的configurable可配置性置为false, 不能删除属性
    3. 旧属性的writable原来是可写的话，就可以修改
-   4. 原型不可修改： __proto__指向或者 setPrototypeof 都不行
-3. freeze VS seal : seal 后 的属性如果之前是writable:true 还有可能可以更改属性值，freeze不行
+   4. 如果属性是数组：数组地址不可更改，数组元素不可更改. 跟freeze一样
+      ```
+      obj = Object.freeze([1,2]); obj.push(3); //TypeError: object is not extensible
+      ```
+   5. 原型不可修改： __proto__指向或者 setPrototypeof 都不行
+3. freeze VS seal 区别: seal 后 的属性如果之前是writable:true 还有可能可以更改属性值，freeze不行
 
 ### 偏函数
 
@@ -2434,10 +2500,7 @@ undefined
 5
 ```
 
-###  web Worker 
-1. 定义：Web Worker 是一个独立的线程（独立的执行环境），这就意味着它可以完全和 UI 线程（主线程）并行的执行 js 代码，从而不会阻塞 UI，
-2. 通信；它和主线程是通过 onmessage 和 postMessage 接进行通信的
-3. 用途：Web Worker 使得网页中进行多线程编程成为可能。当主线程在处理界面事件时，worker 可以在后台运行，帮你处理大量的数据计算，当计算完成，将计算结果返回给主线程，由主线程更新 DOM 元素
+
 
 ### 实现一个函数add函数,使 add(1,2,3)(4)(5,6); 输出 21
 ```
@@ -2460,3 +2523,127 @@ sum; //21
 3. 应用：
    1. 对整个url用 encodeURL
    2. 对get请求的参数用 encodeURLComponent
+
+
+
+### MessageChannel
+1. 定义：js允许使用messageChannel创建一个新的消息通道，并通过它的两个MessagePort 属性发送数据。
+2. 用法：
+   1. 跨通道通信 port.postMessage(data) 
+      ```
+      var channel = new MessageChannel();
+      var port1 = channel.port1;
+      var port2 = channel.port2;
+      port1.onmessage = function(event) {
+         console.log("port1收到来自port2的数据：" + event.data);
+      }
+      port2.onmessage = function(event) {
+         console.log("port2收到来自port1的数据：" + event.data);
+      }
+      port1.postMessage("发送给port2");
+      port2.postMessage("发送给port1");
+      ```
+   2. 跨域/跨文档/跨iframe之间通信  window.postMessage(data, origin)
+      1. 用法：
+         ```
+         1. postMessage(data,origin)方法接受两个参数
+            data: 要传递的数据，html5规范中提到该参数可以是JavaScript的任意基本类型或可复制的对象，然而并不是所有浏览器都做到了这点儿，部分浏览器只能处理字符串参数，所以我们在传递参数的时候需要使用JSON.stringify()方法对对象参数序列化，在低版本IE中引用json2.js可以实现类似效果。
+            origin: 字符串参数，指明目标窗口的源，协议+主机+端口号[+URL]，URL会被忽略，所以可以不写，这个参数是为了安全考虑，postMessage()方法只会将message传递给指定窗口，当然如果愿意也可以建参数设置为”*”，这样可以传递给任意窗口，如果要指定和当前窗口同源的话设置为”/”。
+         2. onmessage(event) event对象里有多个属性
+            event.data: 传过来的数据
+            event.origin: 发送端指定的接收方。只有协议主机端口号三个都符合的才会接受到这条消息
+            event.source: 对发送消息的窗口对象的引用; 您可以使用此来在具有不同origin的两个窗口之间建立双向通信
+         ```
+      2. 消息的发送方为自己： 有两个页面a.html 与 b.html 不同源，在a页面中用iframe加载b, 通过b.contentWindow发送消息到b的域名下的接口，b页面里接收到消息后，再a.window再向a发消息, a页面再接收消息
+         ```
+         //a.html
+         <iframe src="b.html" id="myIframe"></iframe>
+         window.onload = () =>{
+            let iframe = document.querySelector("#myIfram");
+            iframe.contentWindow.postMessage('早上好', "b.html"); // 注意 在 a.html 中用 b_iframe.contentWindow.postMessage
+            window.onMessage = (e)=>{
+               console.log(e.data); // 中午好
+            }
+         }
+         //b.html
+         window.onload = () =>{
+            window.onMessage = (e){
+               console.log(e.data); // 早上好
+               e.source.postMessage('中午好', e.origin );  // 注意 在 b.html 中用 a.window.postMessage
+            }
+         }
+   3. 可以在web_worker之间： ？？？
+
+### JS 事件体系
+1. 事件流：单来说就是事件执行的顺序流。DOM树中有大量的元素，元素之间出现嵌套时，给父子元素同时设置了事件，父子元素的事件执行会按照某种顺序执行，这就是事件流。
+2. 事件阶段
+   1. 捕获阶段
+   2. 目标阶段
+   3. 冒泡阶段
+3. 事件方法
+   ```
+   preventDefault()    取消事件默认行为，如阻止点击提交按钮时对表单的提交
+   stopImmediatePropagation()   取消事件冒泡同时阻止当前节点上的事件处理程序被调用
+   stopPropagation()   取消事件冒泡
+   cancelBubbe()     取消事件冒泡
+   returnValue()      取消事件默认行为
+   ```
+4. 不会冒泡的事件有哪些
+   1. scroll  
+      1. 所以只能在捕获阶段捕获scroll，别的事件做事件委托是在冒泡阶段，scroll就只能在捕获阶段
+      2. 并且无法取消(没有冒泡的基本都没法取消) scroll回调中的 e.stopPropagation(); e.preventDefault();这两个方法也都无效。
+   2. blur & focus 
+      1. 也无法取消e.stopPropagation(); e.preventDefault();这两个方法都无效。
+   3. mouseLeave & mouseEnter
+      1. 注意：相似的两个 mouseOut 和 mouseOver 会触发冒泡。mouseover与mouseout成对，mouseenter与mouseleave成对。mouseover触发优先级高于mouseenter，mouseout触发优先级高于mouseleave
+      2. 推荐使用不会冒泡的 mouse-leave/enter
+   4. Media 媒体触发的相关事件 都不冒泡
+      1. onpause 当媒介被用户或程序暂停时运行的脚本
+      2. onplay  当媒介已就绪可以开始播放时运行的脚本
+      3. onplaying 当媒介已开始播放时运行的脚本
+      4. onsuspend 在媒介数据完全加载之前不论何种原因终止取回媒介数据时运行
+5. 事件委托：也叫事件代理。
+   1. 定义：通过冒泡机制，把一个元素的事件绑定到更高级别的另一个元素上，例如把子元素的事件绑定到顶层父元素了，就可以在该父元素监听处理子元素中事件。
+   2. 事件委托的好处：前端优化的一个主要方向就是减少与dom的交互。如果有一百个dom上都有事件，就需要遍历100次每次执行一个事件。但如果可以事件委托到一个dom上，就只需要交互一次，都在js中执行所有逻辑
+   3. 实现：列表委托到顶层，但是顶层ul不能触发
+      ```
+      <ul id="ul1">
+      <li>1</li>
+      ...
+      <li>1000</li>
+      </url>
+      window.onload = function(){
+      　　var oUl = document.getElementById("ul1");
+         // 在被委托的dom上设置监听事件
+      　　oUl.onclick = function(ev){
+      　　　　var ev = ev || window.event;
+            // target用来限制只有真正要防止事件dom才能触发 这样ul就不会触发
+      　　　　var target = ev.target || ev.srcElement;
+      　　　　if(target.nodeName.toLowerCase() == 'li'){
+      　 　　　　　　 alert(123);
+      　　　　　　　  alert(target.innerHTML);
+      　　　　}
+      　　}
+      }
+      ```
+
+### 图片格式
+参考链接：https://zhuanlan.zhihu.com/p/129810715
+
+
+
+### 输出
+```
+function run(func) {
+    func();
+}
+(function(){
+    const obj = {};
+    obj.foo = function (){
+        console.log(this);
+    };
+    obj.run = run;
+    obj.run(obj.foo);
+})();
+// window
+```

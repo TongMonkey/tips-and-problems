@@ -76,7 +76,7 @@ JSX 仅仅只是 React.createElement(component, props, ...children) 函数的语
 1. 合成事件：React中所有的事件都是合成事件，共享合成对象
 2. 合成对象SyntheticEvent：是React模拟原生DOM事件所有能力的一个事件对象。能兼容所有浏览器的事件。(e)=>{e.nativeEvent} e就是合成对象，通过e.nativeEvent属性获取原生DOM事件
 3. 顶层注册：在React的commit阶段把一个包装后事件监听器以事件委托的方式绑定在最上层root处。 
-4. 事件委托：把一个元素的响应事件绑定到另一个元素上，例如把子元素的事件绑定到顶层父元素了，通过冒泡机制，就可以在该父元素监听处理子元素中事件
+4. 事件委托：react里把事件都委托给顶层root dom了。
 5. 收集事件：当在顶层的监听器监听到事件，生成合成对象，合成对象会按照捕获或冒泡的路径去收集所有组件上的合成函数对应的真正的事件处理函数, 这些合成函数共享这个合成对象
 6. 统一触发：对所有收集来的事件逐一执行，React事件名与原生事件名的映射关系都存在一个叫registrationNameDependencies的对象里
 ```
@@ -237,7 +237,8 @@ this.setState((state, props)=>{...})
    1. 对比元素类型：
       1. 对比类型不同的react元素时：会产生出不同的树。当根节点为不同类型的元素时，React 会拆卸原有的整棵树并且建立起新的树，触发一个完整的重建流程。当卸载一棵树时，组件实例将执行 componentWillUnmount() 方法，对应的 DOM 节点被销毁，。当建立一棵新的树时，对应的 DOM 节点会被创建以及插入到 DOM 中，之后组件实例将执行 UNSAFE_componentWillMount() 方法，紧接着 componentDidMount() 方法。所有与之前的树相关联的 state 也会被销毁。
       2. 对比类型相同的react元素时，React 会保留 DOM 节点，仅比对及更新有改变的属性。当一个组件更新时，组件实例会保持不变，因此可以在不同的渲染时保持 state 一致。React 将更新该组件实例的 props 以保证与最新的元素保持一致，并且调用该实例的 UNSAFE_componentWillReceiveProps()、UNSAFE_componentWillUpdate() 以及 componentDidUpdate() 方法。
-   2. 对比元素Key
+   2. 对比元素Key：比较完当前节点开始遍历递归比较子元素。只会按照顺序依次遍历两个列表对比，比如 ‘1、2’ 变成 ‘1、2、3’, react会直接新建一个node3；但如果是‘1,2’ 变成 ‘3,1,2’, react只会依次 1vs3不同所以update，2vs1不同所以update,undefinedVS2所以Add。 所以说不要频繁变化节点和顺序，对性能不好。
+
 
 ### cloneElement() 干嘛的
 #### 克隆一个元素
@@ -297,30 +298,74 @@ React.cloneElement(
 
 ### 都有哪些Hooks
 #### React内置的Hook共10种，基础Hook有3种 额外Hook有7种，还可以自定义Hook
-1. 基础：
-   1. useState
-   2. useEffect：每次渲染之后(Dom更新完毕)都会执行useEffect，第二个参数决定是否执行内部effect
-   3. useContext
-2. 额外：
-   1. useReducer
-   2. useCallback
-   3. useMemo
-   4. useRef
-   5. useImperativeHandle
-   6. useLayoutEffect：在页面布局之后(浏览器layout阶段 DOM插入后)执行useLayoutEffect，然后浏览器paint,之后用户才看得见页面变化 
-   7. useDebugValue
-3. 自定义Hook 注意：某两个组件内都使用了某自定义Hook，他们共享自定义Hook的state吗：并不共享。自定义Hook是一种重用状态逻辑的机制，相当于把公共的部分提取出来，每次使用自定义Hook中的state和副作用都是完全隔离的。
-
-### Hooks使用有什么规则，为什么要这样约定
-####
-1. 规则：
-   1. 只能在React函数组件中使用，不能在普通js函数中
-   2. 只能在函数组件的最顶层调用Hook,不能在循环、条件判断或者子函数中用
-2. 原因：为了保证hook的执行顺序不变，因为state和effect的存储，在React里是一个单向链表结果,必须保障在每一轮调用useState和useEffect的顺序都是一样的
-3. 官方检测插件安装：`npm install eslint-plugin-react-hooks --save-dev`
+1. api:
+   1. 基础：
+      1. useState
+      2. useEffect：每次渲染之后(Dom更新完毕)都会执行useEffect，第二个参数决定是否执行内部effect
+      3. useContext
+   2. 额外：
+      1. useReducer
+      2. useCallback
+      3. useMemo
+      4. useRef
+      5. useImperativeHandle
+      6. useLayoutEffect：在页面布局之后(浏览器layout阶段 DOM插入后)执行useLayoutEffect，然后浏览器paint,之后用户才看得见页面变化 
+      7. useDebugValue
+   3. 自定义Hook 注意：某两个组件内都使用了某自定义Hook，他们共享自定义Hook的state吗：并不共享。自定义Hook是一种重用状态逻辑的机制，相当于把公共的部分提取出来，每次使用自定义Hook中的state和副作用都是完全隔离的。
+2. Hooks使用有什么规则，为什么要这样约定
+   1. 规则：
+      1. 只能在React函数组件中使用，不能在普通js函数中
+      2. 只能在函数组件的最顶层调用Hook,不能在循环、条件判断或者子函数中用
+   2. 原因：为了保证hook的执行顺序不变，因为state和effect的存储，在React里是一个单向链表结果,必须保障在每一轮调用useState和useEffect的顺序都是一样的
+   3. 官方检测插件安装：`npm install eslint-plugin-react-hooks --save-dev`
+3. 注意：在react hooks里的比较，源码中可以看到使用了Object.is方法，这方法是个浅比较的方法，如果是两个对象，只会比较对象的地址引用。 解决办法是使用ImmutableObject. 每次修改对象返回一个新的ImmutableObject. 而且ImmutableObject实现了结构共享，性能好
 
 ### Hook 与 js闭包的关系
+1. 参考链接：https://zhuanlan.zhihu.com/p/95947450
+2. 前置知识：
+   ```
+   function a(){
+     let val = 0;
+     return {
+         'b': function b(){
+            setTimeout(()=>{
+               console.log(val);
+            },2000)
+         } ,
+         'c': function c(){
+            val ++;
+         }
+     }
+   }
+   a().b();
+   a().c();
+   // 2秒后打印出0
+   ```
+3. hooks与闭包
+   1. useEffect 与定时器：
+      ```
+      function WatchCount() {
+         const [count, setCount] = useState(0);
 
+         useEffect(function() {
+            setInterval(function log() {
+               console.log(`Count is: ${count}`);
+            }, 2000);
+         }, []);
+         return (
+            <div>
+               {count}
+               <button onClick={() => setCount(count + 1) }>
+               Increase
+               </button>
+            </div>
+         );
+      }
+      // 将始终打印出0
+      // 原因：useEffect(cb,deps) 当deps变化，才会重新执行cb。所以当deps是空数组表示只有mount时才会执行一次cb,这一次就是第一次进入时，count的初始化为0会被封存在闭包cb中。所以后序一直都会打印出0
+      // 解决办法：把count作为deps传入数组，这样每次count变化，都会重新执行cb，那么setInterval在重新执行时就会捕获最新的count
+      ```
+   2. 同样在定时器里执行 setState()也会遇到类似问题，要注意闭包问题
 
 ### 自己实现一个useState简化版
 ```

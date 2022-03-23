@@ -101,16 +101,17 @@ V8 是谷歌开源的 JavaScript 引擎，被用于 Chrome 和 Node.js 。程序
 
 ### 基于DOM画一个扇形，提出方案
 
-### 浏览器在一帧的16ms里要做 2+5 件事：![一帧](./assets/一帧.png)
-1. 处理用户输入等交互
-2. 执行JS包含EventLoop回调、
-3. 帧开始：窗口尺寸变更，页面滚动、媒体查询、动画事件等的处理
-4. 调用requestAnimationFrame执行动画、 
-   1. 参考链接：实现进度条https://www.jianshu.com/p/d36c161943d9  协同reacthooks实现倒计时https://juejin.cn/post/7022636375136534565 https://baijiahao.baidu.com/s?id=1702088861129925384&wfr=spider&for=pc
-   2. 同时调用两次 requestAnimationFrame 会在一帧里执行；在requestAnimationFrame里调用requestAnimationFrame，会放到下一帧里执行。
-5. 布局layout加样式css、
-6. 绘制渲染paint。
-7. 当这些事都做完了还没到16ms,就会执行window.requestIdleCallback方法
+### 浏览器 帧
+1. 60hz刷新频率的浏览器在一帧的16ms里要做 2+5 件事：![一帧](./assets/一帧.png)
+   1. 处理用户输入等交互
+   2. 执行JS包含EventLoop回调、
+   3. 帧开始，调用requestAnimationFrame执行动画、：窗口尺寸变更，页面滚动、媒体查询、动画事件等的处理
+      1. 参考链接：实现进度条https://www.jianshu.com/p/d36c161943d9  协同reacthooks实现倒计时https://juejin.cn/post/7022636375136534565 https://baijiahao.baidu.com/s?id=1702088861129925384&wfr=spider&for=pc
+      2. 同时调用两次 requestAnimationFrame 会在一帧里执行；在requestAnimationFrame里调用requestAnimationFrame，会放到下一帧里执行。
+   4. 布局layout加样式css、
+   5. 绘制渲染paint。
+   6. 当这些事都做完了还没到16ms,就会执行window.requestIdleCallback方法
+2. 查看浏览器帧：在f12打开控制台后，shift+commond+p 可以显示fps面板
 
 
 ### 进程 VS 线程  VS 协程
@@ -145,7 +146,8 @@ V8 是谷歌开源的 JavaScript 引擎，被用于 Chrome 和 Node.js 。程序
    3. 事件队列线程：这个线程管理一个任务队列，即事件循环EventLoop, 将来自其他线程的任务加入到事件队列中等待js引擎线程空闲时处理，(任务可能来自不同线程，例如setTimeout来自定时触发器线程、ajax异步请求来自网络请求线程)
    4. 定时器线程：setInterval与setTimeout所在线程。 所以说浏览器定时计数器并不是由JavaScript引擎线程计数的,因为JavaScript引擎线程是单线程, 如果处于阻塞线程状态就会影响记计时的准确。另外规定要求setTimeout中低于4ms的时间间隔算为4ms。 这个时间间隔后，将事件推入任务队列，然后就等着js引擎空闲时执行了(如果js还是在忙，可能执行时间还会延后哦)
    5. 异步网络请求线程：产生一个xhr连接后会新开一个网络请求线程，监控到xhr的readyState状态变化后，如果设置了处理状态的回调函数，异步线程将回调函数放进事件触发线程中的任务队列中，等待JS引擎线程执行。注意Chrome浏览器对同一域名的请求并发数限制为6
-   6. 合成线程：将图层分为图块，这些图块的大小通常是 256x256 或者 512x512，合成线程会按照视口附近的图块来优先生成位图 (位图的使用看下面渲染流程的栅格化过程)
+   6. Compositor合成线程：直接将GUI线程得到的LayerTree拿来执行，对图层分块给光栅线程做光栅化，GPU进程可以加速。做好了就给回GUI主线程了。它可以跟GUI主线程一起执行，这也是为什么说用GPU做动画等是优化方案了
+   7. Raster光栅线程：用来将几何信息转换为屏幕上像素的线程
 3. 关系：![渲染进程内多线程之间的关系](assets/渲染进程内多线程之间关系.jpeg)
    1. GUI 与 JS 线程 互斥，一个执行时另一个挂起，
       1. 所以不能让js执行时间过长，会阻塞页面渲染 
@@ -180,48 +182,81 @@ V8 是谷歌开源的 JavaScript 引擎，被用于 Chrome 和 Node.js 。程序
    5. 总结：js线程与GUI线程的一次交接就是一个循环。在每个循环里，浏览器只执行一个宏任务，而微任务要全部执行完才继续循环。如果微任务耗时特别长，那么这一帧内，浏览器刷新的时机就会被阻塞，页面卡顿
 
 
+
+
 ### 渲染引擎的渲染执行流程 
+参考链接：http://blog.acohome.cn/inside-browser-part3/
 (有的文档里说渲染进程的主线程blabla...就是本文中的GUI渲染线程)
-1. 构建 DOM 树、
-   1. 渲染引擎GUI线程接收到html文件后，由HTML解析器将HTML文本转化成浏览器能懂的树状DOM结构
-   2. window.document就是在浏览器环境下，在内存中保存的DOM结构。DOM 和 HTML 内容几乎是一样的，但是和 HTML 不同的是，DOM 是保存在内存中树状结构，可以通过 JavaScript 来查询或修改其内容。
-2. 样式计算 calculate style
+1. 构建 DOM (Document Object Model)树、
+   1. 渲染引擎GUI线程接收到导航的确认信息，并开始接收相应数据HTML data，就开始由HTML解析器将HTML文本转化成浏览器能懂的树状DOM结构
+      1. window.document就是在浏览器环境下，在内存中保存的DOM结构。DOM 和 HTML 内容几乎是一样的，但是和 HTML 不同的是，DOM 是保存在内存中树状结构，可以通过 JavaScript 来查询或修改其内容。
+   2. 加载外部资源：当渲染主线程GUI在解析并构建DOM树时，为了加速页面显示，PreloadScnner预加载扫描器会同时在后台运行。
+      1. 当解析到例如img link这样的dom标签，预加载器就会通知浏览器进程中的网络线程去加载网络资源。
+      2. 当加载到script标签时，html解析器就会停下来，先去加载相应的js资源并执行。解决办法有几个，比如可以用defer async关键字，也可以用link rel="preload"告知浏览器必须尽快加载
+2. 样式计算 计算每个dom的calculatedstyle
    1. 渲染引擎GUI线程接收到CSS文本后，将CSS文本转化为浏览器可以理解的styleSheets结构，document.styleSheets 就是样式对象
    2. 将各个数据标准化，比如把rem单位转化为px,将颜色的单词转化为rgb()颜色数值等
    3. 计算每个DOM的css样式
       1. css的继承规则：CSS 继承就是每个 DOM 节点都包含有父节点的样式
       2. css的层叠规则：定义了如何合并来自多个源的属性值
+      3. css的默认值：就算有的节点没有设置css，但不同的标签还是有一些默认样式
    4. 把css样式结果输出：每个DOM的css都保存在该DOM的ComputedStyle的结构中
 3. Layout布局阶段: (传统意义上的布局阶段包括Layout和Layer)
    1. 创建布局：构建一棵可见元素的layoutTree:遍历所有节点，把所有可见的节点加入到布局树中，不可见的元素忽略掉
    2. 布局计算: 计算DOM中可见元素的几何位置
 4. Layer分层构建图层树LayerTree, 也属于布局阶段
    1. 因为一些动画、z轴变化等特殊效果，渲染引擎还需要为特定的节点生成专用的图层，并生成一棵对应的图层树（LayerTree）
-   2. 图层：![图层树](/src/assets/图层树.webp)
+   2. 图层：
+      1. ![图层树](/src/assets/图层树.webp)
    3. 并不是布局树的每个节点都包含一个图层，如果一个节点没有对应的层，那么这个节点就从属于父节点的图层。但不管怎样，最终每一个节点都会直接或者间接地从属于一个层。
    4. 会被提升为单独图层的2种情况
-      1. 拥有层叠上下文属性的元素会被提升为单独的一层，例如不在文档流内的position、opacity透明的元素、css filter滤镜的元素 等。参考链接：https://developer.mozilla.org/zh-CN/docs/Web/CSS/CSS_Positioning/Understanding_z_index/The_stacking_context
+      1. 拥有层叠上下文属性的元素,即能够被z-index属性改变表现的元素会被提升为单独的一层，例如不在文档流内的position、opacity透明的元素、css filter滤镜的元素 等。
+         ```
+         // 参考链接：https://developer.mozilla.org/zh-CN/docs/Web/CSS/CSS_Positioning/Understanding_z_index/The_stacking_context
+         文档根元素（<html>）；
+         position 值为 absolute（绝对定位）或  relative（相对定位）且 z-index 值不为 auto 的元素；
+         position 值为 fixed（固定定位）或 sticky（粘滞定位）的元素（沾滞定位适配所有移动设备上的浏览器，但老的桌面浏览器不支持）；
+         flex (flexbox (en-US)) 容器的子元素，且 z-index 值不为 auto；
+         grid (grid) 容器的子元素，且 z-index 值不为 auto；
+         opacity 属性值小于 1 的元素（参见 the specification for opacity）；
+         mix-blend-mode 属性值不为 normal 的元素；
+         以下任意属性值不为 none 的元素：
+            transform
+            filter
+            perspective
+            clip-path
+            mask / mask-image / mask-border
+         isolation 属性值为 isolate 的元素；
+         -webkit-overflow-scrolling 属性值为 touch 的元素；
+         will-change 值设定了任一属性而该属性在 non-initial 值时会创建层叠上下文的元素（参考这篇文章）；
+         contain 属性值为 layout、paint 或包含它们其中之一的合成值（比如 contain: strict、contain: content）的元素。
+         ```
       2. 需要裁剪 或 出现滚动条的,会提升为单独的层 例如小区域大内容的overflow:hidden
-5. 图层绘制：并非真的绘制，其实是组装一个待绘制指令列表。 完成图层树后，渲染引擎会对图层树中的每个图层拆解成一个个小的绘制指令，再将这些指令按照顺序组成待绘制列表，绘制阶段就是合成并输出待绘制指令列表。 
-6. 图层分块: 从这一步开始，下面的操作才是真正的绘制，是由合成线程真正完成的。
+5. 图层绘制指令：并非真的绘制，其实是组装一个待绘制指令列表。 完成图层树后，渲染引擎会对图层树中的每个图层拆解成一个个小的绘制指令，再将这些指令按照顺序组成待绘制列表，绘制阶段就是合成并输出待绘制指令列表。 
+6. 图层分块: 从这一步开始，下面的操作才是真正的绘制，是由合成线程控制光栅线程真正完成的。
    1. 当图层的待绘制指令列表组装好后，渲染引擎中的GUI线程将该列表提交给合成线程。
-   2. 合成线程将图层分为图块
+   2. 合成线程将图层分为图块，因为一个图层可能很大，所以合成线程将层的内容切割分块后发给光栅线程。
 7. raster栅格化：
-   1. 栅格化是指合成线程将图块转换为位图，图块是栅格化执行的最小单位。合成线程会按照视口附近的图块来优先生成位图
-   2. 渲染进程维护了一个栅格化的线程池，所有的图块栅格化都是在线程池内执行的  ![合成线程-栅格化](/src/assets/合成线程-栅格化.webp)
-   3. 通常，栅格化过程都会使用 GPU 来加速生成。如果使用了GPU,合成线程通过栅格化线程池将图块交给GPU,最终生成位图的操作是在GPU进程中完成的，生成的位图被保存在 GPU 内存中。GPU是单独的进程，这中间涉及跨进程操作。 ![跨进程栅格化](/src/assets/跨进程栅格化.webp) 
-   4. GPU完成所有的栅格化之后，将结果返回给合成线程
+   1. 光栅化也叫栅格化，是指光栅线程将图块转换为位图(就是屏幕上的像素)的过程，图块是栅格化执行的最小单位。
+   2. 光栅线程进程维护了一个栅格化的线程池，所有的图块栅格化都是在线程池内执行的  
+      1. ![光栅线程-栅格化](/src/assets/光栅线程-栅格化.webp)
+   3. 合成线程可以对不同的光栅线程进行优先级排序，视窗或附近的元素会优先被光栅化。
+   4. 通常，栅格化过程都会使用 GPU 来加速生成。如果使用了GPU,光栅线程将图块交给GPU,最终生成位图的操作是在GPU进程中完成的，生成的位图被保存在 GPU 内存中。GPU是单独的进程，这中间涉及跨进程操作。 
+      1. ![跨进程栅格化](/src/assets/跨进程栅格化.webp) 
+   5. GPU完成所有图层里的各个图块的栅格化之后，将结果返回给合成线程
 8. 合成: 
-   1. 一旦所有图块都完成栅格化，合成线程执行合并图层，然后将合成的图层提交给browser浏览器主进程。
-   2. browser浏览器主进程里面有一个叫 viz 的组件，用来接收合成线程发过来的合成图层，浏览器主进程执行显示合成操作(Display Compositor),就是在内存中将所有的图层合成可以显示的页面图片，最后再将图片显示在屏幕上。
-   3. 进程关系：![渲染流程-主进程接收](/src/assets/渲染流程-主进程接收.webp)
+   1. 一旦元素被光栅化，就会被合成线程收集起来。一旦所有图层都完成栅格化，合成线程就会创建一个CompositorFrame合成帧,也是最终合成后的图层。
+   2. 合成线程将合成帧通过IPC 跨进程通知browser浏览器主进程。
+   3. browser浏览器主进程接收来自渲染进程的合成线程发过来的合成帧，浏览器主进程执行显示合成操作(Display Compositor)。
+   4. 进程关系：
+      1. ![渲染流程-主进程接收](/src/assets/渲染流程-主进程接收.webp)
 9. 相关概念
    1.  重排：修改元素的几何位置，触发从Layout、Layer开始的所有后续渲染流水线，开销大
    2.  重绘：修改了styleSheets, 没有几何位置的改变，就不会触发Layout和Layer，直接进入绘制阶段，比重排效率高些
    3.  重绘与重排的关系：重排一定会重绘，重绘不一定重排
    4.  直接合成：有些修改，既不修改布局也不修改样式，将跳过重排重绘，只执行后续的合成操作。例如transform:translate 实现的动画效果，利用了GPU擅长绘制CSS动画的特点，可以在不同位置绘制同一张位图，所以能直接执行合成操作，这样的效率最高
 10. 开启GPU硬件加速的属性
-    1.  transform
+    1.  transform 比如 transform: translateZ(0)
     2.  opacity
     3.  filter
     4. will-change 告知浏览器该元素会有哪些属性发生变化(实验中)
@@ -233,6 +268,67 @@ V8 是谷歌开源的 JavaScript 引擎，被用于 Chrome 和 Node.js 。程序
         1.  contain: size 设置该属性的元素的 尺寸不被它的子元素的尺寸影响
         2.  contain: paint 设置了该属性的节点，如果不在视窗内，则该节点和其子元素节点都不必渲染
         3.  contain: layout 表示区域内的变化，不会影响到区域外的重排重绘
+12. 渲染流程总结为：
+    1.  渲染进程将HTML内容转换为能够读懂的DOM树结构
+    2.  渲染引擎将CSS样式表转换为浏览器可以理解的styleSheets，计算出DOM节点的样式
+    3.  创建布局树，并计算元素的布局信息
+    4.  对布局树进行分层，并生成分层树
+    5.  为每个图层生成绘制列表，并将其提交到合成线层
+    6.  合成线层将图层分成图块，并在光栅化线程池中将图块转换成位图
+    7.  合成线程发送绘制图块命令DrawQuad给浏览器进程
+    8.  浏览器进程根据DrawQuad消息生成页面，并显示到显示器上
+
+### 各种资源是否阻塞渲染
+1. 外部css的加载`不会`阻塞DOM`解析` 页面中会出现dom标签
+2. 外部css的加载`不会阻塞 前面的`DOM`渲染`，页面中`标签和内容都会正常渲染`，css加载完成后有可能页面闪一下  (猜测，没解析到引入css的代码,不知道要加载css，所以就先渲染了，反正DOM也有默认的style)
+3. 外部css的加载 `会阻塞 后面的`DOM`渲染` 页面中`只出现标签，在css加载后才会渲染出内容`   (猜测，这是浏览器的优化，知道有css要加载就先不渲染，省的还要重渲染)
+4. 外部CSS的加载 `会阻塞 后面的JS执行` (因为GUI与JS线程互斥，所以要把css放在页面头部尽快加载，不让它耽误js运行)
+5. JS 会 阻塞 后面的 DOM 解析和渲染  (所以js放在页面最后，别耽误html和css解析，减少白屏时间)
+6. 视频、图片、字体 等都不会阻塞渲染
+
+### Worder对象 进程中的独立后台线程
+1. web Worker 
+   1. 定义：Web Worker 是一个独立的线程（独立的执行环境），这就意味着它可以完全和 UI 线程（主线程）并行的执行 js 代码，从而不会阻塞 UI，
+   2. 通信；它和主线程是通过 MessageChannel(onmessage+postMessage)通信的
+   3. 用途：Web Worker 使得网页中进行多线程编程成为可能。当主线程在处理界面事件时，worker 可以在后台运行，帮你处理大量的数据计算，当计算完成，将计算结果返回给主线程，由主线程更新 DOM 元素
+   4. 特点：
+      1. 不能直接访问操作DOM
+      2. 可以被多个脚本调用并创建多个后台线程，前提是这些脚本所在页面必须同源（相同的协议、host 以及端口）。
+   5. demo:
+      ```
+      // A. host.js
+      const myWorker = new Worker('worker.js');
+      myWorker.onmessage = function (e) {
+         alert(e.data); // btn click : worker send
+      }
+      myWorker.postMessage("btn click");
+
+      // B. worker.js
+      onmessage = function (e) {
+         const workerResult = e.data + " : worker send";
+         postMessage(workerResult);// 发送消息给主线程
+      }
+      ```
+2. Service Worker
+   1. 定义：service worker 是一种特殊的 web worker,是一种运行在后台，在GUI主线程之外的一个独立的子线程。
+      1. 可以用来计算一些耗费性能的操作，计算后再跟js主线程通个信交换结果。
+      2. 或者拦截网络请求并根据网络是否可用来采取适当的动作、更新来自服务器的的资源。
+      3. 充当 Web 应用程序、浏览器与网络（可用时）之间的代理服务器。常作性能优化手段，使web项目也可以使用离线功能。
+   2. 发展：是一个H5 API, 前身是 Application Cache。 2012年就推出了，浏览器支持的很好。但是因为规则很多，所以并没有得到大规模推广。
+   3. 实现思路：service worker 可以拦截客户端到服务器的网络请求，然后决定是使用本地缓存，还是请求云端服务并缓存到本地。通过在H5中指定一个menifest缓存配置文件，并在对应的文件里指定缓存策略，比如设置要缓存的列表、要绕过缓存向真正服务器发起请求的白名单列表等等。之后浏览器就会完成相应操作
+   4. service worker的特点
+     1. 不能直接访问操作DOM
+     2. 需要时直接唤醒，不需要时自动休眠
+     3. 离线缓存内容开发者可控
+     4. 一旦被安装，永远存活，除非手动卸载
+     5. 必须在HTTPS协议下工作(不包括在本地环境，可以在本地调试)
+     6. 广泛使用了Promise
+     7. 目前只在Chrome Firefox上能兼容
+   5. 使用： 为了区分功能，把sw不同的功能放在了不同的js中了
+      1. 注册: 创建一个单独的js脚本作为service worker的工作文件 sw-register.js
+      2. 安装: 如果注册过的sw没有被安装过或者过期了，就会触发安装 执行 sw-install.js中的代码
+      3. 激活: 安装成功后就开始激活。要做的事就是让新的sw尽快获得对作用域的控制，并且清理与旧的sw相关的一些缓存资源。sw-install.js中的代码
+      4. 1-3步完成后，sw就可以控制页面了
 
 
 ### 主流浏览器引擎前缀:
@@ -271,13 +367,7 @@ load
 ```
 
 
-### 是否阻塞渲染
-1. 外部css的加载 不会 阻塞DOM解析 页面中会出现dom标签
-2. 外部css的加载 会 阻塞 后面的 DOM渲染 页面中出现的标签中，在css加载后 才会渲染出内容
-3. 外部css的加载 不会 阻塞 前面的 DOM渲染， 页面中标签和内容都会正常渲染，css加载完成后会引发重绘
-4. 外部CSS的加载 会 阻塞 后面的 JS
-5. JS 会 阻塞 后面的 DOM 解析和渲染
-6. 视频、图片、字体 等都不会阻塞渲染
+
 
 ### 移动端 click touch tap 的区别
 参考：https://www.cnblogs.com/zhuzhenwei918/p/7588553.html
@@ -285,59 +375,6 @@ load
 2. 多指时 一个手指的离开就会触发touchend
 3. tap 的穿透问题
 
-### MessageChannel
-1. 定义：js允许使用messageChannel创建一个新的消息通道，并通过它的两个MessagePort 属性发送数据。
-2. 用法：
-   1. 跨通道通信 port.postMessage(data) 
-      ```
-      var channel = new MessageChannel();
-      var port1 = channel.port1;
-      var port2 = channel.port2;
-      port1.onmessage = function(event) {
-         console.log("port1收到来自port2的数据：" + event.data);
-      }
-      port2.onmessage = function(event) {
-         console.log("port2收到来自port1的数据：" + event.data);
-      }
-      port1.postMessage("发送给port2");
-      port2.postMessage("发送给port1");
-      ```
-   2. 跨域/跨文档/跨iframe之间通信  window.postMessage(data, origin)
-      1. 用法：
-         ```
-         1. postMessage(data,origin)方法接受两个参数
-            data: 要传递的数据，html5规范中提到该参数可以是JavaScript的任意基本类型或可复制的对象，然而并不是所有浏览器都做到了这点儿，部分浏览器只能处理字符串参数，所以我们在传递参数的时候需要使用JSON.stringify()方法对对象参数序列化，在低版本IE中引用json2.js可以实现类似效果。
-            origin: 字符串参数，指明目标窗口的源，协议+主机+端口号[+URL]，URL会被忽略，所以可以不写，这个参数是为了安全考虑，postMessage()方法只会将message传递给指定窗口，当然如果愿意也可以建参数设置为”*”，这样可以传递给任意窗口，如果要指定和当前窗口同源的话设置为”/”。
-         2. onmessage(event) event对象里有多个属性
-            event.data: 传过来的数据
-            event.origin: 发送端指定的接收方。只有协议主机端口号三个都符合的才会接受到这条消息
-            event.source: 对发送消息的窗口对象的引用; 您可以使用此来在具有不同origin的两个窗口之间建立双向通信
-         ```
-      2. 消息的发送方为自己： 有两个页面a.html 与 b.html 不同源，在a页面中用iframe加载b, 通过b.contentWindow发送消息到b的域名下的接口，b页面里接收到消息后，再a.window再向a发消息, a页面再接收消息
-         ```
-         //a.html
-         <iframe src="b.html" id="myIframe"></iframe>
-         window.onload = () =>{
-            let iframe = document.querySelector("#myIfram");
-            iframe.contentWindow.postMessage('早上好', "b.html"); // 注意 在 a.html 中用 b_iframe.contentWindow.postMessage
-            window.onMessage = (e)=>{
-               console.log(e.data); // 中午好
-            }
-         }
-         //b.html
-         window.onload = () =>{
-            window.onMessage = (e){
-               console.log(e.data); // 早上好
-               e.source.postMessage('中午好', e.origin );  // 注意 在 b.html 中用 a.window.postMessage
-            }
-         }
-   3. 可以在web_worker之间： ？？？
 
-### 事件
-```
-preventDefault()    取消事件默认行为，如阻止点击提交按钮时对表单的提交
-stopImmediatePropagation()   取消事件冒泡同时阻止当前节点上的事件处理程序被调用
-stopPropagation()   取消事件冒泡
-cancelBubbe()     取消事件冒泡
-returnValue()      取消事件默认行为
-```
+
+      

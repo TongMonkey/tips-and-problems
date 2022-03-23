@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <script>
+    // 模拟requestAnimationFrame分片 链表结构用数组代替
+    window.onload = function () {
+      const ANIMATION_FRAME_TIMEOUT = 100;
+      let rAFID = (rAFTimeoutID = undefined);
+      let root = document.querySelector("#root");
+      let domList = Array.from(root.childNodes);
+      let taskList = domList.map((dom, index) => {
+        return function () {
+          dom.className = `class${index}`;
+          console.log(dom.className);
+        };
+      });
+      // 每一帧要执行的回调
+      let tastTick = function (rafTime) {
+        if (taskList.length > 0) {
+          // 在源码中 也是在任务的开头就调度了下一帧任务
+          requestAnimationFrameWithoutTimeout(tastTick);
+        } else return;
+        let nextTask = taskList.shift();
+        // nextTask() 这步 在react中使用postMessage实现的
+        console.log(rafTime);
+        nextTask();
+      };
+      function requestAnimationFrameWithoutTimeout(callback) {
+        rAFID = requestAnimationFrame(function (timestamp) {
+          clearTimeout(rAFTimeoutID);
+          callback(timestamp);
+        });
+        rAFTimeoutID = setTimeout(function () {
+          // cancel the requestAnimationFrame
+          cancelAnimationFrame(rAFID);
+          callback(Date.now());
+        }, ANIMATION_FRAME_TIMEOUT);
+      }
+      requestAnimationFrameWithoutTimeout(tastTick);
+    };
+  </script>
+  <body>
+    <div id="root">
+      <div>1</div>
+      <div>2</div>
+      <div>3</div>
+      <div>4</div>
+      <div>5</div>
+      <div>1</div>
+      <div>2</div>
+      <div>3</div>
+      <div>4</div>
+      <div>5</div>
+      <div>1</div>
+      <div>2</div>
+      <div>3</div>
+      <div>4</div>
+      <div>5</div>
+      <div>1</div>
+      <div>2</div>
+      <div>3</div>
+      <div>4</div>
+      <div>5</div>
+    </div>
+  </body>
+</html>
