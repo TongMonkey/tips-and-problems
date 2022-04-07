@@ -183,8 +183,6 @@
          4. Reflect.ownKeys(obj) 返回一个数组，元素为：对象自身的，无论是否为Symbol的 无论是否可枚举 的属性
 
 
-
-
 ### ES5函数中的一些特殊对象都是什么
 #### 除了自定义的属性方法外，这些凭空出现的可用属性都是从原型链上继承的
 1. 属性 length： 表示函数定义时，希望传入的参数的个数
@@ -207,10 +205,30 @@
     b(); // 打印 null
    ```
 5. arguments.callee.caller //指向调用当前函数的函数 在严格模式下禁用，因为会暴露源码 作用与funName.caller一样但不需要写死funName函数名，是解藕的写法
-6. 对象 this：this引用的是函数`执行的环境对象`，也就是函数执行所在的作用域对象，如果是在全局作用域，this对象引用的就是Global对象，在浏览器中就是window对象.
-   1. 普通函数中this: 调用函数的那个对象所在的环境上下文对象作为普通函数的this
-   2. 箭头函数中this: 定义函数时所处的环境上下文对象被箭头函数捕获作为自己的this,由声明位置决定，跟被谁调用的没关系
-   3. 求输出
+6. 对象 this：function 声明的函数中，this的绑定和函数声明的位置没有关系，只取决于函数的调用方式。当一个函数被调用，会创建一个执行上下文。它会记录这个函数在哪被调用、调用方式、传入参数等信息，this就是这个执行上下文的一个属性，会在函数执行的过程中用到。
+   1. 注意：常见的两个误区：1this指向函数本身，2this指向函数的词法作用域, 这两个说法都是错误的。this实际上是在函数调用时发生的绑定，它指向什么完全取决于函数在哪被调用。
+   2. function函数中this绑定：  生效优先级 1>2>3>4
+      1. new绑定：new构造函数创建对象的时候，有四步：1创建新对象、2给新对象绑定prototype、3给新对象绑定到函数调用的this上、4如果函数没返回对象就自动返回新对象。这个第3步中，就会把生成的实例绑定到this上
+         1. 注意：当new调用构造函数时，发现构造函数是个硬绑定函数，就会使用新创建的this替换硬绑定的this
+            ```
+            function foo(something){
+              this.a = something;
+            }
+            var obj = {};
+            var bar = foo.bind(obj1); // 硬绑定函数 bar函数里this===obj1
+            bar(2);
+            console.log(obj1.a); // 2 没毛病 this绑定了obj1,所以obj1.a=this.a = 2;
+            var baz = new bar(3); // new 调用硬绑定函数 得到baz实例
+            console.log(obj1.a); // 2 
+            console.log(baz.a); // 3  意外!! baz是bar的实例所以bar绑定到了bar的this上，而bar的this已经绑定了obj1,理论上baz.a等于obj1.a, 也就是2。但实际上，当new调用构造函数时，发现构造函数是个硬绑定函数，就会使用新创建的this替换硬绑定的this
+            ```
+      2. 显示绑定：
+         1. 用.call(obj) .apply(obj) 在调用函数时，直接指定this要绑定的对象. 如果传入的是基础类型数组也会被自动变成对象形式(装箱行为)。 注意，当只想传递参数时，第一个参数也就是作为this的对象，如果传递null undefined等，可能会被忽略并且应用默认绑定规则，所以最简单的办法是传递一个空对象，用Object.create(null)，这个对象没有prototype，比{}更空。
+         2. 用.bind硬绑定
+      3. 隐式绑定：当obj.foo()，调用位置使用了obj的上下文来引用函数，obj对象“拥有”或者“包含”函数引用，那么foo()调用时this绑定到了obj上
+      4. 默认绑定：调用位置处于window对象中，函数this绑定到全局环境window中。注意：能不能绑定到window中取决于函数题是否没在严格模式下，至于调用位置是不是在严格模式下不重要。
+   3. => 箭头函数中this: 定义函数时所处的环境上下文对象被箭头函数捕获作为自己的this,由声明位置决定，跟被谁调用的没关系
+   4. 求输出
       ```
       var obj = {
         name: 'abc',
@@ -225,7 +243,7 @@
       obj.fn(); // undefined
       obj.bar(); //abc
       ```
-7. 方法 call / apply ：每个函数都有的，非继承来的方法，用于在特定的环境中调用函数，效果等同于设置函数体内this的值
+7. 方法 call / apply ：每个函数都包含两个非继承来的方法，apply和call。这两个方法的用途都是在特定的作用域中调用函数，实际上等于设置函数题内this对象的值。
    1. apply的用法：接收两个参数，funName.apply(要运行函数的作用域对象,参数数组也可以是argumens)
    2. call的用法：接收两个参数，funName.apply(要运行函数的作用域对象,...需要逐个列举参数)
    3. apply VS call: 只有第二个参数不同，其他都一样
@@ -337,16 +355,18 @@ p1.constructor === Person; //true
 ### 上下文 VS 调用栈 VS 作用域 VS 闭包
 前提：一段代码经过编译之后，会生成两部分：执行上下文 + 可执行代码
 1. 执行上下文：
-   1. 定义：是Js执行一段代码时的运行环境，包含了运行代码所需的this等各种对象。
-   2. 代码编译后，首先会初始化一个全局执行上下文+全局可执行代码。
-   3. 执行上下文组成：由 变量环境 + 词法环境组成
+   1. 定义: 也叫执行环境，定义了变量或者函数有权访问的其他数据，决定了它们各自的行为。每个执行环境都有一个与之关联的变量对象，环境中定义的所有变量和函数都保存在这个对象中。(虽然我们编写的代码无法访问这个对象，但解析器在处理数据的时候会在后台使用它)。
+   2. 全局执行环境是最外围的一个执行环境，在浏览器中，全局执行上下文被认定是window对象，因为所有全局变量和函数都是作为window的属性和方法创建的。全局执行环境直到应用程序退出才被销毁。
+   3. 每个函数都有自己的执行环境。某个执行环境中的所有代码执行完之后，该环境被销毁，保存在其中的所有变量和函数定义也随之销毁。
+   4. 代码编译后，首先会初始化一个全局执行上下文+全局可执行代码。
+   5. 执行上下文组成：由 变量环境 + 词法环境组成
       1. 变量环境：包含
          1. 由 var 声明的变量和函数 
          2. function函数
          3. 一个指针outer:指向外部的执行上下文 全局执行上下文的outer=>NULL 注意，这个outer是在编译时跟创建执行上下文时一起创建的，它的指向是由词法作用域决定的，是在编译过程中就决定好了的
       2. 词法环境：由 let 和 const 声明的变量
-   4. 代码中的变量和函数都保存在对应上下文的变量环境+词法环境中，将全局作用域压入调用栈，之后开始执行全局可执行代码，
-   5. 全局可执行代码的调用过程中，当调用一个函数，会编译该函数，js引擎就会为其创建新的函数执行上下文+函数可执行代码，再把函数执行上下文压入调用栈，之后执行函数可执行代码
+   6. 代码中的变量和函数都保存在对应上下文的变量环境+词法环境中，将全局作用域压入调用栈，之后开始执行全局可执行代码，
+   7. 全局可执行代码的调用过程中，当调用一个函数，会编译该函数，js引擎就会为其创建新的函数执行上下文+函数可执行代码，再把函数执行上下文压入调用栈，之后执行函数可执行代码
 2. 调用栈：是把执行上下文不断压入栈种，不包含可执行函数部分
 ![调用栈VS执行上下文](/src/assets/调用栈.png) 
 3. 作用域链：
@@ -392,8 +412,12 @@ p1.constructor === Person; //true
 
 ### 原型链
 1. 定义：一个构造函数的prototype属性指向一个原型对象，原型对象的constrctor指向构造函数，构造函数的实例的__proto__属性指向原型对象。让原型对象成为另一个类型的实例，那么就会形成一条通过__proto__不断指向的原型链 实例=>__proto__=>原型对象兼实例=>__proto__=>原型对象兼实例=>__proto__=>Object.prototype
-2. Function 与 Object 哪个是原型链的尽头：所有引用类型默认都继承了Object, 所有函数的默认原型都是Object的实例，因此默认原型都会有一个__proto__指向Object.prototype。所以所有的自定义类型都默认有toString和valueOf方法，都是来自Object.prototype的(参考js高程第三版p164)  ![原型链尽头](assets/原型链尽头.png)
-3. 在ES6的类继承中，Super = Object.getPrototypeOf(Sub) 
+2. 取得原型对象：Super.prototype = Object.getPrototypeOf(Sub) 
+3. Function 与 Object 哪个是原型链的尽头：
+   1. Object的原型的原型是null: Object.getPrototypeOf(Object.prototype); //null
+   2. Function的原型尽头是Object的原型： Object.getPrototypeOf(Function.prototype) === Object.prototype; // true
+   3. 所有引用类型默认都继承了Object, 所有函数的默认原型都是Object的实例，因此默认原型都会有一个__proto__指向Object.prototype。所以所有的自定义类型都默认有toString和valueOf方法，都是来自Object.prototype的(参考js高程第三版p164)  
+4. ![原型链尽头](assets/原型链尽头.png)
 
 
 ### 实现一个.bind方法
@@ -585,7 +609,6 @@ p1.constructor === Person; //true
    ```
 
 
-### 作用域 调用栈
 #### 
 1. 求输出
 ```
@@ -1100,13 +1123,23 @@ plus(1)(2) // 输出 4
     ```
 ### Promise.prototype上的方法：,
 1. Promise.prototype.then()
-   1. 是在原型对象上的方法,可能有两个函数参数，第一个处理resolve的情况， 第二个可选，处理异常
+   1. 是在原型对象上的方法,可能有两个函数参数，第一个处理resolve的情况， 第二个，处理异常。 两个参数都是可选的。
    2. .then()返回一个新的Promise实例,不是之前那个
-   3. 所以promise.then().then()....可以形成一条回调函数链条
+   3. 链式追踪：所以promise.then().then()....可以形成一条回调函数链条
+      ```
+      let p1 = Promise.resolve();
+      // 新返回的p2 会追踪 p1的状态变化
+      let p2 = p1.then(() => { })
+      // p1是fulfilled状态后，p2的onFulfilled会被执行
+      p2.then((res) => {
+          console.log('log：执行了onFulfilled')
+      })
+      // log： 执行了onFulfilled
+      ```
    4. 那么，`new Promise((resolve, reject)=>{resolve(*)}).then(*=>{})` 和 `.then(()=>{return *}).then(*=>{})` 都相当于用一个实例调用then()方法，有什么异同么
       1. 不同：resolve/return: 在.then().then()中 通过return * 将结果在链中传递：.then(()=>{return res}).then((res)=>{}) 即第一个回调函数完成后，return的结果会作为第二个函数的参数； 而在Promise构造函数的参数函数里，使用resolve或reject传递的;没有return就只是相互独立的任务而已
       2. 相同：都可以传递promise: 如果前一个的传递值仍然是个Proise实例，无论是resolve(p1) 还是 return p1, 那下一个then链仍然会等待p1的状态
-   5. 值穿透现象：.then 或者 .catch 的参数期望是函数，传入非函数则会发生值穿透。也就是说参数不是函数的then会被忽略，因为Promise方法链通过return传值，没有return就只是相互独立的任务而已
+   5. 值穿透现象：.then 或者 .catch 的参数期望是函数，传入非函数则会发生值穿透。也就是说参数不是函数的then会被忽略,依旧追踪上一个promise实例的状态。因为Promise方法链通过return传值，没有return就只是相互独立的任务而已
 2. Promise.prototype.catch()
    1. 都是原型链上的对象，相当于.then(null, ()=>{...}) 处理异常。与.then(null, ()=>{...}写法的区别：catch可以捕获then中第一个函数的错误，但是then(1,2)这样写，2函数不能捕获1的错误
    2. .catch()返回的也是一个新promise对象，不是之前那个，所以后面可以继续跟then或catch链
@@ -1213,7 +1246,6 @@ runPromises()
 7. filter+indexOf
 8. reduce+includes
 
-### 手写:使定时器没回调
 
 ### 求输出
 ```
@@ -1223,6 +1255,33 @@ var o = {};
 o[a] = 1;
 o[b] = 2;
 console.log(o[a]); //2
+```
+
+### 求输出
+```
+
+let promise1 = Promise.resolve()
+    .then(res => console.log(1))
+    .then(res => console.log(2))
+ 
+let promise2 = new Promise(resolve => {
+    setTimeout(() => {
+        console.log(6)
+        resolve()
+    })
+}).then(res => console.log(3))
+ 
+async function main() {
+    console.log(4)
+    console.log(await Promise.all([promise2, promise1]))
+    console.log(5)
+    return { obj: 5 }
+}
+let promise3 = Promise.resolve()
+    .then(res => console.log(8))
+    .then(res => console.log(9))
+ 
+console.log(typeof main())
 ```
 
 ### 如果需要你实现一个弹幕的组件，你需要如何设计这个组件的 props 和 state，内部如何实现，有哪些地方可以优化
@@ -1945,8 +2004,8 @@ function instance_of(Case, Constructor) {
     if ((typeof(Case) != 'object' && typeof(Case) != 'function') || Case == 'null') return false;
     let CaseProto = Object.getPrototypeOf(Case);
     while (true) {
-        // 查到原型链顶端，仍未查到，返回false
-        if (CaseProto == null) return false;  // 原型链的尽头是Object.prototype, Object.prototype.prototype为null
+        // 原型链的尽头 Object.prototype.prototype为null
+        if (CaseProto == null) return false;  // 查到原型链顶端，仍未查到，返回false
         // 找到相同的原型
         if (CaseProto === Constructor.prototype) return true;
         CaseProto = Object.getPrototypeOf(CaseProto);
@@ -2709,3 +2768,22 @@ function run(func) {
 })();
 // window
 ```
+
+### Ascll 编码 VS Unicode码
+1. 参考链接：AscII码  和 unicode码是什么关系？ - 石溪的回答 - 知乎
+https://www.zhihu.com/question/57461614/answer/274634720
+2. 总结：Unicode 是兼容 Ascll 基础上更大的编码集
+3. 发展过程：
+  1. 最初在英语国家，ascll码用一位字节就能标记字母、数字、部分符号。
+  2. 但中国汉字很多，acsll码不够，中国发布了GB-2312字符集，向下兼容Ascll；
+  3. 后来生僻字繁体字日韩字不够用了，又有了GBK字符集,向下兼容GB2312。
+  4. 但是各个系统的编码不同，常常引起乱码(互相无法正确解码对方的二进制信息), 所以最终ISO国际标准化组织发布了一套Unicode新标准，包含了全世界所有的文字和符号字符。其中表示汉字使用2位字节。
+4. 关于 UTF-8 和 UTF-16: 
+  1. 前置知识：字符代码 和 字符编码是不同的
+    1. 字符代码：是特定字符在某个字符集中的序号
+    2. 字符编码：是在传输、存储过程当中用于表示字符的以字节为单位的二进制序列
+  2. 在Ascll编码集中，字符代码和字符编码是一样的，所以忽略了差异
+  3. 在Unicode编码集中，每个字符的字符代码都用4个字节来表示，其中字符代码0~127兼容ASCII字符集，一般的通用汉字的字符代码也都集中在65535之前，需要超过两个字节来表示的字符代码是比较少的。
+  4. 所以，原本英文和汉字都只需要2位字节来表示字节代码，现在却被要求4个字节表示，对于存储或传输资源而言是很不划算的。因此就需要在字符代码和字符编码间进行再编码，这样就引出了UTF-8、UTF-16等编码方式。
+  5. UTF-8: 是针对位于不同范围的字符代码转化成不同长度的字符编码，同时这种编码方式是以字节为单位，并且完全兼容ASCII编码，也是用一个字节来编码ASCII字符集，用三个字节来进行汉字字符的编码。
+  6. UTF-16: 就是以16位二进制数为基本单位对Unicode字符集中的字符代码进行再编码，原理和UTF-8一致。

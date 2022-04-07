@@ -80,7 +80,7 @@ V8 是谷歌开源的 JavaScript 引擎，被用于 Chrome 和 Node.js 。程序
 1. 打开的同时加载数据 ❓❓❓
 2. 缓存webview  ❓❓❓
 
-### 浏览器时间切片
+### 浏览器时间切片 ???
 
 ### 浏览器本地缓存
 
@@ -95,7 +95,17 @@ V8 是谷歌开源的 JavaScript 引擎，被用于 Chrome 和 Node.js 。程序
 
 ### 如何做页面的监控
 
-### 浏览器从输入地址URL之后都做了什么， 重绘 与 回流 
+### 浏览器从输入地址URL之后都做了什么 
+#### 参考链接：![打开网页后全程](assets/打开网页后全程.png)
+1. 卸载已有的页面(Prompt for unload)：先卸载原来的页面，释放页面占据的内存
+2. 重定向(redirect)：基于缓存。在请求url时，可能该地址在以前请求过，如果发生了重定向，例如301，就会在浏览器内存中存储该重定向后的地址，所以会重新向新地址发起请求。
+3. App cache
+4. DNS
+5. TCP
+6. Request
+7. Response
+8. 文档解析 Processing
+9. 文档加载完成 onload
 
 ### 各个浏览器包括App端/小程序端WebView的内核都是什么
 
@@ -163,8 +173,15 @@ V8 是谷歌开源的 JavaScript 引擎，被用于 Chrome 和 Node.js 。程序
    2. messageChannel 
 3. 微任务：
    1. Promise (包含promise.then promise.catch promise.finally)
-   2. MutationObserver，监控dom节点变化、
-   3. window.queueMicrotask 可以创建一个微任务
+   2. window.queueMicrotask 可以创建一个微任务
+   3. MutationObserver，监控dom节点变化、
+      ```
+      // 创建一个微任务
+      const observer = new MutationObserver((mutationRecords, observer)=>{
+         console.log('mt1')
+      }))
+      observer.observe(document.body, { attributes: true })
+      ```
 4. 特殊的任务队列：Animation callbacks 是由 requestAnimationFrame定义的回调，也是一个队列，不属于事件循环
 5. 优先级 同步任务 > 微任务 > 宏任务
 6. 浏览器执行机制：
@@ -329,6 +346,9 @@ V8 是谷歌开源的 JavaScript 引擎，被用于 Chrome 和 Node.js 。程序
       2. 安装: 如果注册过的sw没有被安装过或者过期了，就会触发安装 执行 sw-install.js中的代码
       3. 激活: 安装成功后就开始激活。要做的事就是让新的sw尽快获得对作用域的控制，并且清理与旧的sw相关的一些缓存资源。sw-install.js中的代码
       4. 1-3步完成后，sw就可以控制页面了
+   6. 应用：PWA  ????
+      1. PWA是一种可以提供类似于原生应用程序(native app)体验的网络应用程序(web app)。PWA 可以用来做很多事。其中最重要的是，在离线(offline)时应用程序能够继续运行功能。这是通过使用名为 Service Workers 的网络技术来实现的。
+
 
 
 ### 主流浏览器引擎前缀:

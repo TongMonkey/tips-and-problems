@@ -48,7 +48,7 @@ git branch --unset-upstream 解除与当前映射的远程分支的关联
 git branch --set-upstream-to=origin/远程分支名 本地分支名  将本地的分支与远程库分支建立关联
 git pull  从与当前分支建立联系的远程库分支上拉取最新的提交,拉取到本地后将直接进行merge
 git pull origin 远程分支名：本地分支  其中 origin 是远程库的默认名称 将远程分支与本地分支merge 如果是与当前分支合并，冒号和本地分支名可以省略
-git rebase * 变基拉取  参考链接：https://blog.csdn.net/weixin_42310154/article/details/119004977
+git rebase * 变基拉取, 会自动把*分支最新代码合并到执行本命令所在的分支上，并将本分支新提交的代码合并到*上，变基后找不到当前分支是从哪个分支拉取的，也不会有merge记录，所以公司开发中可能会禁用该命令 参考链接：https://blog.csdn.net/weixin_42310154/article/details/119004977
 git push origin 本地分支名：远程分支名  把本地分支推送到远程库中的对应分支 其中 origin 是远程库的默认名称 ，分支名是master或自定义的分支名。一般，默认分支master和开发分支都要与远程库保持同步，修复bug分支等可以不这样，前提是已经commit之类的都完成了
 git reset --hard HEAD@{n}  回退到想使用的版本n
 git tag 自定义标签名  给当前分支最新的一次提交打上标签名

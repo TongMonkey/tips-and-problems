@@ -18,7 +18,90 @@
 
 ### 如何做前端预渲染
 
-### 埋点+监控方案
+### 前端监控方案
+1. 监控错误
+   1. promise异常：当Promise 被 reject 且没有 reject 处理器的时候，会触发 unhandledrejection 事件
+      ```
+      window.addEventListener("unhandledrejection",(event)=>{
+         // 接收错误信息
+         if (typeof event.reason === "string") {
+            message = event.reason;
+         } else if (typeof event.reason === "object") {
+            message = event.reason.message;
+         }
+      })
+      ```
+   2. js错误 监听window.onerror 
+   3. 资源加载异常 监听window.onerror 判断e.target.src||href
+      ```
+      window.addEventListener('error',function(event){
+         // 有 e.target.src(href) 的认定为资源加载错误
+         if (event.target && (event.target.src || event.target.href)) {
+            ...
+         }
+      })
+      ```
+   4. 卡顿：响应用户交互的响应时间如果大于100ms,用户就会感觉卡顿
+      ```
+      // new PerformanceObserver 创建监听对象
+      let observer = new PerformanceObserver((list) => {
+         list.getEntries().forEach((entry) => {
+            // entry.duration > 100 判断大于100ms，即可认定为长任务
+            if (entry.duration > 100) {
+               let lastEvent = getLastEvent();
+               // 使用 requestIdleCallback上报数据
+               requestIdleCallback(() => {
+                  ...
+               });
+            }
+         });
+      })
+      observer.observe({ entryTypes: ["longtask"] });
+      ```
+   5. 内存泄漏: 
+      1. 浏览器端监听 window.performance.memory 返回一个MemoryInfo类的对象，有三个属性
+         1. jsHeapSizeLomit：内存大小限制
+         2. totalJSHeadSize：可使用的内存大小
+         3. userdJSHeadSize：已使用的内存大小
+      2. node端监听 process.memoryUsage() 返回一个对象，描述以字节为单位的node进程的内存使用情况
+2. 监控性能 
+   1. 分析工具：
+      1. Chrome-devTools 中 lighthouse web-vitals performance 新加入了一个recorder功能
+      2. FP、FCP、LCP、CLS、FID、FMP 可通过 PerformanceObserver获取
+      3. TCP连接耗时、首字节到达时间、response响应耗时、DOM解析渲染的时间、TTI、DCL、L等可通过performance.timing获取
+      4. 长任务监听，PerformanceObserver 监听 longTask
+   2. 指标
+      1. 白屏时间：指的是从输入网址， 到页面开始显示内容的时间
+            ```
+            // 代码放在<head></head>里
+            <script>
+               let t = + new Date() - performance.timing.navigationStart
+            </script>
+            ```
+      2. 首屏时间：指从输入网址， 到首屏页面内容渲染完毕的时间。放在 load 事件里监听
+            ```
+            <script>
+               window.addEventListener('load',() =>{
+                  let t = + new Date() - performance.timing.navigationStart;
+               })
+            </script>
+            ```
+      3. `FP (First Paint) 首次绘制 `: 标记浏览器渲染任何在视觉上不同于导航前屏幕内容之内容的时间点.
+      4. `FCP (First Contentful Paint) 首次内容绘制 ` 标记浏览器渲染来自 DOM 第一位内容的时间点，该内容可能是文本、图像、SVG 甚至 元素.
+      5. `LCP (Largest Contentful Paint)` 最大内容渲染 代表在viewport中最大的页面元素加载的时间. LCP的数据会通过PerformanceEntry对象记录, 每次出现更大的内容渲染, 则会产生一个新的PerformanceEntry对象
+      6. `DCL (DomContentloaded) `: 当 HTML 文档被完全加载和解析完成之后，DOMContentLoaded 事件被触发，无需等待样式表、图像和子框架的完成加载.
+      7. `L (onLoad)`：当依赖的资源, 全部加载完毕之后才会触发
+      8. `FMP(First Meaningful Paint) 首次有效绘制`：主要元素的首次绘制时间
+      9.  `TTI (Time to Interactive) 可交互时间` : Time to interactive is the amount of time it takes for the page to become fully interactive.
+      10. `TBT (Total Blocking Time) 页面阻塞总时长`: js线程超50ms之后的task都会被记录视作阻塞时间，某进程主线程运行时间的总和中，阻塞task的时间总长就是TBT
+          1.  ![TBT页面阻塞总时长](assets/TBT页面阻塞总时长.png)
+      11. `FID (First Input Delay) 首次输入延迟`: 指标衡量的是从用户首次与您的网站进行交互（即当他们单击链接，点击按钮等）到浏览器实际能够访问之间的时间
+          1. ![FID首次输入延迟](assets/FID首次输入延迟.png
+      12. `SI (Speed Index)`: 页面可见速度 Speed Index shows how quickly the contents of a page are visibly populated.
+      13. `CLS (Cumulative Layout Shift)` 累积布局偏移 Cumulative Layout Shift measures the movement of visible elements within the viewport.测量的是整个页面生命周期内发生的所有意外布局偏移中最大一连串的布局偏移分数
+3. 业务数据：pv uv 停留时长
+   1. 可以通过 DocumentOrShadowRoot.elementsFromPoint() 可以获取当前视窗内某个指定坐标处的所有元素，添加数据监听事件
+   2. 可以在 beforeunload 事件之前把分析数据上报
 
 
 ### 前端优化
@@ -126,39 +209,6 @@
 10. Webview 优化
     1. 打开webview的同时并行加载页面数据 ？？？
 
-
-### 项目性能监控指标 都有哪些
-1. 分析工具：Chrome-devTools 中 lighthouse web-vitals performance 新加入了一个recorder功能
-2. 分析方向：网络层面 + 渲染层面，细分下来就是 时间层面 + 体积层面
-3. 渲染耗时：
-   1. 白屏时间：指的是从输入网址， 到页面开始显示内容的时间
-      ```
-      // 代码放在<head></head>里
-      <script>
-         let t = + new Date() - performance.timing.navigationStart
-      </script>
-      ```
-   2. 首屏时间：指从输入网址， 到首屏页面内容渲染完毕的时间。放在 load 事件里监听
-      ```
-      <script>
-         window.addEventListener('load',() =>{
-            let t = + new Date() - performance.timing.navigationStart;
-         })
-      </script>
-      ```
-   3. `FP (First Paint) 首次绘制 `: 标记浏览器渲染任何在视觉上不同于导航前屏幕内容之内容的时间点.
-   4. `FCP (First Contentful Paint) 首次内容绘制 ` 标记浏览器渲染来自 DOM 第一位内容的时间点，该内容可能是文本、图像、SVG 甚至 元素.
-   5. `LCP (Largest Contentful Paint)` 最大内容渲染 代表在viewport中最大的页面元素加载的时间. LCP的数据会通过PerformanceEntry对象记录, 每次出现更大的内容渲染, 则会产生一个新的PerformanceEntry对象
-   6. `DCL (DomContentloaded) `: 当 HTML 文档被完全加载和解析完成之后，DOMContentLoaded 事件被触发，无需等待样式表、图像和子框架的完成加载.
-   7. `L (onLoad)`：当依赖的资源, 全部加载完毕之后才会触发
-   8. `FMP(First Meaningful Paint) 首次有效绘制`：主要元素的首次绘制时间
-   9.  `TTI (Time to Interactive) 可交互时间` : Time to interactive is the amount of time it takes for the page to become fully interactive.
-   10. `TBT (Total Blocking Time) 页面阻塞总时长`: js线程超50ms之后的task都会被记录视作阻塞时间，某进程主线程运行时间的总和中，阻塞task的时间总长就是TBT
-       1.  ![TBT页面阻塞总时长](assets/TBT页面阻塞总时长.png)
-   11. `FID (First Input Delay) 首次输入延迟`: 指标衡量的是从用户首次与您的网站进行交互（即当他们单击链接，点击按钮等）到浏览器实际能够访问之间的时间
-       1. ![FID首次输入延迟](assets/FID首次输入延迟.png
-   12. `SI (Speed Index)`: 页面可见速度 Speed Index shows how quickly the contents of a page are visibly populated.
-   13. `CLS (Cumulative Layout Shift)` Cumulative Layout Shift measures the movement of visible elements within the viewport.
 
 
 ### debug 的方式

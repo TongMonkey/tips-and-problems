@@ -32,7 +32,7 @@
 
 
 ### webpack打包流程是什么
-#### 大方向分为：初始化、编译、输出文件
+#### 总体四个过程：初始化 - 构建make - 生成seal - 写入emit
 1. 前提：先找到项目的package.json文件下载好各个依赖的npm包
 2. 初始化
    1. 初始化参数： 从配置文件webpack.config.js(默认)+Shell语句中读取并合并参数，得到最终的参数
@@ -63,7 +63,7 @@
    })
    ```
    1. 初始化Resolver，负责在文件系统中寻找指定路径的文件。
-3. 编译：
+3. 编译make：
    1. 启动编译：
    ```
    globalSingleCompiler.run(); //启动一次新的编译 globalSingleCompiler.watchRun(); //在监听模式下启动的编译，在这个事件中可以获取是那些文件发生了变化导致了重新启动了
@@ -73,9 +73,9 @@
    1. 找到entry:当一个compilation创建完，先找到入口文件，再根据依赖关系找到整个依赖模块图关系。找entry:去配置文件webpack.config.js里找entry属性配置的地址，如果没有，默认是index.js
    2. 调动loader翻译：对每个module串行调用配置的所有loader翻译文件内容。在loader翻译完一个module后，将翻译后的内容进行解析(Babel中用的是@babel/parser)，输出对应的抽象语法书AST, 以便webpack后面对代码进行分析。
    3. 递归: 从配置的入口模块开始，分析其AST，当遇到导入语句导入了新的module，就将其加入依赖列表，同时对新找到的module翻译并递归(即重复3.4.步骤)，最终所有module都用loader翻译完成，并找到所有模块的依赖关系。
-4. 输出文件
-   1. 合成chunk:根据入口文件和文件之间的依赖关系，相关模块会组装成chunk, 最终输出多个chunk
-   2. 一个chunk就是一个文件：把每个chunk转换成一个单独的文件加入到输出列表。这步是可以修改输出内容的最后一个机会。
+4. 输出文件 seal+emit
+   1. seal阶段：会根据依赖图的内容组织分包，也就是合成chunk:根据入口文件和文件之间的依赖关系，相关模块会组装成chunk, 最终输出多个chunk
+   2. emit阶段：一个chunk就是一个文件：把每个chunk转换成一个单独的文件加入到输出列表。这步是可以修改输出内容的最后一个机会。
    3. 输出完成:根据配置文件output设置，输出到文件系统对应路径下
 5. 整个过程中：Webpack会在特定的时间点广播出特定的事件，插件在监听到感兴趣的事件后会执行特定的逻辑，插件可以调用Webpack提供的API
 
@@ -86,7 +86,18 @@
 
 
 ### webpack打包后都会产生什么
-1. 打包后的结果代码，是一个自执行函数
+1. runtime.js: 运行时代码.除业务代码外，Webpack 编译产物中还需要包含一些用于支持 webpack 模块化、异步加载等特性的支撑性代码，这类代码在 webpack 中被统称为 runtime。
+2. manifest.json: 这个manifest文件用来引导所有模块的交互,是最先加载的，负责解析webpack打包的其他bundle文件，使其按照要求进行加载和执行。当模块被打包并输出到浏览器上时，HMR-runtime就会根据manifest文件，知道从哪里去获取模块代码，处理和加载模块
+   1. 主要包含三个主要变量
+      1. modules: 保存所有的模块函数，对应打包前的每一个文件。所有的模块函数的索引值都是连续编码的。
+      2. installedModules：保存所有模块函数执行后返回的模块对象。是标准的commonJs对象，其属性主要有模块id和exports对象。webpack运行的过程其实就是指执行模块函数得到模块对象的过程。
+      3. installedChunks：保存异步加载模块信息，
+   2. 主要包含三个函数
+      1. webpackJsonpCallback(chunkIds, moreModules, executeModules){…}是bundle文件的包裹函数
+      2. webpack_require(moduleId)通过运行modules里的模块函数来得到模块对象，并保存到installedModules对象中。
+      3. webpack_require.e(chunkId)通过建立promise对象来跟踪按需加载模块的加载状态，并设置超时阙值，如果加载超时就抛出js异常。如果不需要处理加载超时异常的话，就不需要这个函数和installedChunks对象，可以把按需加载模块当作普通模块来处理。
+   3. 参考链接：https://blog.csdn.net/lancewu0907/article/details/76513231/
+3. 打包后的结果代码，是一个自执行函数
    ```
    // 基础版打包-大概逻辑：
    // 前提：入口文件为模块1, 在模块1中import了模块2 忽略了检查模块缓存优化的部分
@@ -391,16 +402,18 @@ module.export = {
    4. HMR Runtime: HMR Runtime是在browser浏览器终端中运行的。在最初Webpack Compiler打包过程中就把HMR Runtime注入到bundle.js里，在浏览器端的bundle.js里负责与服务器建立连接并更新文件的变化, 当监听到HMR Server传来了消息(一般是json数据)就更新浏览器。
    5. bundle.js: 即在浏览器中被访问的构建后输出的文件，包含HMR Runtime + js code
 2. 流程图：![HMR实现原理](../assets/HMR.png)
-3. 参考：文档`https://webpack.docschina.org/concepts/hot-module-replacement/`
+3. 参考：
+   1. 文档`https://webpack.docschina.org/concepts/hot-module-replacement/`
+   2. 中文文档：`https://doc.codingdict.com/webpack-cn-doc/concepts/hot-module-replacement/`
 4. 流程描述： 
    1. 在热更新的过程中，有两个阵营，一边是webpack,一边是browser，中间维护一个WebSocket.
    2. webpack中，通过HotModuleReplacementPlugin或者webpack-dev-middleware的方式，开启一个devServer本地服务器. 里面有两个Server服务，分别是Bundle-Server和HMR-Server
    3. webpack中，通过Compiler将 源码 + HMR-Runtime 打包进bundle.js(HMR是可选功能，不是所有的文件都有HMR-Runtime，需要热替换的文件才注入，同样，有了HMR-Runtime才能支持热替换)
    4. browser中,访问bundle.js文件。在未开启WDS时，浏览器是直接访问文件 例如 ./user/document/bundle.js，有了热更新后，其实是开启了webpack端的Bundle-Server之后，就可以用访问服务器的方式访问文件了，例如localhost:8080/bundle.js;
    5. 在webpack中，当发生一次更新，compiler发出一个update给到HMR-Server，update包含两部分：1.更新后的manifest(新的打包hash和所有的updated-chunks更新模块清单) + 2.updated-chunks更新后的模块文件。compiler 会确保在这些构建之间的模块 ID 和 chunk ID 保持一致。（通常将这些 ID 存储在内存中 例如使用 webpack-dev-server 时，但是也可能会将它们存储在一个 JSON 文件中)。然后通过websocket通知给browser端。
-   6. 在browser中，应用程序要求 HMR-Runtime 检查更新： HMR-Runtime中，会先check 即发送一个HTTP请求到HMR-Server请求更新manifest,如果请求失败说明没有可更新的；如果请求成功，HMR-Runtime会将 updated chunk 列表与当前的 loaded chunk 列表进行比较。
+   6. 在browser中，应用程序要求 HMR-Runtime 检查更新： HMR-Runtime中，会先执行check方法，即发送一个HTTP请求到HMR-Server请求更新manifest,如果请求失败说明没有可更新的；如果请求成功，进行步骤7比较。
    7. 在browser中， HMR-Runtime异步下载更新：比较后将每个需要更新的chunk下载相应的 updated chunk。当所有更新 chunks 完成下载，HMR-Runtime 就会切换到 ready 状态，然后通知应用程序。
-   8. 在browser中，应用程序要求HMR-Runtime 重新执行模块代码。HMR-Runtime 运行新的updated module, 将所有 updated module 标记为无效并不断冒泡把父module都标记为无效。之后所有无效 module 都会被处理和解除加载。然后更新当前 hash， HMR-Runtime 切换回 idle 状态，HMR-Runtime同步更新完成。
+   8. 在browser中，应用程序要求HMR-Runtime 重新执行模块代码。HMR-Runtime 运行新的updated module, 调用apply方法，将所有 updated module 标记为无效并不断冒泡把父module都标记为无效。之后所有无效 module 都会被处理和解除加载。然后更新当前 hash， HMR-Runtime 切换回 idle 状态，HMR-Runtime同步更新完成。
 
 ### 热更新遇到跨域问题怎么解决：
 ```
@@ -527,26 +540,35 @@ module.exports = {
          ```
 
 
-### 代码分割是什么，原理是什么 ？？？
-1. 定义：代码分割是将代码库分割成多个chunks，在代码运行需要它们的时候再进行下载、加载
-   1. 有两种情况需要代码分割：
-      1. 抽离相同代码到一个共享块
-      2. 脚本懒加载，使初始化代码下载量更小
-   2. 懒加载的方式
-   3. CommonJS语法：require.ensure
-   4. ES6: 动态import (目前原生还没有支持，需要Babel翻译，使用插件@babel/plugin-syntax-dynamic-import)
-   5. 配置
-      ```
-      module.export = {
-         plugins:[
-            "@babel/plugin-syntax-dynamic-import"
-         ]
-      }
-      ```
-2. 原理： ？？？？
+### SplitChunk 代码分包 
+1. chunk 是什么：Chunk 则是输出产物的基本组织单位，在生成阶段 webpack 按规则将 entry 及其它 Module 插入 Chunk 中，之后再由 SplitChunksPlugin 插件根据优化规则与 ChunkGraph 对 Chunk 做一系列的变化、拆解、合并操作，重新组织成一批性能(可能)更高的 Chunks 。运行完毕之后 webpack 继续将 chunk 写入物理文件中，完成编译工作
+2. seal阶段默认分包：
+   1. 默认分包规则：
+      1. 同一个 entry 下触达到的模块组织成一个 chunk。如果有多个entry，webpack会遍历entry对象并创造出多个chunks对象。
+      2. 异步模块单独组织为一个 chunk。 
+         1. 异步语句 CommonJs语法 require.ensure("./xx.js") 或 ES6语法 使用@babel/plugin-syntax-dynamic-import 插件 import("./xx.js")
+      3. entry.runtime 单独组织成一个 chunk:
+         1. entry.runtime : 对于多entry入口的应用，每个入口都重复打包一份相似的运行代码有点浪费，为此webpack5专门提供了entry.runtime配置项用于声明如何打包运行时代码。在多 entry 场景中，只要为每个 entry 都设定相同的 runtime 值，webpack 运行时代码最终就会集中写入到同一个 chunk，例如对于如下配置
+            ```
+               module.exports = {
+                  entry: {
+                     index: { import: "./src/index", runtime: "solid-runtime" },
+                     home: { import: "./src/home", runtime: "solid-runtime" },
+                  }
+               };
+            ```
+   2. 默认分包规则源码位置: webpack/lib/compilation.js 文件的 seal 函数
+   3. 默认分包的问题：无法解决模块重复的问题，如果多个 chunk 同时包含同一个 module，那么这个 module 会被不受限制地重复打包进这些 chunk。默认情况，webpack不会对此做额外处理，全都傻傻打包进去。
+3. splitChunk 是什么：
+   1. 定义：借助 SplitChunksPlugin 实现分包
+   2. 源码：/webpack/lib/optimize/SplitChunksPlugin.js
+   3. ChunkGroup:
+   4. ChunkGraph
+   5. SplitChunkPlugin 插件做了哪些分包优化 ???
+4. 
+
 
 ### 使用动态import时，webpack是怎么工作的 || 动态import的实现原理 ？？？
-
 
 
 ### Scope-Hoisting 区域提升，原理是什么 ？？？
@@ -736,14 +758,10 @@ module.exports = {
 
 ### 源码
 
-### 常用配置
 
 ### 复杂情况下的配置方案
 
 
-### split chunks 用了哪些函数实现 得看源码
-
-### runtime.js是什么
 
 ### 其他打包工具 比如vite
 
@@ -1005,7 +1023,7 @@ module.exports = {
    3. 打包速度检查：用 speed-measure-webpack-plugin 插件，用插件实例化的对象 wrap整个配置文件即可
    4. 打包进度监控：使用 progress-bar-webpack-plugin 插件，可以在命令行看到实时的打包进度百分比
 4. 内联资源：
-   1. 将css内联到js: 用 style-loader 将css-loader打包好的代码由js操作，以`<style>`标签的形式加载到html中使样式生效. 此时打包出来的文件中，没有独立的css代码，打包的html中没有css代码
+   1. 将css内联到js: 用 style-loader 将css-loader打包好的代码由js操作dom, 以`<style>`标签的形式append到html body中使样式生效. 此时打包出来的资源中没有独立的css代码，打包的html中没有css代码，而是在js中有css代码。
    2. 将css内联进html的head中：用 html-inline-css-webpack-plugin 插件. 注意配置时要放在 html-webpack-plugin 后面，要先产出了html后才能放置css
    3. 将css打包成独立文件: 用 mini-css-extract-plugin插件，配置时，除了要在插件数组里加入实例，还要注意，用MiniCssExtractPlugin.loader 代替 style-loader
    4. 小资源(小图/字体)内联到j：类似file-loader,用 url-loader 将小于限制大小的字体/图片加载为base64格式,这样就可以直接使用字符串得到资源而不用发http请求，url-loader对大小做限制判断，小的才去转换base64格式，大的资源依然去调用file-loader (但是我在测试中，url-loader打出来的包都是损毁的，直接打都打不开)
@@ -1014,12 +1032,22 @@ module.exports = {
    1. 第三方基础库打包：用 html-webpack-externals-plugin 插件，然后设置externals。然后可以从html中利用cdn获取资源
    2. 预编译资源模块：用 DLLPlugin 将外部的包都打进一个文件 并且生成一个 menifest.json 清单文件描述打出来的这些包，在config配置文件中可以通过 DLLReferencePlugin 去引用menifest 即可引用对应的资源包。 一般会单独配置一个文件叫 webpack.dll.js
    3. 代码分割：使用 split-chunks-plugin 插件提取公共代码 + 控制每个包的体积
-   4. 提取第三方：
+   4. splitChunksPlugin:
+      1. 提取公共代码：配置cacheGroups 将 react等第三方、重复使用的模块 单独提取
+      2. 动态加载：异步模块单独提取
    5. Tree-Shaking:
-   6. 动态加载：
 6. 持久化缓存：
-   1. 文件指纹：
-   2. 控制项目部署顺序：
+   1. contenthash 文件指纹：在w5中将使用真正的文件内容hash，在此之前只是使用了‘结构的hash’。
+   2. webpack4内置了临时缓存功能，但只在watch模式下使用，进程退出后立即失效。但可以通过例如 babel-loader eslint-loader cache-loader 等实现缓存。
+      1. babel-loader 默认会将缓存内容保存到 node_modules/.cache/babel-loader 目录，用户也可以通过 cacheDirectory = 'dir' 方式设置缓存路径。
+      2. eslint-loader 同样支持缓存功能，只需设置 cache = true 即可开启。默认将缓存内容保存到 ./node_modules/.cache/eslint-loader 目录，用户也可以通过 cache = 'dir' 方式设置缓存路径。
+      3. 将 cache-loader可支持loader执行结果缓存。需要配置在 loader 数组首位，也就会在最后一个执行的位置，就可以实现持久化缓存
+   3. webpack5支持 filesystem持久化缓存：
+      1. 可以将首次构建结果(module、chunk、moduleGraph)缓存到内存或者本地文件，在配置cache中 type设置filesystem, 在下次执行构建时对比每个文件的contenthash，未变化的文件跳过一系列解析、链接、编译等非常耗性能的操作，直接复用构建结果。
+      2. 通过cache.buildDependencies 设置依赖文件，当有变化，则缓存失效，重新build。
+   4. 控制项目部署顺序：？？？
+7. 构建组件库：
+   1. 模块联邦 Module Federation：webpack5支持了一个可以对模块单独打包和引入的方案叫做 Module Federation 模块联邦, 通常被称作微前端，但不止于此。多个独立的构建可以组成一个应用程序，这些独立的构建之间不应该存在依赖关系，因此可以单独开发和部署它们。
 
 
 

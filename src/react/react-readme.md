@@ -623,7 +623,7 @@ function useCustomHook(initial){
       3. 通过 store.subscribe(listener) 注册监听器，订阅state更新, 观察者模式
       4. 通过 store.subscribe(listener) 返回的函数注销监听器
    4. 使用Provider 包裹根组件 传入store `<Provider store={store}><App></Provider>`
-   5. 用connect()方法可以获取react redux,适用于根组件之下的所有子组件，  `connect([mapStateToProps], [mapDispatchToProps], [mergeProps], [options])`,连接操作不会改变原来的组件类。返回一个新的已与 Redux store 连接的组件类.
+   5. 用connect()方法将状态注入组件，可以在组件中获取react redux state,适用于根组件之下的所有子组件，  `connect([mapStateToProps], [mapDispatchToProps], [mergeProps], [options])`,连接操作不会改变原来的组件类。返回一个新的已与 Redux store 连接的组件类.
       1. [mapStateToProps(state, [ownProps]): stateProps] (Function): 如果定义该参数，组件将会监听 Redux store 的变化。任何时候，只要 Redux store 发生改变，mapStateToProps 函数就会被调用。该回调函数必须返回一个纯对象，这个对象会与组件的 props 合并。如果你省略了这个参数，你的组件将不会监听 Redux store
       2. [mapDispatchToProps(dispatch, [ownProps]): dispatchProps] (Object or Function): 如果传递的是一个对象，那么每个定义在该对象的函数都将被当作 Redux action creator，对象所定义的方法名将作为属性名；每个方法将返回一个新的函数，函数中dispatch方法会将action creator的返回值作为参数执行。这些属性会被合并到组件的 props 中。
    6. action 是一个对象，里面必须有一个type属性，字符串值，用来决定会触发的reducer
@@ -678,7 +678,6 @@ function useCustomHook(initial){
          }
       }
       ```
-   10. 
 3. reudx 异步： 参考链接http://www.ruanyifeng.com/blog/2016/09/redux_tutorial_part_two_async_operations.html
    1. middlewares: 
       1. 数组里面每个middleware都是对store.dispatch的重写，是对dispatch方法的拓展，middleware函数返回新dispatch方法，供链式调用，redux本身提供了一个applyMiddlewares方法，applyMiddleware(...middlewares) 用来合并中间件
@@ -706,7 +705,6 @@ function useCustomHook(initial){
 3. 通过window.history.pushState window.history.replaceState window.history.popState 实现的，更改浏览器地址但是不刷新页面
 4. react项目中有两个包 react-router 和 react-router-dom 两种，关系是：react-router: 实现了路由的核心功能。react-router-dom: 基于react-router，加入了在浏览器运行环境下的一些功能。还有一个库叫 react-router-native，这个库也是基于 react-router 的，它类似 react-router-dom，加入了 React Native 运行环境下的一些功能。所以在浏览器环境下，一般引用react-router-dom就可以
 
-### 怎么检测页面性能 react性能工具profiler怎么用的
 
 ### React怎么实现懒加载
 #### 大项目打包到一个bundle文件体积过大，请求资源的时间过长，影响首屏渲染速度，通过代码分割+懒加载可以解决这一问题
@@ -740,18 +738,17 @@ function useCustomHook(initial){
    1. 用处：Suspense使组件可以"等待"某些操作结束后再进行渲染；而React.lazy就是一中一个使用场景，动态加载组件。
    2. 导入时机：React.lazy 函数能像渲染常规组件一样处理动态引入的组件。不会在一开始就导入组件，而是在组件首次渲染时，才自动导入包含组件的包;
    3. 写法：应在 Suspense 组件中渲染 lazy 组件,fallback 属性接受任何在组件加载过程中你想展示的 React 元素,可以将 Suspense 组件置于懒加载组件之上的任何位置。你甚至可以用一个 Suspense 组件包裹多个懒加载组件。React.lazy 接受一个函数，这个函数需要动态调用 import(),所以也会自动分割。lazy的入参函数必须返回一个 Promise，该 Promise 需要 resolve 一个 default export 的 React 组件
-   ```
-   import React, { Suspense } from 'react';
-   const OtherComponent = React.lazy(() => import('./OtherComponent')); //注意：返回的是模块的默认导出模块 export default OtherComponent
-   return (
-      <Suspense fallback={<div>Loading...</div>}> 
-         <OtherComponent />
-      </Suspense>
-   )
-   ```
-   1. 代码分割：也使用了动态import，所以也会自动代码分割
-   2. Suspense 与 React.lazy 的原理：React.lazy函数返回一个叫LazyComponent的对象，LazyComponent的本质是调用了一个叫readLazyComponentType的函数，首次渲染时进入readLazyComponentType的default逻辑，在这里真正执行import()操作，返回Promise，然后直接检查resolved的状态，如果有结果就直接把动态加载的模块的默认部分moduleObject.default导出；如果没有resolved，就将该Promise的'是否可then'对象thenable抛出给上层:throw thenable。此时React捕获到error,就判断是不是thenable,如果是的话就交给Suspense即SuspenseComponent对象处理。如果thenable处于pending状态则会将其children都渲染成fallback的值，一旦thenable被resolve则SuspenseComponent的子组件会重新渲染一次,渲染moduleObject.default
-   3. 注意： React.lazy 目前只支持默认导出 default exports, 如果想用命名导出，需要使用一个中间模块做转换
+      ```
+      import React, { Suspense } from 'react';
+      const OtherComponent = React.lazy(() => import('./OtherComponent')); //注意：返回的是模块的默认导出模块 export default OtherComponent
+      return (
+         <Suspense fallback={<div>Loading...</div>}> 
+            <OtherComponent />
+         </Suspense>
+      )
+      ```
+   4. Suspense 与 React.lazy 的原理：React.lazy函数返回一个叫LazyComponent的对象，LazyComponent的本质是调用了一个叫readLazyComponentType的函数，首次渲染时进入readLazyComponentType的default逻辑，在这里真正执行import()操作，返回Promise，然后直接检查resolved的状态，如果有结果就直接把动态加载的模块的默认部分moduleObject.default导出；如果没有resolved，就将该Promise的'是否可then'对象thenable抛出给上层:throw thenable。此时React捕获到error,就判断是不是thenable,如果是的话就交给Suspense即SuspenseComponent对象处理。如果thenable处于pending状态则会将其children都渲染成fallback的值，一旦thenable被resolve则SuspenseComponent的子组件会重新渲染一次,渲染moduleObject.default
+   5. 注意： React.lazy 目前只支持默认导出 default exports, 如果想用命名导出，需要使用一个中间模块做转换
    ```
    // ManyComponents.js
    export const MyComponent = /* ... */;
@@ -762,6 +759,7 @@ function useCustomHook(initial){
    import React, { lazy } from 'react';
    const MyComponent = lazy(() => import("./MyComponent.js"));
    ```
+3. 代码分割：也使用了动态import，所以也会自动代码分割
 
 
 ### React如何处理组件内发生的错误
@@ -769,43 +767,43 @@ function useCustomHook(initial){
 1. 定义：ErrorBoundary也是一个React组件，这种组件可以捕获发生在其子组件树任何位置的 JavaScript 错误，并打印这些错误，同时展示降级 UI，而并不会渲染那些发生崩溃的子组件树。；无法捕获的错误：。
    1. 能捕获：错误边界在渲染期间、生命周期方法和整个组件树的构造函数中捕获错误
    2. 不能捕获：
-   ```
-   事件处理 //事件内部的错误还是用try-catch捕获
-   异步代码（例如setTimeout或requestAnimationFrame回调函数）
-   服务端渲染
-   它自身(非子组件)抛出来的错误。 // 自身抛出的问题会冒泡到更上层的错误边界，类似于catch的机制。
-   ```
+      ```
+      事件处理 //事件内部的错误还是用try-catch捕获
+      异步代码（例如setTimeout或requestAnimationFrame回调函数）
+      服务端渲染
+      它自身(非子组件)抛出来的错误。 // 自身抛出的问题会冒泡到更上层的错误边界，类似于catch的机制。
+      ```
 2. 用法：如果一个class组件(只有 class 组件才可以成为错误边界组件)中定义了static getDerivedStateFromError() 或 componentDidCatch() 这两个生命周期方法中的任意一个（或两个）时，那么它就变成一个错误边界。
-```
-// 定义
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-  // 当抛出错误后，使用 static getDerivedStateFromError() 渲染备用UI
-  static getDerivedStateFromError(error) {
-    // 更新 state 使下一次渲染能够显示降级后的 UI
-    return { hasError: true };
-  }
-  // 当抛出错误后，使用componentDidCatch() 处理错误信息。
-  componentDidCatch(error, errorInfo) {
-    // 同样可以将错误日志上报给服务器
-    logErrorToMyService(error, errorInfo);
-  }
-  render() {
-    if (this.state.hasError) {
-      // 你可以自定义降级后的 UI 并渲染
-      return <h1>Something went wrong.</h1>;
-    }
-    return this.props.children; 
-  }
-}
-// 使用，跟常规组件一样，定义一个就可以在全局使用，可以放在零件组件中，也可以放在最顶层的路由组件中
-<ErrorBoundary>
-  <MyWidget />
-</ErrorBoundary>
-```
+   ```
+   // 定义
+   class ErrorBoundary extends React.Component {
+   constructor(props) {
+      super(props);
+      this.state = { hasError: false };
+   }
+   // 当抛出错误后，使用 static getDerivedStateFromError() 渲染备用UI
+   static getDerivedStateFromError(error) {
+      // 更新 state 使下一次渲染能够显示降级后的 UI
+      return { hasError: true };
+   }
+   // 当抛出错误后，使用componentDidCatch() 处理错误信息。
+   componentDidCatch(error, errorInfo) {
+      // 同样可以将错误日志上报给服务器
+      logErrorToMyService(error, errorInfo);
+   }
+   render() {
+      if (this.state.hasError) {
+         // 你可以自定义降级后的 UI 并渲染
+         return <h1>Something went wrong.</h1>;
+      }
+      return this.props.children; 
+   }
+   }
+   // 使用，跟常规组件一样，定义一个就可以在全局使用，可以放在零件组件中，也可以放在最顶层的路由组件中
+   <ErrorBoundary>
+      <MyWidget />
+   </ErrorBoundary>
+   ```
 
 ### 疑问 为什么在类组件的constructor中需要将普通函数手动.bind(this)，而箭头函数不需要?
 #### 解释：
@@ -822,51 +820,51 @@ ES6中的Class只是一个函数的语法糖，如果没有用new调用，并不
 
 ### 怎么实现一个定时器/倒计时
 1. 写一个 React Hooks，用来倒计时，传入时间，返回 start、pause、restart、isRunning
-2. 可能有哪些坑
+2. 可能有哪些坑: 闭包问题
 3. 求输出:以下两种写法有什么区别，会出现什么效果，如果不一样的话如何能得到同样的效果
-```
-export default class App extends React.Component {
-  state = {
-    cnt: 0
-  };
-  render() {
-    return (
-      <>
-        <button
-          onClick={() => {
-            this.setState({ cnt: this.state.cnt + 1 });
-            setTimeout(() => {
-              this.setState({ cnt: this.state.cnt + 1 });
-            }, 1000);
-          }}
-        >
-          add cnt
-        </button>
-        <div>cnt: {this.state.cnt}</div>
-      </>
-    );
-  }
-}
+   ```
+   export default class App extends React.Component {
+   state = {
+      cnt: 0
+   };
+   render() {
+      return (
+         <>
+         <button
+            onClick={() => {
+               this.setState({ cnt: this.state.cnt + 1 });
+               setTimeout(() => {
+               this.setState({ cnt: this.state.cnt + 1 });
+               }, 1000);
+            }}
+         >
+            add cnt
+         </button>
+         <div>cnt: {this.state.cnt}</div>
+         </>
+      );
+   }
+   }
 
-export default function App() {
-  const [cnt, setCnt] = useState(0);
-  return (
-    <>
-      <button
-        onClick={() => {
-          setCnt(cnt + 1);
-          setTimeout(() => {
+   export default function App() {
+   const [cnt, setCnt] = useState(0);
+   return (
+      <>
+         <button
+         onClick={() => {
             setCnt(cnt + 1);
-          }, 1000);
-        }}
-      >
-        add cnt
-      </button>
-      <div>cnt: {cnt}</div>
-    </>
-  );
-}
-```
+            setTimeout(() => {
+               setCnt(cnt + 1);
+            }, 1000);
+         }}
+         >
+         add cnt
+         </button>
+         <div>cnt: {cnt}</div>
+      </>
+   );
+   }
+   ```
 
 ### React-Dom做了什么
 1. render(element, container[, callback]) 

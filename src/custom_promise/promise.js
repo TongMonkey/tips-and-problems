@@ -233,6 +233,5 @@ class Promise {
     });
   }
   static allSettled() {}
-  static try() {}
 }
 export default Promise;
