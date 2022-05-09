@@ -248,6 +248,8 @@
    7. HtmlWebpackPlugin 创建html模版文件用来承载输出bundle
    8. ZipWebpackPlugin 将打包的资源生成一个.zip包
    9. webpackBundleAnalyzer 打包资源分析器
+   10. MemoryCachePlugin 增加了内存缓存功能 (w5内置了)
+   11. FileCachePlugin 增加了持久性（文件系统）缓存 (w5内置了)
 
 
 ### 编写Plugin
@@ -1012,7 +1014,9 @@ module.exports = {
    1. 压缩css：用 css-minimizer-webpack-plugin 插件
    2. 压缩js: 用 Uglify-webpack-plugin
    3. 开启gzip压缩： 用compression-webpack-plugin插件
-   4. 打包后检查：用 webpack-bundle-analyser 包中的 BundleAnalyzerPlugin 插件，可以在本地另开一个服务显示各个bundle的体积
+   4. 打包后检查：
+      1. 用 webpack-bundle-analyser 包中的 BundleAnalyzerPlugin 插件，可以在本地另开一个服务显示各个bundle的体积
+      2. 内置了 performance 配置项用来监控大于250kb的项目就会在控制台输出告警信息
 3. 提高打包速率：
    1. 多线程编译：
       1. 用 thread-loader 多线程打包。注意把这个 loader 放置在其他 loader 之前， 放置在这个 loader 之后的 loader 就会在一个单独的 worker 池(worker pool)中运行.
@@ -1028,7 +1032,7 @@ module.exports = {
    3. 将css打包成独立文件: 用 mini-css-extract-plugin插件，配置时，除了要在插件数组里加入实例，还要注意，用MiniCssExtractPlugin.loader 代替 style-loader
    4. 小资源(小图/字体)内联到j：类似file-loader,用 url-loader 将小于限制大小的字体/图片加载为base64格式,这样就可以直接使用字符串得到资源而不用发http请求，url-loader对大小做限制判断，小的才去转换base64格式，大的资源依然去调用file-loader (但是我在测试中，url-loader打出来的包都是损毁的，直接打都打不开)
    5. 将html内联到html：用 raw-loader 将文件作为字符串导入.
-5. 模块分离
+5. 代码分离
    1. 第三方基础库打包：用 html-webpack-externals-plugin 插件，然后设置externals。然后可以从html中利用cdn获取资源
    2. 预编译资源模块：用 DLLPlugin 将外部的包都打进一个文件 并且生成一个 menifest.json 清单文件描述打出来的这些包，在config配置文件中可以通过 DLLReferencePlugin 去引用menifest 即可引用对应的资源包。 一般会单独配置一个文件叫 webpack.dll.js
    3. 代码分割：使用 split-chunks-plugin 插件提取公共代码 + 控制每个包的体积
@@ -1046,9 +1050,12 @@ module.exports = {
       1. 可以将首次构建结果(module、chunk、moduleGraph)缓存到内存或者本地文件，在配置cache中 type设置filesystem, 在下次执行构建时对比每个文件的contenthash，未变化的文件跳过一系列解析、链接、编译等非常耗性能的操作，直接复用构建结果。
       2. 通过cache.buildDependencies 设置依赖文件，当有变化，则缓存失效，重新build。
    4. 控制项目部署顺序：？？？
-7. 构建组件库：
+7. 微前端：
    1. 模块联邦 Module Federation：webpack5支持了一个可以对模块单独打包和引入的方案叫做 Module Federation 模块联邦, 通常被称作微前端，但不止于此。多个独立的构建可以组成一个应用程序，这些独立的构建之间不应该存在依赖关系，因此可以单独开发和部署它们。
+      1. 注意：new ModuleFederationPlugin 里配置的 name 要与 入口 entry 的名字相同
+      2. 注意：与splitChunks:'all'不兼容，参考https://blog.csdn.net/xys_777/article/details/123987025?spm=1001.2014.3001.5501
+      3. 注意：导入的包本身是个[object Module] 对象，可能是其default属性，需要 import {default: compName} from 这样导出。 否则可能报错 Uncaught Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: object.
+      4. 注意：导入的顺序和模块类型有要求，因为远程加载进来的是异步加载，参考链接：https://segmentfault.com/a/1190000024449390
 
 
 
-### ?

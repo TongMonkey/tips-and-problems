@@ -82,7 +82,6 @@
    ```
 
 
-
 ### npm 
 1. 定义：是Node.js标准的软件包管理器。 yarn是npm的一个替代选择。
 2. 安装软件包
@@ -654,5 +653,18 @@
 
 ### node多进程之间是如何通信的
 
+### RPC通信
+1. 定义：Remote Procedure Call 远程过程调用
+2. 
+3. RPC VS Ajax
+   1. 相同点：都是两个计算机之间的网络通信，都需要约定一个数据格式
+   2. 不同点：
+      1. RPC 不一定使用 DNS 做寻址服务，因为可能是内网直接请求服务器；而Ajax是需要DNS的
+      2. RPC 调用一般使用二进制协议，而不是 HTTP协议; 而 Ajax基于 HTTP。使用二进制协议，拥有更小的数据包体积和更快的编解码速率。
+      3. Ajax一定是基于 TCP, 但 RPC 不一定基于TCP还是UDP
+
+### 应用：
+1. 使用Node.js搭建 BFF 层 Backend For Frontend
+2. 使用Node.js + Next.js 实现 SSR
 
 

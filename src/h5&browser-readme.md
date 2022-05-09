@@ -164,6 +164,15 @@ V8 是谷歌开源的 JavaScript 引擎，被用于 Chrome 和 Node.js 。程序
       2. 互斥的原因：由于JavaScript是可操纵DOM的，如果在修改这些元素属性同时渲染界面（即JS线程和UI线程同时运行），那么渲染线程前后获得的元素数据就可能不一致了。因此为了防止渲染出现不可预期的结果，浏览器设置GUI渲染线程与JS引擎线程为互斥的关系
    2. 上述5个线程中，只有js引擎线程执行js脚本，3-5这三个线程只负责将满足条件的函数推进事件循环中的任务队列，等待js引擎进程空闲时执行
 
+### 浏览器的5种 Observer 
+参考链接：https://blog.csdn.net/qiwoo_weekly/article/details/123080748?spm=1001.2014.3001.5502
+1. addEventListener 监听用户操作、窗口resize
+2. IntersectionObserver 监听一个元素和可视区域相交部分的比例，然后在可视比例达到某个阈值的时候触发回调。
+3. MutationObserver 可以监听对元素的属性的修改、对它的子节点的增删改。
+4. ResizeObserver 监听元素大小的改变，当 width、height 被修改时会触发回调
+5. PerformanceObserver 用于监听记录 performance 数据的行为，一旦记录了就会触发回调，这样我们就可以在回调里把这些数据上报
+6. ReportingObserver 监听过时的 api、浏览器干预等报告等的打印，在回调里上报
+
 ### EventLoop事件循环 (浏览器环境) 
 参考链接：https://baijiahao.baidu.com/s?id=1702088861129925384&wfr=spider&for=pc
 1. 处于一个渲染进程中的事件队列线程，维护了一个栈，分为 宏任务 和微任务。
@@ -227,27 +236,57 @@ V8 是谷歌开源的 JavaScript 引擎，被用于 Chrome 和 Node.js 。程序
       1. ![图层树](/src/assets/图层树.webp)
    3. 并不是布局树的每个节点都包含一个图层，如果一个节点没有对应的层，那么这个节点就从属于父节点的图层。但不管怎样，最终每一个节点都会直接或者间接地从属于一个层。
    4. 会被提升为单独图层的2种情况
-      1. 拥有层叠上下文属性的元素,即能够被z-index属性改变表现的元素会被提升为单独的一层，例如不在文档流内的position、opacity透明的元素、css filter滤镜的元素 等。
-         ```
-         // 参考链接：https://developer.mozilla.org/zh-CN/docs/Web/CSS/CSS_Positioning/Understanding_z_index/The_stacking_context
-         文档根元素（<html>）；
-         position 值为 absolute（绝对定位）或  relative（相对定位）且 z-index 值不为 auto 的元素；
-         position 值为 fixed（固定定位）或 sticky（粘滞定位）的元素（沾滞定位适配所有移动设备上的浏览器，但老的桌面浏览器不支持）；
-         flex (flexbox (en-US)) 容器的子元素，且 z-index 值不为 auto；
-         grid (grid) 容器的子元素，且 z-index 值不为 auto；
-         opacity 属性值小于 1 的元素（参见 the specification for opacity）；
-         mix-blend-mode 属性值不为 normal 的元素；
-         以下任意属性值不为 none 的元素：
-            transform
-            filter
-            perspective
-            clip-path
-            mask / mask-image / mask-border
-         isolation 属性值为 isolate 的元素；
-         -webkit-overflow-scrolling 属性值为 touch 的元素；
-         will-change 值设定了任一属性而该属性在 non-initial 值时会创建层叠上下文的元素（参考这篇文章）；
-         contain 属性值为 layout、paint 或包含它们其中之一的合成值（比如 contain: strict、contain: content）的元素。
-         ```
+      1. 拥有层叠上下文属性的元素,即能够被z-index属性改变表现的元素会被提升为单独的一层，例如不在文档流内的position、opacity透明的元素、css filter滤镜的元素 等。参考链接：https://developer.mozilla.org/zh-CN/docs/Web/CSS/CSS_Positioning/Understanding_z_index/The_stacking_context
+         1. 文档根元素（<html>）；
+         2. position 值为 absolute（绝对定位）或  relative（相对定位）且 z-index 值不为 auto 的元素；
+         3. position 值为 fixed（固定定位）或 sticky（粘滞定位）的元素（沾滞定位适配所有移动设备上的浏览器，但老的桌面浏览器不支持）；
+            1. 注意！！ position:fixed遇到部分分层的情况后，将会从对屏幕绝对定位萎缩为对元素绝对定位
+               ```
+               /*  
+               transform 属性值不为 none 的元素
+               设置了 transform-style: preserve-3d 的元素
+               perspective 值不为 none 的元素
+               在 will-change 中指定了任意 CSS 属性
+               设置了 contain: paint
+               filter 值不为 none 的元素
+               backdrop-filter 值不为 none的元素 
+               */
+               <style>
+                  .outer {
+                     width: 300px;
+                     height: 400px;
+                     background-color: orange;
+                     /* transform: translateX(100px); */ 
+                     /* transform-style: preserve-3d; */
+                     /* perspective: 400px; */
+                     /* will-change: transform; */
+                     /* contain: paint; */
+                     /* filter: grayscale(100%); */
+                     /* backdrop-filter: grayscale(100%); */
+                  }
+                  .inner {
+                     width: 200px;
+                     height: 200px;
+                     background-color: lightblue;
+                     position: fixed;
+                     right: 0;
+                  }
+               </style>
+               ```
+         4. flex (flexbox (en-US)) 容器的子元素，且 z-index 值不为 auto；
+         5. grid (grid) 容器的子元素，且 z-index 值不为 auto；
+         6. opacity 属性值小于 1 的元素（参见 the specification for opacity）；
+         7. mix-blend-mode 属性值不为 normal 的元素；
+         8. transform:值不为 none 的元素
+         9.  filter:值不为 none 的元素(filter将会给整个元素设置滤镜)
+         10. backdrop-filter 值不为 none的元素(backdrop-filter 可以只给北京设置滤镜)
+         11. perspective: preserve-3d 的元素
+         12. clip-path
+         13. mask / mask-image / mask-border
+         14. isolation 属性值为 isolate 的元素；
+         15. -webkit-overflow-scrolling 属性值为 touch 的元素；
+         16. will-change 值设定了任一属性而该属性在 non-initial 值时会创建层叠上下文的元素（参考这篇文章）；
+         17. contain 属性值为 layout、paint 或包含它们其中之一的合成值（比如 contain: strict、contain: content）的元素。
       2. 需要裁剪 或 出现滚动条的,会提升为单独的层 例如小区域大内容的overflow:hidden
 5. 图层绘制指令：并非真的绘制，其实是组装一个待绘制指令列表。 完成图层树后，渲染引擎会对图层树中的每个图层拆解成一个个小的绘制指令，再将这些指令按照顺序组成待绘制列表，绘制阶段就是合成并输出待绘制指令列表。 
 6. 图层分块: 从这一步开始，下面的操作才是真正的绘制，是由合成线程控制光栅线程真正完成的。
@@ -281,10 +320,7 @@ V8 是谷歌开源的 JavaScript 引擎，被用于 Chrome 和 Node.js 。程序
     1.  在内存中操作或缓存起来：在js中统一操作dom 或者缓存dom，之后操作一次dom
     2.  脱离文档流操作：将要修改的dom设置为 绝对定位或者浮动、或者display:none等，目的是脱离文档流，统一操作dom后再放回文档流
     3.  合并css样式修改：多个通过dom.style.*的修改 可以合并成一次 class的覆盖
-    4.  通过css的contain属性控制：CSS contain 属性允许开发者声明当前元素和它的内容尽可能的独立于 DOM 树的其他部分。这使得浏览器在重新计算布局、样式、绘图、大小或这四项的组合时，只影响到有限的 DOM 区域，而不是整个页面，可以有效改善性能。这个属性在包含大量独立组件的页面非常实用，它可以防止某个小部件的 CSS 规则改变对页面上的其他东西造成影响(目前各浏览器支持的情况还不那么好)
-        1.  contain: size 设置该属性的元素的 尺寸不被它的子元素的尺寸影响
-        2.  contain: paint 设置了该属性的节点，如果不在视窗内，则该节点和其子元素节点都不必渲染
-        3.  contain: layout 表示区域内的变化，不会影响到区域外的重排重绘
+    4.  分层渲染： 上面写了
 12. 渲染流程总结为：
     1.  渲染进程将HTML内容转换为能够读懂的DOM树结构
     2.  渲染引擎将CSS样式表转换为浏览器可以理解的styleSheets，计算出DOM节点的样式
@@ -303,7 +339,7 @@ V8 是谷歌开源的 JavaScript 引擎，被用于 Chrome 和 Node.js 。程序
 5. JS 会 阻塞 后面的 DOM 解析和渲染  (所以js放在页面最后，别耽误html和css解析，减少白屏时间)
 6. 视频、图片、字体 等都不会阻塞渲染
 
-### Worder对象 进程中的独立后台线程
+### Worder对象 进程中的独立后台线程 
 1. web Worker 
    1. 定义：Web Worker 是一个独立的线程（独立的执行环境），这就意味着它可以完全和 UI 线程（主线程）并行的执行 js 代码，从而不会阻塞 UI，
    2. 通信；它和主线程是通过 MessageChannel(onmessage+postMessage)通信的
@@ -348,6 +384,10 @@ V8 是谷歌开源的 JavaScript 引擎，被用于 Chrome 和 Node.js 。程序
       4. 1-3步完成后，sw就可以控制页面了
    6. 应用：PWA  ????
       1. PWA是一种可以提供类似于原生应用程序(native app)体验的网络应用程序(web app)。PWA 可以用来做很多事。其中最重要的是，在离线(offline)时应用程序能够继续运行功能。这是通过使用名为 Service Workers 的网络技术来实现的。
+   7. Demo位置：/tips-and-problems/src/ServiceWorker
+3. Web Worder 对比 Service Worker 的不同 
+   1. 参考链接：https://www.bilibili.com/video/BV1bA411s7E3?spm_id_from=333.337.search-card.all.click
+   2. 
 
 
 
