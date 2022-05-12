@@ -4,6 +4,14 @@ git 命令
 Mac下如何把本地项目上传到git上：https://liuyanzhao.com/6319.html
 hot fix:https://blog.csdn.net/hherima/article/details/50386011#commentBox
 
+本地项目放到远程上
+git init
+git add .
+git commit -m 'first commit'
+git remote add origin https://github.com/yourname/project.git（这是HTTP链接，搞了SSH免密登录的可以使用SSH链接）
+git push -u origin main（这样就是上传项目到你的main主分支）
+————————————————
+
 git status  查看文件处于什么状态
 echo myProject > README 在myProject文件下建立一个README文件
 git init. 建立一个本地仓库
