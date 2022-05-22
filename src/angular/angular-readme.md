@@ -62,6 +62,15 @@
    2. 属性绑定：
       1. 普通属性：
 3. 组件样式css
+4. 组件逻辑 ts 
+   1. 有三个层级的结构
+      1. 全局 app.module.ts
+      2. 模块：里面有 @NgModule 修饰符的，是通过 ng g m name 创建的 (ng generate module name)
+      3. 组件：里面有 @Component 修饰符的，是通过 ng g c name 创建的 (ng generate component name)
+   2. 关系：
+      1. 全局文件中 declarations 里可以定义要使用的 compoennts, imports 里可以定义要导入的 modules
+      2. 在 module 文件中，可以 declareations 和 exports 相关的 components 
+      3. component 文件，就是最小的文件层级了
 
 ### 获取原生DOM对象
 1. 获取一个元素：利用 模版 #name 
@@ -120,7 +129,206 @@
    1. 通过ngModel跟踪修改状态与有效性验证，使用三个CSS类来更新控件 ![表单用ngModel添加CSS](../assets/表单用ngModel添加样式.png)
 
 
-
+### 表单
+1. 两种类型：模版驱动 && 模型驱动
+2. 模版驱动表单：FormsModule
+   1. 定义：表单的控制逻辑写在组件模版中，适合简单的表单类型
+   2. 使用：
+      1. 在根模块中：import {FormsModule } form '@angular/forms'，并在模块的 imports 中注入 FormsModule
+      2. 在使用表单的模块中 import { NgForm } from '@angular/forms';
+      3. 将普通的 DOM 表单转化成 ngForm 表单 #name="ngForm" 
+         ```
+         // 这里的 f 是自定义的名字
+         <form #f="ngForm" (submit)="onSubmit(f)">
+         ```
+      4. 声明表单字段为 ngModel：标识该字段受 ngForm 表单管控
+         ```
+         // 3
+         <form #f="ngForm" (submit)="onSubmit(f)">
+            // 4
+            用户名：<input type="text" name="username" ngModel/>
+            <button type="submit">提交</button>
+         </form>
+         ```
+      5. 之后就可以获取表单字段值了 form.value 对象里包含所有字段值
+         ```
+         onSubmit(form: NgForm){
+            console.log('form',form.value)
+            console.log('验证通过',form.valid)
+            console.log('验证未通过',form.invalid)
+         }
+         ```
+   3. 表单分组 ngModelGroup
+      ```
+      <form #f="ngForm" (submit)="onSubmit(f)">
+         <ng-container ngModelGroup="user">
+            用户名：<input type="text" name="username" ngModel/>
+         </ng-container>
+         <ng-container ngModelGroup="contact">
+            手机：<input type="text" name="phone" ngModel/>
+         </ng-container>
+         <button type="submit">提交</button>
+      </form>
+      // 此时 form.value 变成了一个对象中包含多个组对象
+      form.value:{
+         user:{username:'aaa'}
+         contact:{phone:'bbb'}
+      }
+      ```
+   4. 表单验证：
+      1. required maxLength minLength pattern 等直接作为属性放到表单元素上就可以
+      2. 整体表单验证的两个属性：form.valid:boolean 验证通过、 form.invalid:boolean 验证未通过
+      3. 具体表单项验证：
+         1. 获取表单项：使用 #name="ngModel"
+            ```
+            // 这里的 #username 里，username 是自定义名
+            用户名：<input type="text" name="username" ngModel #username="ngModel"/>
+            <div *ngIf="username.touched"> 出现</div>
+            ```
+         2. 表单属性：
+            1. *.touched 标识是否操作过该表单项的值
+            2. *.valid 验证通过：boolean
+            3. *.errors 可能是对象或者是 null, 对象里包含的是未通过的表单项的信息
+         3. 自定义表单样式：官方提供了几个样式类名，可以自行添加样式
+            1. ng-touched
+            2. ng-invalid
+            3. ng-dirty
+            4. 组合
+               1. input.ng-touched.ng-invalid 修改过但不合格
+3. 模型驱动表单：ReactiveFormModule
+   1. 定义：表单的控制逻辑在组件类中，适合复杂的表单的类型
+   2. 三个概念： 
+      1. 表单项 FormControl: 在模型驱动表单中，所有表单字段都得是 FormControl 类的实例，实例对象可以验证字段中的值
+      2. 表单组 FormControlGroup: 一组表单字段组成整个表单组，整个表单是 FormControlGroup 的实例，可以对表单进行整体的验证
+      3. 表单数组 FormArray: 可以动态添加表单项或者表单组，适用于复杂表单。在表单验证时，只要有一个没通过，那整个 FormArray 就整体不通过
+   3. 表单项：FormControl
+      1. 在根模块中: import { ReactiveFormModule } from '@angular/forms',并在模块的 imports 中注入 ReactiveFormModule
+      2. 在使用表单的模块中： import { FormControl, FormGroup } from '@angular/forms'，并且创建表单组对象
+         ```
+         import { FormControl, FormGroup } from '@angular/forms'
+         export class AppComponent
+         ```
+      3. 在 html 中绘制表单
+         1. formGroup 绑定表单对象，该表单对象是个引用，所以要用方括号将 formGroup框起来
+         2. formControlName 绑定表单项的名字，名字是string, 它不是一个实时变化的数据，所以不需要方括号框起来
+         ```
+         // 使用 formGroup 跟 ts 类中定义的表单对象关联起来,需要[]
+         <form [formGroup]="loginForm">
+            // formControlName 绑定的是 string 类型的名字，不需要[]
+            用户名：<input formControlName="username" /> 
+            密码：<input type="password" formControlName="password" />
+            <button (click)="done()">提交</button>
+         </form>
+         ```
+      4. 在 ts 类中写逻辑
+         1. 表单组是 FormGroup 实例
+         2. 表单项是 FormControl 实例, new 初始化的入参是默认值
+         3. 通过表单.value 获取表单数据
+         ```
+         // 模型驱动表单
+         loginForm: FormGroup = new FormGroup({
+            // new 的时候可以传入默认值
+            username: new FormControl("defaultValue",[
+               // ... 验证规则
+            ]),
+            password: new FormControl(),
+         });
+         done() {
+            // this.表单.value 获取表单的全部属性
+            console.log(this.loginForm.value);
+         }
+         ```
+   4. 表单分组 formGroup
+         1. 在 html 中：
+            1. formGroupName：注意：表单绑定用`[formGroup]`绑定对象, 内部的组用 formGroupName 绑定字符串
+            ```
+            <form [formGroup]="loginForm" (submit)="done()">
+            // formGroupName 绑定名称
+               <div formGroupName="fullName">
+                  姓：<input formControlName="lastName" /> 
+                  名：<input formControlName="firstName" /> 
+               </div>
+               密码：<input type="password" formControlName="password" />
+               <button>提交</button>
+            </form>
+            ```
+         2. 在ts类中：
+            1. 在 FormGroup 里面再写 FormGroup 即可
+            2. .get 获取表单项：传参方式：
+               1. 通过数组：`表单.get(['parentName', 'childName'])` 传入表单组层级`数组`，可以获取对应的表单项
+               2. 通过点运算符：`表单.get('parentName.hildName')` 传入表单组层级名称，注意这里不用数组了哦
+            ```
+            loginForm: FormGroup = new FormGroup({
+               fullName: new FormGroup({
+                  firstName: new FormControl(),
+                  lastName: new FormControl()
+               }),
+               password: new FormControl(),
+            });
+            done() {
+               console.log(this.loginForm.value); // {fullName: { firstName, lastName },password}
+               // 表单.get() 获取对应表单项
+               let formControlObj1 = this.loginForm.get(['fullName', "firstName"]);
+               let formControlObj2 = this.loginForm.get("fullName.firstName")
+               formControlObj1 === formControlObj2; // true
+               console.log(formControlObj1.value); //依然用 .value 取值
+            }
+            ```
+   5. 表单数组 FormArray
+      1. 参考链接：https://www.bilibili.com/video/BV113411t7rG/?spm_id_from=pageDriver%20Typescript
+      2. 既可以放 FormGroup 也可以放 FormGroup
+      3. API:
+         1. 获取表单DOM对象：也可以用 formName.get 方法
+         2. ts 中移除某个表单：formNameObj.removeAt(index)
+         3. html 中遍历 formArray: 实际上遍历的是 `formNameObj.controls`
+         4. 表单数组中的表单，遍历的 formGroupName 的值 实际上是遍历`formNameObj.controls`时的 index
+            ```
+            <div formArrayName="contacts">
+               // 真正遍历的是 fromArray实例的controls 属性 
+               // i 是变量而不是字符串，所以formGroupName 要用 [] 框起来
+               <div *ngFor="let contact of contacts.controls; let i = index" [formGroupName]="i">
+                  <input formControlName="name" />
+                  <input formControlName="phone" />
+                  <input formControlName="address" />
+                  <button (click)="remoceContact(i)">删除联系方式</button>
+               </div>
+            </div>
+            ```
+      4. demo：/angular-demo/src/app/form-array/*
+      5. 验证规则
+         1. Angular 内置规则
+            1. 创建规则：
+               ```
+               import { FromControl, FormGroup，Validators } from '@angular/forms"
+               myForm: FormGroup = new FormGroup({
+                  name: new FormControl('默认值', [
+                     Validators.reqired, //注意这里没有括号，Angular会帮我们调用
+                     Validators.minLength(2),
+                     // ...
+                  ])
+               })
+               ```
+            2. 规则验证：
+               ```
+               // 在 ts 中
+               this.myform.valid //boolean 
+               // 在 html 中
+               <button [disabled]="myForm.invalid"> 提交 </button>
+               ```
+            3. 规则列表：touched, valid, invalid, required, maxLength, minLength...
+         2. 自定义同步表单验证器
+            1. 参考链接：https://www.bilibili.com/video/BV1tP4y1V7DX/?spm_id_from=pageDriver
+         3. 自定义异步表单验证器
+            1. 参考链接：https://www.bilibili.com/video/BV1GF411871e/?spm_id_from=pageDriver
+   6. FormBuilder: 创建模型表单的快捷方式
+      1. 参考链接：https://www.bilibili.com/video/BV1aU4y1T7hD/?spm_id_from=pageDriver
+   7. 复选表单：https://www.bilibili.com/video/BV1Bi4y1o7Gp/?spm_id_from=pageDriver
+   8. 单选表单：https://www.bilibili.com/video/BV1aY411s7tF/?spm_id_from=pageDriver
+   9. 其他内置常用API：
+      1.  patchValue: 设置表单控件的值，可以设置全部or其中某几个，其他不受影响
+      2.  setValue: 设置表单整体的值，一个表单项都不能落下
+      3.  valueChanges: 当表单控件的值发生变化时会触发的事件
+      4.  reset: 表单内容初始化
 
 ### @Component 里几个常用选项的含义
 1. selector：css选择器用于在模版中标记出该指令，并触发该指令的实例化
@@ -376,13 +584,39 @@
          console.log(fatherService === sonService); // true 最终查到的一个实例对象
 
          ```
-   3. Provider 提供者: ???
-      1. 定义：
-      2. 用法：
+   3. Provider 提供者:
+      1. 定义：是注入器 Injector 的配置对象
+      2. 访问依赖对象的标识 provide：
+         1. 数据类型：既可以是对象比如 MailService 也可以是 "mail" 字符串。
+         2. 意义：将实力对象和外部的引用建立松耦合关系，外部通过标识获取实例对象，只要标识保持不变，内部代码怎么变化都不会影响到外部。
+         3. 用法：
+            ```
+            // resolveAndCreate 创建注入器
+            const injector = ReflectiveInjector.resolveAndCreate([
+               {
+                  // 注意：属性名是 provide 不是 provider
+                  // 这样写的时候，就不需要在 
+                  // provide: MailService,  // 用哪个标识去获取实例对象，也可以是字符串
+                  provide: “mail”,  // 用哪个标识去获取实例对象，也可以是字符串
+                  useClass: MailService //用那个类创建实例对象
+               }
+            ]);
+            ```
+      3. useValue: 作为配置对象，也可以传递一个对象 
          ```
-         
+         // resolveAndCreate 创建注入器
+         const injector = ReflectiveInjector.resolveAndCreate([
+            {
+               provide: “Config”,  // 用哪个标识去获取实例对象，也可以是字符串
+               // 使用 Object.freeze 使外部无法修改该对象
+               useValue: Object.freeze({
+                  APIKEY: '12345',
+                  APISCRET: '500-400-300',
+               })
+            }
+         ]);
          ```
-      3. https://www.bilibili.com/video/BV1SM4y1A7Ci/?spm_id_from=pageDriver
+      4. 
 
 
 ### 服务
@@ -392,7 +626,54 @@
    1. 命令：ng g serviceFolerName/serveName 创建后，通过 @Injectable()装饰器标识服务 
    2. 注意：在使用服务时，不要用 new 手动创建服务，需要由 Angular 内置的依赖注入系统创建和维护。服务是依赖需要而被注入到组件中的！！
    3. demo: /angular-demo/src/app/service/menu.service.ts
-4. 使用：
+4. 设置服务的 3 种作用域
+   1. 全局作用域：在根注入器中注册服务，所有模块使用同一服务实例对象. 
+      1. 默认root：root表示默认注入到 AppModule 里，就是app.module.ts
+      2. 注意！！ 如果暂时不想定义任何区域，可以传入 null, 不能让 Injectable 里传入空对象,会报错。
+      3. provedIn 的参数选项：  `({ providedIn: Type<any> | "root" | "platform" | "any" | null; } & InjectableProvider) | undefined`
+         ```
+         import { Injectable } from '@angular/core';
+         @Injectable({
+            // 1.全局作用域 默认 app.module.ts
+            providedIn: 'root', 
+            // providedIn: null
+         })
+         export class MenuService {}
+         ```
+   2. 模块级别：该 module 中的所有 components 使用同一服务实例对象。
+      1. 有两种语法都可以，第一种：在服务中用 providedIn 声明要在哪个 module 里生效
+         ```
+         import { Injectable } from '@angular/core';
+         import { SharedModule } from '../shared/share.module';
+         @Injectable({
+            // 在服务中用 providedIn 声明要在哪个 module 里生效
+            providedIn: sharedModule, // 2.模块作用域
+         })
+         export class MenuService {}
+         ```
+      2. 两种语法都可以，第二种：在模块中用 providers 表示使用哪些服务
+         ```
+         import {MenuService} from './menu.service'
+         @ngModule({
+            // 在模块中用 providers 表示使用哪些服务  
+            providers: [MenuService],
+         })
+         export class sharedModule{}
+         ```
+   3. 组件级别：该 component 组件及子组件中使用同一服务实例对象
+      ```
+      // 在组件中
+      import {MenuService} from './menu.service'
+      @Component({
+         providers: [MenuService]
+      })
+      export class MenuIndexComponent implements OnInit {
+         constructor(
+            private menuServer: MenuService,
+         ) {}
+      }
+      ```
+5. 使用：
    1. 在app.module.ts中手动import并放进 @Component的providers数组
       ```
       @NgModule({
@@ -416,21 +697,56 @@
          ) {}
          ```
       3. 总结：通过类构造函数里的private服务，就可以在当前业务类中，使用this.服务.*来获取操作数据的方法
-5. 设计模式：单例模式，所以当服务本身修改时，所有依赖注入到的组件内都会使用到新的修改
+6. 设计模式：单例模式，所以当服务本身修改时，所有依赖注入到的组件内都会使用到新的修改
 
 
 ### 共享模块
 1. 定义：共享模块中放置的是 Angular 应用中模块级别的需要共享的组件或者逻辑
 2. 创建
    1. 共享模块：ng g m shared  这里取名叫shared
-   2. 在该共享模块下 创建组件：ng g c shared/components/compName  demo 取名叫Layout
-   3. 此时，在shared.module.ts里可以看到，在declaration里已经自动注入了 LayoutComponent
-3. 导出：
-   1. 在共享模块中导出共享组件: 在shared.module.ts中的 exports数组中指定要导出的模块名
+   2. 创建第一个组件：
+      1. 在该共享模块下 创建组件：ng g c shared/components/Layout  demo 取名叫Layout 
+      2. 此时，在shared.module.ts里可以看到，在declaration里已经自动注入了 LayoutComponent
+         ```
+         @NgModule({
+            declarations: [
+               LayoutComponent
+            ],
+            imports: [
+               CommonModule
+            ],
+            exports:[
+               LayoutComponent,
+               PrintComponent
+            ]
+         })
+         export class SharedModule { }
+         ```
+   3. 创建第二个组件：
+      1. 如果继续创建组件 ng g c shared/components/Print 
+      2. 此时，在shared.module.ts里可以看到,在 declarations 里已经自动添加了 printComponent, 但是在 exports 里没有自动添加，如果想导出，就自己手动添加，否则不导出是用不了的
+         ```
+         @NgModule({
+            declarations: [
+               LayoutComponent,
+               PrintComponent 
+            ],
+            imports: [
+               CommonModule
+            ],
+            // 导出
+            exports:[
+               LayoutComponent,
+               // 这里没有自动 添加进 exports，手动添加
+               PrintComponent
+            ]
+         })
+         export class SharedModule { }
+         ```
+3. 导出：在共享模块中导出共享组件: 在shared.module.ts中的 exports数组中指定要导出的模块名 LayoutComponent, PrintComponent
 4. 使用：
-   1. sharedModule已经被自动导入了跟组件 app.module.ts 中了
-   2. 在根组件app.module.ts中，作为依赖模块，写入imports数组。
-   3. 然后在想要使用的地方正常标签引用就行了， `<app-layout></app-layout>`
+   1. SharedModule 已经被自动导入了根组件 app.module.ts 的 imports 中了, 注意这里自动导入的是分享模块SharedModule，而不是内部的 LayoutComponent 或者 PrintComponent，但是可以直接引用 分享模块中的 components
+   2. 然后在想要使用的地方 直接引用标签就行了， `<app-layout></app-layout>`  `<app-print></app-print>`
 
 
 ### 组件交互
@@ -518,10 +834,13 @@
          <ng-content select="[question]"></ng-content>
       `
       // 组件标签中间的内容
-      <p question> 
-         Is content projection cool?
-      </p>
-      <p>Let's learn about content projection!</p>
+      <子组件>
+         // question 对应select
+         <p question> 
+            Is content projection cool?
+         </p>
+         <p>Let's learn about content projection!</p>
+      </子组件>
       ```
 4. ng-container
    1. 背景：在上述栗子中碳水化合物，会将整个标签拿过来投射进slot里，比如`<div class="a">a</div>` 如果不想要div,只想要里面的内容 a 怎么办？因为需要 select的表示同意，所以必须有一个容器，这时候就可以使用 ng-container
@@ -542,7 +861,11 @@
       <div>b</div>
       ```
    4. 优点：不会实例化真实 DOM 
+   5. 用处：
+      1. 创建一个 View-container ，动态调整 ？？？
 5. 复杂情况 ？？？
+6. 与 ng-template 有什么关系
+7. 
 
 
 ### 视图包装 ？？？ 
@@ -655,3 +978,42 @@ https://angular.cn/guide/elements
 ### NgRx
 1. 定义：是 Angular 应用实现全局状态管理的 Redux 架构解决方案
 2. https://www.bilibili.com/video/BV1qq4y1m74v/?spm_id_from=pageDriver
+
+### 内容投影的变更检测是跟着父组件还是子组件 ？？
+
+### ng-container
+两个结构化指令不能出现在一个标签上
+
+### ng-template VS template ??
+1. 辅助结构化指令语法糖
+2. template 是 html的原生标签 不建议用 建议用 ng-template
+3. template 包含 ng-template，
+4. template 对应的是 component 的view模版
+5. ng-template 是 template 内部可以复用的小的 template
+6. ngTemplateOutlet 复用模版， context可以传入参数
+
+### angular matierial - cdk - portal 动态
+
+### templateRef 各种ref 是什么，干嘛的
+
+### 幂等 ？？ pure-pipe相关的概念 pure = 幂等 ？
+
+### injectionToken ?
+
+### 是不是只有service 才能被 injectede? false! ???
+
+### 当前层级 injector 没找到，就去上一层找 
+
+### hostListener 监听dom自己的事件发生
+
+### HostBinding
+
+### host 是什么
+
+### 如何监听宿主
+
+### ElementRef
+
+### @ngModule 是什么，干什么的
+
+### CommonModule 是干嘛的
