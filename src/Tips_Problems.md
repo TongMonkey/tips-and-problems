@@ -428,3 +428,12 @@ window.location.href = universalDeeplink;
 #### 过滤数组中所有true值。 理解的重点是`Boolean`是一个函数,返回true 或 false,`a.filter(Boolean)`相当于`a.filter(function(n){ return Boolean(n)})`
 
 
+### 26. 超出三行自动用省略号代替
+```
+div{
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  text-overflow: ellipsis;
+}
+```
