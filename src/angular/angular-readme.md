@@ -750,12 +750,43 @@
 
 
 ### 组件交互
-1. 父2子：利用 @Input("变量名")
+1. 父2子：利用 @Input("父母给孩子传的变量名") 实际变量名
 2. 子2父：利用 @Output 父组件监听子组件的事件 eventEmitter
 3. 利用 setter 截听输入属性值的变化
-2. 利用 ngOnChanges() 截听输入属性值的变化
-4. 获得子组件实例：
-5. 服务
+   1. demo:
+      ```
+      // in child
+      export class NameChildComponent {
+         @Input()
+         get name(): string { return this._name; }
+         set name(name: string) {
+            this._name = (name && name.trim()) || '<no name set>';
+         }
+         private _name = '';
+      }
+
+      // in parent
+      ```
+4. 利用 ngOnChanges() 截听输入属性值的变化 
+   1. ???
+5. 通过 put a local variable: #name 来代表元素：能在 parent-template 中 use or invoke child component's properties and methods
+   1. That gives you a reference to the child component and the ability to access any of its properties or methods from within the parent template.
+      ```
+         // in child
+         seconds = 0;
+         start(){}
+
+         // in parent
+         <div class="seconds">{{timer.seconds}}</div>
+         <button type="button" (click)="timer.start()">Start</button>
+         <app-countdown-timer #timer></app-countdown-timer>
+      ```
+   2. 缺点：只能在 parent-template 也就是 html 中调用 child, 在 parrent-component 组件中 has no access to the child.
+6. 通过 @ViewChild 获取元素: 能在 parent-component 中 获取对 child 的使用权限
+      ```
+
+      ```
+7. 服务
 
 
 ### 路由
@@ -772,7 +803,7 @@
          ```
       2. path变成：`/menuDetail?id=3&name=abc`
       3. 接收：在目标页面 引用ActivatedRoute并 作为构造函数的入参被使用. 然后通过 `this.ActivatedRoute实例.*`得到相关信息，可以用它的 `this.ActivatedRoute实例.snapshot.queryParams` 接受参数
-      4.  参数顺序：要求不严格
+      4. 参数顺序：要求不严格
    2. params
       1. 传递：
          ```
@@ -791,15 +822,28 @@
       4. 参数顺序：params 在router里注册的先后顺序，与传参数组里的顺序 是严格对应的
 
 
-### 特殊的选择器
+### 特殊的选择器 ？？？
 1. :host 
-   1. 宿主元素：每个组件里的selector对应的组件选择器匹配的元素，称为宿主元素，模版template内容会渲染到其中
-   2. 用途：:host 伪类选择器可创建针对宿主元素自身的样式，而不是针对宿主内部的元素。 但是可能会影响后代的样式，有的样式会继承
-   3. 唯一：:host 是唯一的方式可以把宿主元素作为目标，因为宿主元素不是组件自身template的一部分，而是父组件模版中的一部分
-   4. 组合：比如 :host h2，:host 选择器也可以与其他选择器组合使用
-2. :host-content
-   1. 用途：在当前组件的宿主元素的祖先节点开始查找css类，知道文档的根结点为止，如果找到了就应用样式 例如 :host-content(.active) 是找到当前宿主元素以下具有active类的节点。
-   2. 必须组合：它只能与其他选择器组合使用
+   1. host 是宿主元素：每个组件里的selector对应的组件选择器匹配的元素，称为宿主元素，模版template内容会渲染到其中
+   2. 定义: :host 是针对 host 宿主元素的伪类选择器
+   3. 用途：:host 伪类选择器可创建针对宿主元素自身的样式，而不是针对宿主内部的元素。 但是可能会影响后代的样式，有的样式会继承
+   4. 注意!! :host 是唯一的方式可以把宿主元素作为目标，因为宿主元素不是组件自身template的一部分，而是父组件模版中的一部分
+   5. 组合：比如 :host h2，:host 选择器也可以与其他选择器组合使用
+2. :host-context()
+   1. 用途：angular 中的 :host-context() 选择器允许开发者基于当前组件外的一些条件为当前组件设置样式。选择器不限于 类样式or节点属性attribute
+   2. 选择器匹配过程：选择器将会从当前元素，一直向上查找，匹配所有祖先节点/组件，直到 document root 元素. 无需将 ViewEncapsulation 设置为 none.
+   3. 举例：
+      1. ``` 
+         :host-context(.dark-theme) .my-component { // set style }
+         // 祖先节点中如果能找到 .dark-theme 类样式，当前style将会成功设置
+         ```
+      2. ``` 
+         <div theme="dark">...</div>
+         :host-context([theme="dark"]) .my-component { // set style}
+         // 任一祖先节点上设置了 theme=dark，当前 style 将会成功设置
+         ```
+   4. 必须组合：它只能与其他选择器组合使用
+   5. 参考链接：https://tinytip.co/tips/angular-host-context/#:~:text=The%20Angular%20%3Ahost-context%20%28%29%20selector%20allows%20you%20to,of%20your%20component%20up%20to%20the%20document%20root.
 
 
 ### 内容投影
@@ -868,8 +912,25 @@
 7. 
 
 
-### 视图包装 ？？？ 
-https://angular.cn/guide/view-encapsulation
+### View Encapsulation 视图封装
+1. 前提：
+   1. encapsulation 封装：It defines the idea that all the data and methods that operate on that data are kept private in a single unit (or class). It is like hiding the implementation detail from the outside world. The consumer of encapsulated object know that it works, but do not know how it works.
+2. 定义：在 angular 中，一个组件的样式可以被封装在组件的宿主元素中，这样就不会影响应用中的其余部分
+3. 内置: 组件的装饰器 decoretor 提供封装选项，来控制每个组件怎样应用封装规则
+4. 封装选项: ViewEncapsulation 的值
+   1. ShadowDom:
+   2. Emulated (recommended): 
+   3. None：When you use this, the styles defined in one component affects the elements of the other components.
+5. 用法：
+   ```
+      @Component({
+         template: `<p>Using Emulator</p>`,
+         styles: ['p { color:red}'],
+         encapsulation: ViewEncapsulation.Emulated     //This is default
+      })
+   ```
+6. 文档链接：https://angular.cn/guide/view-encapsulation
+7. 参考链接: https://www.tektutorialshub.com/angular/angular-view-encapsulation/
 
 ### 动态组件 ？？？
 https://angular.cn/guide/dynamic-component-loader
