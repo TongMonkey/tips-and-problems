@@ -6,7 +6,7 @@
 1. 定义：angular是由Google维护的一款开源javaScript。
 2. 版本：Anguar1.5叫做angularJs，Angular4.0称为Angular，Angular1.5到Angular4.0是完全重写。
 
-### 相关知识点
+### 基础
 1. 架构：angular是一种组件架构，用户可以与组件交互，组件之间互相路由，组件和服务之间通过依赖注入调用，服务调用webSocket与服务器端发生http通信。
 2. 基础语言：Typescript
 3. js：基于Es6开发
@@ -53,6 +53,26 @@
 1. 用cnpm install @angular/cli 可能会有问题，提示无权限安装，还是用npm直接安装吧
 2. 一直卡在 installing packages: 可以 ng new projectName --skip-install 之后在项目里用淘宝镜像安装依赖 cnpm intall
 
+### 核心概念 ？？？
+1. Directive 指令
+2. Decorator 装饰器
+   1. @ViewChild: 
+      1. 定义：是一个属性装饰器，用来配置视图查询
+      2. 作用: The change detector looks for the first element or the directive matching the selector in the view DOM. If the view DOM changes, and a new child matches the selector, the property is updated. 
+      3. 查询时机：视图查询是在调用ngAfterViewInit回调之前设置的。
+      4. 注意: 获取`第一个`匹配的元素或者指令，并且angular会通过detector自动监听更改
+      5. The following selectors are supported.
+         1. Any class with the @Component or @Directive decorator
+         2. A template reference variable as a string (e.g. query <my-component #cmp></my-component> with @ViewChild('cmp'))
+         3. Any provider defined in the child component tree of the current component (e.g. @ViewChild(SomeService) someService: SomeService)
+         4. Any provider defined through a string token (e.g. @ViewChild('someToken') someTokenVal: any)
+         5. A TemplateRef (e.g. query <ng-template></ng-template> with @ViewChild(TemplateRef) template;)
+      6. 用法：
+         ```
+         @ViewChild(selector, )
+         ```
+   2. 
+3. 
 ### 组件的组成
 1. 组件类class
 2. 组件模版html
@@ -782,9 +802,22 @@
          <app-countdown-timer #timer></app-countdown-timer>
       ```
    2. 缺点：只能在 parent-template 也就是 html 中调用 child, 在 parrent-component 组件中 has no access to the child.
-6. 通过 @ViewChild 获取元素: 能在 parent-component 中 获取对 child 的使用权限
+6. 通过 @ViewChild 获取元素: 能在 parent-component 中 获取对 child 的使用权限, inject the child component into the parent as a ViewChild.
+   1. 通过指定'#字符串'，得到第一个匹配的子类
       ```
+      // Parent Component
+      <app-child #targetChild></app-child>
 
+      // Child Component 还可以设置个别名isMe
+      @ViewChild('targetChild') isMe: ChildComponent;
+      ```
+   2. 直接指定'组件类'，通过类名获得第一个匹配的子类
+      ```
+      // Parent Component
+      <app-child></app-child>
+
+      // Child Component
+      @ViewChild(ChildComponent) isMe: ChildComponent
       ```
 7. 服务
 
@@ -846,50 +879,50 @@
    5. 参考链接：https://tinytip.co/tips/angular-host-context/#:~:text=The%20Angular%20%3Ahost-context%20%28%29%20selector%20allows%20you%20to,of%20your%20component%20up%20to%20the%20document%20root.
 
 
-### 内容投影
+### 内容投影 && 三种嵌入视图
 1. 定义：在组件标签之间的内容可以传递给组件中展示，这一过程就是投射
-2. 单插槽投影：ng-content
-   1. 定义：创建一个组件，可以在其中投影一个组件
-   2. slot：`<ng-contnet></ng-content`
-   3. 但一插槽 且 没有select，会将所有内容都投影在一个 插槽中
-3. 多插槽投影：ng-content
-   1. 定义：一个组件可以具有多个插槽。每个插槽可以指定一个CSS选择器，该选择器会决定将哪些内容放进该插槽。
-   2. slot + class: 
-      ```
-      <app-menu-detail>
-         <div class="a">a</div>
-         <div class="b">b</div>
-      </app-menu-detial>
-     
-      // 在 menu-detail.component.html 中
-      <ng-content select=".a"></ng-content>
-      <ng-content select=".b"></ng-content>
-      ```
-   3. slot + select：定义了select属性的插槽是专门给定义了对应属性的内容投影的。其余没有select选项的内容默认都放到其他不带select属性的插槽中
-      ```
-      // 插槽
-      组件内部: `
-         <h2>Multi-slot content projection</h2>
+2. ng-content
+   1. 单插槽投影：ng-content
+      1. 定义：创建一个组件，可以在其中投影一个组件
+      2. slot：`<ng-contnet></ng-content`
+      3. 但一插槽 且 没有select，会将所有内容都投影在一个 插槽中
+   2. 多插槽投影：ng-content
+      1. 定义：一个组件可以具有多个插槽。每个插槽可以指定一个CSS选择器，该选择器会决定将哪些内容放进该插槽。
+      2. slot + class: 
+         ```
+         <app-menu-detail>
+            <div class="a">a</div>
+            <div class="b">b</div>
+         </app-menu-detial>
+      
+         // 在 menu-detail.component.html 中
+         <ng-content select=".a"></ng-content>
+         <ng-content select=".b"></ng-content>
+         ```
+      3. slot + select：定义了select属性的插槽是专门给定义了对应属性的内容投影的。其余没有select选项的内容默认都放到其他不带select属性的插槽中
+         ```
+         // 插槽
+         组件内部: `
+            <h2>Multi-slot content projection</h2>
 
-         Default:
-         <ng-content></ng-content>
+            Default:
+            <ng-content></ng-content>
 
-         Question:
-         <ng-content select="[question]"></ng-content>
-      `
-      // 组件标签中间的内容
-      <子组件>
-         // question 对应select
-         <p question> 
-            Is content projection cool?
-         </p>
-         <p>Let's learn about content projection!</p>
-      </子组件>
-      ```
-4. ng-container
-   1. 背景：在上述栗子中碳水化合物，会将整个标签拿过来投射进slot里，比如`<div class="a">a</div>` 如果不想要div,只想要里面的内容 a 怎么办？因为需要 select的表示同意，所以必须有一个容器，这时候就可以使用 ng-container
-   2. 定义：不包含外部的例如`<div></div>`，只想要内容，可以用 ng-container代替 div
-   3. 用法： 
+            Question:
+            <ng-content select="[question]"></ng-content>
+         `
+         // 组件标签中间的内容
+         <子组件>
+            // question 对应select
+            <p question> 
+               Is content projection cool?
+            </p>
+            <p>Let's learn about content projection!</p>
+         </子组件>
+         ```
+3. ng-container
+   1. 定义：不包含外部的例如`<div></div>`，只想要内容，可以用 ng-container代替 div
+   2. 用法： 
       ```
       <app-menu-detail>
          <ng-container class="a">a</ng-container>
@@ -904,12 +937,14 @@
       a
       <div>b</div>
       ```
-   4. 优点：不会实例化真实 DOM 
-   5. 用处：
+   3. 优点：不会实例化真实 DOM 
+   4. 用处：
       1. 创建一个 View-container ，动态调整 ？？？
-5. 复杂情况 ？？？
-6. 与 ng-template 有什么关系
-7. 
+4. ng-template
+   1. 定义：
+   2. 
+5. comparison:
+   1. ???
 
 
 ### View Encapsulation 视图封装
@@ -1034,11 +1069,6 @@ https://angular.cn/guide/elements
 8. Angular Proxy  ???
    1. https://www.bilibili.com/video/BV1Qa41167H1/?spm_id_from=pageDriver
       
-
-
-### NgRx
-1. 定义：是 Angular 应用实现全局状态管理的 Redux 架构解决方案
-2. https://www.bilibili.com/video/BV1qq4y1m74v/?spm_id_from=pageDriver
 
 ### 内容投影的变更检测是跟着父组件还是子组件 ？？
 

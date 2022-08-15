@@ -17,6 +17,7 @@
 3. Subscription (订阅): 表示 Observable 的执行，可用于取消 Observable 订阅。代表正在执行 Observabe/Observer 的执行个体，建立观察者与被观察者之间的观察关系，
 4. Operators (操作符): 采用函数式编程风格的纯函数 (pure function)，主要用来处理一系列的事件资料集合。常见 map、filter、concat、flatMap 等这样的操作符来处理集合。
 5. Subject (主体): 相当于 EventEmitter，并且是将值或事件多路推送给多个 Observer 的唯一方式，通俗来讲就是广播收到的事件资料给多位 Observer.
+   1. 方法 asObservable: 投射 subject 实例为一个observable 对象
 6. Schedulers (调度器): 用来控制并发并且是中央集权的调度员，允许我们在发生计算时进行协调, 以控制事件并发情况，例如 setTimeout 或 requestAnimationFrame 或其他。
 
 ### 操作符
