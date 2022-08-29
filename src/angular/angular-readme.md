@@ -53,7 +53,7 @@
 1. 用cnpm install @angular/cli 可能会有问题，提示无权限安装，还是用npm直接安装吧
 2. 一直卡在 installing packages: 可以 ng new projectName --skip-install 之后在项目里用淘宝镜像安装依赖 cnpm intall
 
-### 核心概念 ？？？
+### 核心概念 https://angular.io/guide/architecture
 1. Directive 指令
 2. Decorator 装饰器
    1. @ViewChild: 

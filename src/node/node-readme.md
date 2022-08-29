@@ -667,4 +667,9 @@
 1. 使用Node.js搭建 BFF 层 Backend For Frontend
 2. 使用Node.js + Next.js 实现 SSR
 
+### package.json 里的 depandency
+1. peerDependencies ❓❓❓❓
+2. dependencies
+3. devDependencies
+
 

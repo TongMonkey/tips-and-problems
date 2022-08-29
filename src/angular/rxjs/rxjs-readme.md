@@ -115,7 +115,15 @@
     )
     .subscribe(console.log)
    ```
-10. 
+10. timer 延时 time(2000) 单位毫秒
+   ```
+   import { timer } from 'rxjs'
+   this.actions$.pipe(
+      ofType('[async] increment'), 
+      mergeMap( () => timer(2000) ),
+   )
+   ```
+11. 
 
 
 
