@@ -110,55 +110,61 @@
 
    4. 通过 Reducer 注册状态：
       1. 定义 piece of state: 应用程序的所有状态就是一个很大的对象。reducer 来管理一部分的状态，就是在这个大对象中，定义一些关联状态的键值 key。
-      2. 注册状态：在 app.module.ts 的 Imports 数组中调用，创建一个键值对形式的对象，来管理相关的状态{key: associated state}
-         1. 注册全局状态：
-            1. 定义：文档原文：The StoreModule.forRoot() registers the global providers for your application, including the Store service you inject into your components and services to dispatch actions and select pieces of state. 翻译为:StoreModule.forRoot()为你的应用程序注册了全局提供者，包括你注入到组件和服务中的Store服务，以分配行动和选择状态的片段。
-            2. 注册位置：app.module.ts
-            3. 用法：导入 StoreModule.forRoot，并在 Imports 数组中调用, 创建键值对, 成为全局提供者，于是可以使用注入的 store 服务
+      2. StoreModule 注册状态：以键值对形来管理状态
+         1. 原理：本来 在 reducer 里定义了 state 中数据的各个部分，组成 store 中总的数据。使用 for*(key)
+         2. 分类：
+            1. 注册全局状态：
+               1. 定义：文档原文：The StoreModule.forRoot() registers the global providers for your application, including the Store service you inject into your components and services to dispatch actions and select pieces of state. 翻译为:StoreModule.forRoot()为你的应用程序注册了全局提供者，包括你注入到组件和服务中的Store服务，以分配行动和选择状态的片段。
+               2. 注册位置：app.module.ts
+               3. 用法：导入 StoreModule.forRoot，并在 Imports 数组中调用, 创建键值对, 成为全局提供者，于是可以使用注入的 store 服务
 
-               ```bash
-               import { StoreModule } from '@ngrx/store';
-               @NgModule({
-                  imports: [
-                     // 键值对 count: countReducer
-                     // `StoreModule.forRoot` 方法注册了使 store 可以被整个应用使用的全局提供者
-                     // `StoreModule.forRoot` 方法能够保证在应用启动的一开始，定义的state 就被定义
-                     // 在这里注册的状态，应该是那种立刻要被全局使用到的状态
-                     
-                     StoreModule.forRoot({ count: counterReducer }),
-                     ...
-                  ]，
-                  ...
-               })
-               ```
-
-         2. 注册分支状态：
-            1. 定义：跟 storeModule.forRoot 类似，但是 feature state 允许使用一个 特指的 key/value 键值域来存储数据，用于在一个特定模块内，自己管理自己的数据
-            2. 注册位置：任何 feature module 都可以
-            3. 用法：导入 StoreModule.forFeature 并加入到 AppModule，并在 Imports 数组中调用, 创建键值对
-
-               ```bash
-                  // shared.module.ts
+                  ```bash
                   import { StoreModule } from '@ngrx/store';
-                  import { counterReducer } from './counterReducer.reducer';
                   @NgModule({
                      imports: [
                         // 键值对 count: countReducer
-                        StoreModule.forFeature('count', counterReducer)
-                     ],
+                        // `StoreModule.forRoot` 方法注册了使 store 可以被整个应用使用的全局提供者
+                        // `StoreModule.forRoot` 方法能够保证在应用启动的一开始，定义的state 就被定义
+                        // 在这里注册的状态，应该是那种立刻要被全局使用到的状态
+                        
+                        StoreModule.forRoot({ count: counterReducer }),
+                        ...
+                     ]，
+                     ...
                   })
-                  export class SharedModule {}
+                  ```
 
-                  // app.module.ts
-                  import { StoreModule } from '@ngrx/store';
-                  import { SharedModule } from './scoreboard/scoreboard.module';
-                  @NgModule({
-                     imports: [
-                        SharedModule 
-                     ],
-                  })
-                  export class AppModule {}
-               ```
+               4. 注意：虽然官网 API 中，使用说明如下:!['api截图'](../../assets/StoreModule.for-apis.png) 但实际使用中，入参类型应该入下: !['vscode提示截图'](../../assets/StoreModule.forRoot-api-correct.png);
+
+            2. 注册分支状态： {key: *reducer}
+               1. 定义：跟 storeModule.forRoot 类似，但是 feature state 允许使用一个 特指的 key/value 键值域来存储数据，用于在一个特定模块内，自己管理自己的数据
+               2. 注册位置：任何 feature module 都可以
+               3. 用法：导入 StoreModule.forFeature 并加入到 AppModule，并在 Imports 数组中调用, 创建键值对
+               4. 调用时机：Lazily load. 会在加载 SharedModule 时，懒加载 counterReducer
+
+                  ```bash
+                     // shared.module.ts
+                     import { StoreModule } from '@ngrx/store';
+                     import { counterReducer } from './counterReducer.reducer';
+                     @NgModule({
+                        imports: [
+                           // 键值对 count: countReducer
+                           StoreModule.forFeature('count', counterReducer)
+                        ],
+                     })
+                     export class SharedModule {}
+
+                     // app.module.ts
+                     import { StoreModule } from '@ngrx/store';
+                     import { SharedModule } from './scoreboard/scoreboard.module';
+                     @NgModule({
+                        imports: [
+                           SharedModule 
+                        ],
+                     })
+                     export class AppModule {}
+                  ```
+
          3. 最终数据如图：![forRoot&forFeature_result](../../assets/forRoot&forFeature_result.jpg)
       3. 用法：
          1. forRoot 和 forFeature 都可以像上面一样，直接在 app.module.ts 里写在 imports 里
@@ -174,97 +180,276 @@
    5. 注意：
       1. The exported reducer function is no longer required if you use the default Ivy AOT compiler (or JIT). It is only necessary with the View Engine AOT compiler as function calls are not supported there. ❓❓❓
 4. Selectors:
-   1. 定义：用来定义如何从 store 中获得 state 的函数，是纯函数
-   2. 特性：ngrx 中的 Selectors 具有一些特性：
+   1. 定义：selector 是一个选择器函数，决定如何从 store 中获得 某些数据片 slices of data，是纯函数. 入参是函数，返回值也是函数.
+   2. 用途：createSelector可以用来根据同一状态的几个片断来选择状态中的一些数据。createSelector函数最多可以带8个选择器函数，用于更完整的状态选择。
+   3. 特性：ngrx 中的 Selectors 具有一些特性： 都是啥意思❓❓❓
       1. Portability 可移植性
-      2. Memoization 记忆化
+      2. Memoization 记忆化：
+         1. 记忆化:当参数匹配时，可以返回最后的结果，而无需重新调用你的选择器函数 ❓❓❓ 源码在哪怎么看
+         2. selector 自带性能优化：memoizedSelector 类 实例
+            1. 追踪参数：
+               1. 文档原文：When using the createSelector and createFeatureSelector functions @ngrx/store keeps track of the latest arguments in which your selector function was invoked. Because selectors are pure functions, the last result can be returned when the arguments match without reinvoking your selector function. This can provide performance benefits, particularly with selectors that perform expensive computation.
+               2. 翻译：当使用createSelector和createFeatureSelector函数时，@ngrx/store会跟踪你的 selector 被调用的最新参数。因为 selector 是纯函数，当参数匹配时可以返回最后的结果，而无需重新调用 selector 函数。这可以提供性能上的好处，特别是对于那些执行昂贵计算的选择器。
+            2. 缓存结果：
+               1. 文档原文：The selector function returned by calling createSelector or createFeatureSelector initially has a memoized value of null. After a selector is invoked the first time its memoized value is stored in memory. If the selector is subsequently invoked with the same arguments it will return the memoized value. If the selector is then invoked with different arguments it will recompute and update its memoized value.
+               2. 翻译：通过调用createSelector或createFeatureSelector返回的选择器函数最初有一个null的记忆值。选择器第一次被调用后，它的记忆值被保存在内存中。如果该选择器随后以相同的参数被调用，它将返回记忆化的值。如果随后用不同的参数调用选择器，它将重新计算并更新其记忆值。
       3. Composition 构成化
       4. Testability 可测试性
       5. Type Safety 类型安全性
-   3. 调用 selector: `this.store.select( selector )` 跟 `this.store.select('count')` 类似，传入的参数不同
-   4. selectors 的分类
-      1. createFeatureSelector： 获取外层数据
-      2. createSelector： 通过 createFeatureSelector 获取内层数据
-      3. 原理：❓❓❓
-         1. 怎么定义外层、内层数据？
-         2. 内、外层 的关系是什么？
-         3. 多个外层联合获取内层数据的原理是什么？
-   5. selector 的用法：
-      1. 获取 a piece of state:
-      2. 获取 multiple pieces of state:
-      3. 获取 feature state:
-   6. selector 自带性能优化：memoizedSelector 类 实例
-      1. 文档原文：When using the createSelector and createFeatureSelector functions @ngrx/store keeps track of the latest arguments in which your selector function was invoked. Because selectors are pure functions, the last result can be returned when the arguments match without reinvoking your selector function. This can provide performance benefits, particularly with selectors that perform expensive computation.
-      2. 翻译：当使用createSelector和createFeatureSelector函数时，@ngrx/store会跟踪你的 selector 被调用的最新参数。因为 selector 是纯函数，当参数匹配时可以返回最后的结果，而无需重新调用 selector 函数。这可以提供性能上的好处，特别是对于那些执行昂贵计算的选择器。
-      3. 原理：看源码 ❓❓❓
-   7. 创建 Selector：
+   4. selectors API：
+      1. createFeatureSelector： 获取顶层数据。
+         1. 文档原文：The createFeatureSelector is a convenience method for returning a top level feature state. It returns a typed selector function for a feature slice of state.
+         2. createFeatureSelector 的用法：
+
+            ```dash
+               import { createSelector, createFeatureSelector } from '@ngrx/store';
+
+               // 获取顶层的 count 的状态
+               export const selectCountState = createFeatureSelector<{ num: number }>('count');
+
+               export const selectNumFromCount = createSelector(
+                  selectCountState,
+                  (count) => count.num
+               );
+
+               // 获取顶层的 featureCount
+               export const selectFeatureCountState = createFeatureSelector<{ num: number }>(
+                  'featureCount'
+               );
+
+               export const selectFeatureNumFromFeatureCount = createSelector(
+                  selectFeatureCountState,
+                  (featureCount) => featureCount.num
+               );
+
+               // ❓❓❓猜想：虽然 Store.forFeature('featureCount') 是写在 shared.module.ts 模块里的，sharedModule 在 app.module.ts 里被引入在 Imports[] 数组中了，所以 featureCount state 跟 Count state 都存在于顶层的位置
+
+            ```
+
+      2. createSelector： 
+         1. 定义：通过 createFeatureSelector 获取内层数据
+         2. createSelector 的用法：
+            1. 获取 a piece of state:
+
+               ```dash
+                  import { createSelector } from '@ngrx/store';
+
+                  export interface FeatureState {
+                     counter: number;
+                  }
+
+                  export interface AppState {
+                     feature: FeatureState;
+                  }
+
+                  export const selectFeature = (state: AppState) => state.feature;
+
+                  export const selectFeatureCount = createSelector(
+                     selectFeature,
+                     (state: FeatureState) => state.counter
+                  );
+               ```
+
+            2. 获取 multiple pieces of state:
+
+               ```dash
+                  import { createSelector } from '@ngrx/store';
+
+                  export interface User {
+                     id: number;
+                     name: string;
+                  }
+
+                  export interface Book {
+                     id: number;
+                     userId: number;
+                     name: string;
+                  }
+
+                  export interface AppState {
+                     selectedUser: User;
+                     allBooks: Book[];
+                  }
+
+                  export const selectUser = (state: AppState) => state.selectedUser;
+                  export const selectAllBooks = (state: AppState) => state.allBooks;
+
+                  export const selectVisibleBooks = createSelector(
+                     selectUser,
+                     selectAllBooks,
+                     (selectedUser: User, allBooks: Book[]) => {
+                        if (selectedUser && allBooks) {
+                           return allBooks.filter((book: Book) => book.userId === selectedUser.id);
+                        } else {
+                           return allBooks;
+                        }
+                     }
+                  );
+                  // 调用 selector: `this.store.select( selector )` 跟 `this.store.select('count')` 类似，传入的参数不同
+               ```
+
+            3. 通过传入参数 props 获取 state:
+
+               ```dash
+                  // 缺点：由于 selector 天然具有记忆化的特点，可以保留之前输入的参数，从而直接从内存中拿selector，而不用多次调用。但当 props 传参调用时传入不同的 multiply 参数，选择器不得不重新评估它的参数，就会多次调用，解决方案是可以使用工厂函数：
+                  export const getCount = createSelector(
+                     getCounterValue,
+                     (counter, props) => counter * props.multiply
+                  );
+                  ngOnInit() {
+                     this.counter = this.store.select(fromRoot.getCount, { multiply: 2 })
+                  }
+
+                  // Better with 工厂函数：使用 props.id 来返回不同的选择器实例
+                  export const getCount = () =>
+                     createSelector(
+                        (state, props) => state.counter[props.id],
+                        (counter, props) => counter * props.multiply
+                     );
+                  ngOnInit() {
+                     this.counter2 = this.store.select(fromRoot.getCount(), { id: 'counter2', multiply: 2 });
+                     this.counter4 = this.store.select(fromRoot.getCount(), { id: 'counter4', multiply: 4 });
+                     this.counter6 = this.store.select(fromRoot.getCount(), { id: 'counter6', multiply: 6 });
+                  }
+               ```
+
+      3. selectorInstance.release(): 将选择器实例及其所有依赖的祖先选择器，递归地全部释放掉 所有选择器返回的记忆化函数在内存中的资源，使其全部重归 null 值，
+
+         ```dash
+         export interface State {
+            a: number[];
+            b: number[];
+         }
+
+         export const selectSumEvenNums = createSelector(...);
+         export const selectSumOddNums = createSelector(...);
+
+         export const selectTotal = createSelector(
+            selectSumEvenNums,
+            selectSumOddNums,
+            (a, b) => a + b
+         );
+
+         selectTotal({
+            a: [2, 4],
+            b: [1, 3],
+         });
+
+         /**
+         * Memoized Values before calling selectTotal.release()
+         *   selectSumEvenNums  6
+         *   selectSumOddNums   4
+         *   selectTotal        10
+         */
+
+         selectTotal.release();
+
+         /**
+         * Memoized Values after calling selectTotal.release()
+         *   selectSumEvenNums  null
+         *   selectSumOddNums   null
+         *   selectTotal        null
+         */
+         ```
+
+   5. store.select('') VS store.select(selector) 对比
+      1. 可以用来查询的 key 值不同：例子请看 /angular-demo/src/app/app.component.ts line 50，61
+         1. store.select('key') 通过字符串查找的数据，这个字符串 'key' 必须是存在于传入的数据对象中的属性，即 constructor 入参的属性
+         2. store.select(selector) 不限制要查的数据是否在 constructor 的入参中
+   6. Using Store Without Type Generic ❓❓❓
+      1. 注意：It is important to continue to provide a Store type generic if you are using the string version of selectors as types cannot be inferred automatically in those instances. ❓❓❓
+   7. 高阶用法：
+      1. 使用 RxJS 中的语法例如 store.pipe(...) ❓❓❓
+5. Effects
+   1. 定义：Effects 是由 RxJS 提供的给 Store 使用的副作用模块，比如网络请求，异步事件等。
+   2. 作用：在一个基于服务的Angular应用程序中，component 负责直接通过 serivce 与外部资源进行交互。相反，effects 提供了一种与这些 service 交互的方式，并将它们与 component 隔离。effects 是你处理业务的地方，如获取数据、产生多个事件的长期运行的任务，以及其他外部交互，你的组件不需要明确了解这些交互。
+   3. 核心概念：
+      1. Effects isolate side effects from components, allowing for more pure components that select state and dispatch actions.效果将副作用与组件隔离开来，允许选择状态和调度动作的更纯的组件。
+      2. Effects are long-running services that listen to an observable of every action dispatched from the Store.效果是长时间运行的服务，它侦听从Store调度的每个操作的可观察对象。
+      3. Effects filter those actions based on the type of action they are interested in. This is done by using an operator.效果根据他们感兴趣的动作类型过滤这些动作。这是通过使用运算符来完成的。
+      4. Effects perform tasks, which are synchronous or asynchronous and return a new action.效果执行同步或异步的任务并返回一个新动作
+   4. Effect 的本质
+      1. A Effect is a type of Angular Service. 即 Effects 的本质就是一个服务
+      2. 使用 effects 时，也需要 @Injectable, 写法也一样
+   5. 注册 root effects: 
+      1. 自动注册到顶层：利用 Angular CLI 的命令 ng add @ngrx/effects 会自动下载安装包，然后自动更新 app.module.ts 和 package.json 两个文件。
+
+         ```dash
+            @NgModule({
+               imports: [
+                  EffectsModule.forRoot([]), // 自动在顶层出现这行：默认是空数组
+               ],
+            })
+            
+         ```
+
+      2. 手动注册顶层 top-level effects. 
+         1. 写到 根模块中 app.module.ts 里，
+
+            ```dash
+            @NgModule({
+               imports: [
+                  EffectsModule.forRoot([BoooksEffects])
+               ],
+            })
+            export class AppModule {}
+            ```
+
+         2. 调用时机：当 AppModule 一经加载，effects 就会立刻被加载，这样才能保证监听得到所有的 actions
+         3. 注意: 无论是否定义了 top-level effects,  EffectsModule.forRoot() 这个方法都要添加进 AppModule imports 数组中
+
+      3. 手动注册 feature effects:
+         1. 写在  根模块中 app.module.ts 里 或者 分支 Module 里
+
+            ```dash
+               // 在 BooksModule 里
+               @NgModule({
+               imports: [
+                  EffectsModule.forFeature([BoooksEffects])
+               ],
+            })
+            export class BookModule {}
+            ```
+
+         2. 调用时机：Lazily load. 会在加载 BookModule 时，懒加载 BooksEffects
+   6. 用法：
+      1. 注入语法
+      2. 构造函数注入 Aciton Observable
 
       ```bash
-      import { createSelector, createFeatureSelector } from '@ngrx/store'; 
-      export const selectBooksState = createFeatureSelector<ReadonlyArray<Book>>('books');
-      export const selectCollectionState = createFeatureSelector<ReadonlyArray<string>>('collection');
-      export const selectBookCollection = createSelector(
-         selectBooksState,
-         selectCollectionState,
-         (books, collection) => { // 最后一个函数参数用来实际控制得到何种处理过的数据
-            return collection.map((id) => books.find((book) => book.id === id));
-         }
-      );
-      ```
-
-   8. 调用 Selector: ❓❓❓
-
-      ```dash
-
-      ```
-
-5. Effects
-   1. 定义：在一个基于服务的Angular应用程序中，component 负责直接通过 serivce 与外部资源进行交互。相反，effects 提供了一种与这些 service 交互的方式，并将它们与 component 隔离。effects 是你处理业务的地方，如获取数据、产生多个事件的长期运行的任务，以及其他外部交互，你的组件不需要明确了解这些交互。
-   2. 核心概念：
-      1. Effects isolate side effects from components, allowing for more pure components that select state and dispatch actions.
-      2. Effects are long-running services that listen to an observable of every action dispatched from the Store.
-      3. Effects filter those actions based on the type of action they are interested in. This is done by using an operator.
-      4. Effects perform tasks, which are synchronous or asynchronous and return a new action.
-   3. Effects are injectable service classes with distinct parts: ❓❓❓
-   4. 代码
-
-      ```
-      // movie.effects.ts 中
+      // 1.注入语法
       @Injectable()
-      export class MovieEffects {
-         // 当组件触发 action 时，effect 需要通过 Actions 类服务接收 Action， 所以在 Effect 类中通过 constructor 参数的方式将 Actions 的实例注入
-         // Actions 服务类的实例对象是 Observable 对象，当有 Action 被触发时，Action 对象本身会作为数据流被发出
-         constructor( private actions$: Actions, private moviesService: MoviesService ) {}
-      
-         // 接收的值 loadMovie$ 是一个 observable 对象，当最后反回的那个 action 被触发时，loadMovie$ 就会发出流数据
-         loadMovies$ = createEffect(() => {
-            // 回调函数中返回 observable 对象，对象中要发出副作用执行完成后要触发的 action 
-            return this.actions$.pipe(
-               ofType('[Movies Page] Load Movies'), // 每个 action 被触发的时候，都会发出数据流，所以要通过 ofType 过滤得到要处理的 action
-               mergeMap(
-                  () => {
-                     // 返回 observable 对象，对象中要发出副作用执行完成后要触发的 action 
-                     return this.moviesService.getAll().pipe(
-                        map( movies => {
-                           // 返回的就是要最后被触发的 action
-                           return { type: '[Movies API] Movies Loaded Success', payload: movies } 
-                        }, 
-                        catchError(() => EMPTY)
-                     )
-                  }
-               )
-            )
-         });
+      export class BoooksEffects {
+         // 2.当组件触发 action 时，effect 需要通过 Actions 类服务接收 Action， 所以在 Effect 类中通过 constructor 参数的方式将 Actions 的实例注入，当有 Action 被触发时，Action 对象本身会作为数据流被发出
+         constructor(
+            private actions$: Actions, // Actions 服务类的实例对象是 Observable 对象，当有 Action 被触发时，Action 对象本身会作为数据流被发出
+            private booksService: GoogleBooksService
+         ) {}
+
+         // createEffect 接受一个回调函数作参数，回调函数中返回 observable 对象，即 loadBooks$，对象中要返回副作用执行完成后要触发的 action$,当最后反回的那个 action 被触发时，loadBooks$ 就会发出流数据
+         loadBooks$ = createEffect(() => this.actions$.pipe(
+            ofType('[Book List/API] fetch Books'), // 每个 action 被 dispatched 的时候，都会发出数据流，effects 会监听所有被触发的 actions$ 数据流，但只会对 'ofType' 里的 一个或多个 action 做出反应
+            // 使用 mergeMap 操作符将 action stream 扁平化❓❓❓并映射到一个新的可观察对象。必须使用‘扁平化’操作符，比如 mergeMap,concatMap, exhaustMap 等
+            mergeMap(() => { 
+               // 返回那个副作用执行完成后想触发的 action$, 也是 Observable 对象. 
+               return this.booksService.getBooks().pipe( 
+                  map((books) => {
+                     return {
+                        type: '[Book List/API] Retrieve Books Success', // 然后这个 action 也会被 store 触发，当数据需要改变，这个 action 就会被对应的 reducer 处理
+                        payload: books,
+                     };
+                  }),
+                  catchError(() => EMPTY), // Effects 会始终监听 observable streams 直到错误出现或者流结束。这里是返回了一个 empty observable，if an error occurs.
+               ))
+            })
+         );
       }
       ```
 
-   5. 使用 ❓❓❓
-      1. 在 constructor 中注入 actions$, 并且是 observable 类型的。当有 Action 被触发时，Action 对象本身会作为数据流被发出
-      2. createEffect 接受一个回调函数作参数，回调函数中返回 observable 对象，对象中要发出副作用执行完成后要触发的 action
-      3. ofType(): 对目标 Action 对象进行过滤，如果没有过滤到目标action对象，本次不会继续发出数据流；如果找到了，就会将action对象作为数据流继续发出
-      4. mergeMap: rxjs操作符，用来合并 observable 对象。接受一个回调函数作参数。
-      5. map： rxjs操作符，可以操作 observable 对象
-   6.
+   7. 注意：
+      1. 上述所有的 event streams 都是可观察对象，但不限制于 被触发的 action$， 任何新的或者别的库产生的可观察对象都可以，比如 Angular Router、浏览器事件等任何 observable streams.
+   8. root effects VS feature effects: ❓❓❓
+      1. EffectsModule.forFeature([*effects])
 6. Entity
    1. 定义：实体，就是集合中的一条数据。
    2. 作用：ngrx提供了实体适配器对象，这个适配器对象提供了各种操作集合中实体的方法，目的就是提高开发者操作实体的效率。
@@ -273,7 +458,7 @@
       1. EntityState: 实体类型接口.
          1. EntityState 接口类型存储的数据格式：有 ids 和 entities 两个属性
 
-            ```
+            ```bash
             {
                ids: [1,2],
                entities: {
@@ -285,7 +470,7 @@
 
          2. 状态接口继承该实体类型接口后，就也有了ids&entities两个属性
 
-            ```
+            ```bash
             export interface State extends EntityState<T> {} 
             ```
 
@@ -293,7 +478,7 @@
       2. EntityAdapter： 实体适配器对象类型接口
       3. createEntityAdapter: 创建实体适配器对象的方法
 
-         ```
+         ```bash
          const adapter: EntityAdapter<T> = createEntityAdapter<T>();
          const initialState: State = adapter.getInitialState(); //{ ids: [], entities: {} }
          ```
@@ -302,7 +487,7 @@
       1. 适配器方法：就是用来操作实体的方法
          1. 目录:
 
-            ```
+            ```bash
             // 删
             removeOne: Remove one entity from the collection.
             removeMany: Remove multiple entities from the collection, by id or by predicate.
@@ -326,7 +511,7 @@
 
          2. 用法：大部分两个参数的方法是fn(参数,state)，state是作为第二个参数使用的，注意区别
 
-            ```
+            ```bash
             on(UserActions.addUser, (state, { user }) => {
                return adapter.addOne(user, state)
             }),
@@ -340,14 +525,14 @@
       2. 选择器方法：就是用来选择实体的 adapter.getSelectors()
          1. 目录：
 
-            ```
+            ```bash
             // 来自 adapter.getSelectors() 的返回值
             const { selectIds, selectEntities, selectAll, selectTotal, } = adapter.getSelectors();
             ```
 
          2. 用法：不是方法，是变量可直接赋值
 
-            ```
+            ```bash
             // 获取 id 集合，以数组形式呈现
             export const selectUserIds = selectIds;
 
@@ -364,7 +549,7 @@
    6. Entity 与 Selector 的结合
       1. 用法
 
-         ```
+         ```bash
          import { createSelector, createFeatureSelector } from '@ngrx/store'; 
          export const selectBooksState = createFeatureSelector<ReadonlyArray<Book>>('books');
          // 原来:得到所有对象
@@ -387,4 +572,4 @@
 ### Action 与 Reducer 是如何绑定/映射的，实现原理 ❓❓❓
 
 1. 思想：每个 reducer 都是一个用来监听 action 的 listener。当一个 action 被触发，所有注册了这个 action 的 reducers 都会接收到， 监听的方法是通过 on 方法
-2. 具体：
+2. 源码：

@@ -20,7 +20,7 @@
 1. 导入全局样式的方法
    1. 在入口样式 style.css 文件中导入
 
-      ```
+      ```dash
       // 这个~波浪号代表相对 node_module 文件夹
       @import "~bootstrap/dist/css/bootstrap.css"
       ```
@@ -28,7 +28,7 @@
    2. 在 入口模版 index.html 中引入外链
    3. 在文件根目录下的 angular.json 中，加入样式数组
 
-      ```
+      ```dash
       // angular.json
       "styles":[
          "./node_modules/bootstrap/dist/css/bootstrap.min.css",
@@ -38,16 +38,21 @@
 
 ### angular/cli
 
-1. 常规创建 ng new angular-demo
-2. 精简创建 ng new angular-demo -minimal 最小化，会创建一个精简的项目，不会包含 karma *spec.ts 等单元测试相关，并且也会把 html/css/ts 文件统一都打进一个 ts文件里
-3. 精简创建 ng new angular-demo --inlineTemplate 创建一个的项目，使 html 文件和 ts文件是分开的
-4. 总结第2、3点，可以使用 ng new angular-demo -minimal --inlineTemplate 最合适
-5. --skipGit=true 会跳过设置git
-6. --skip-install 会跳过自动安装依赖，可手动安装
-7. --style=css 设置项目的css的方式
-8. --routing=false 不创建路由文件
-9. --inlineStyle=true 则组件类文件+组件样式文件会合并
-10. --prefix="xxt" 指定组件默认前缀 默认是app 例如 app-menu-index
+1. 创建项目 ng new angular-demo
+   1. 精简创建 ng new angular-demo -minimal 最小化，会创建一个精简的项目，不会包含 karma *spec.ts 等单元测试相关，并且也会把 html/css/ts 文件统一都打进一个 ts文件里
+   2. 精简创建 ng new angular-demo --inlineTemplate 创建一个的项目，使 html 文件和 ts文件是分开的
+   3. 总结第2、3点，可以使用 ng new angular-demo -minimal --inlineTemplate 最合适
+   4. --skipGit=true 会跳过设置git
+   5. --skip-install 会跳过自动安装依赖，可手动安装
+   6. --style=css 设置项目的css的方式
+   7. --routing=false 不创建路由文件
+   8. --inlineStyle=true 则组件类文件+组件样式文件会合并
+   9. --prefix="xxt" 指定组件默认前缀 默认是app 例如 app-menu-index
+2. 创建组件 ng generate component name 缩写 ng g c name
+    1. 带文件夹创建组件 ng g c folder/name 默认会创建 folder
+    2. 不带文件夹创建组件 ng g c folder/name --flat 只会在该 folder 下创建组件，不会重新创建 folder
+3. 创建服务 ng generate service name 缩写 ng g s name
+4. 创建路由守卫 ng generate guard name 缩写 ng g g name
 
 ### 启动命令
 
@@ -59,12 +64,12 @@
 
 ### 常见问题
 
-1. 用cnpm install @angular/cli 可能会有问题，提示无权限安装，还是用npm直接安装吧
+1. 用 cnpm install @angular/cli 可能会有问题，提示无权限安装，还是用npm直接安装吧
 2. 一直卡在 installing packages: 可以 ng new projectName --skip-install 之后在项目里用淘宝镜像安装依赖 cnpm intall
 
 ### 核心概念 <https://angular.io/guide/architecture>
 
-1. Directive 指令
+1. Directive 指令: Custom HTML syntax 本质就是一个自定义的 HTML 元素语法
    1. 属性指令：
       1. 定义：修改现有元素的外观或者行为，使用`[]`包裹
       2. 分类
@@ -829,8 +834,54 @@
 1. 管道：传输数据，支持链式管道，从左到右，逐层执行,
 2. 自带的管道
    1. ![管道分类](../assets/Angular_Pipe.png)
+      1. async pipe: 从一个异步单元中解锁一个值。
+         1. 用法：{{ obj_expression | async }} 支持重命名 {{ obj_expression | async as newName1}} 这个 newName1 可以是一个本地的变量
+         2. 描述：The async pipe subscribes to an Observable or Promise and returns the latest value it has emitted. When a new value is emitted, the async pipe marks the component to be checked for changes. When the component gets destroyed, the async pipe unsubscribes automatically to avoid potential memory leaks. When the reference of the expression changes, the async pipe automatically unsubscribes from the old Observable or Promise and subscribes to the new one.
+         3. 描述翻译：异步管道订阅一个Observable或Promise，并返回它所发出的最新值。当一个新的值被发射出来时，异步管道会标记该组件以检查是否有变化。当组件被销毁时，异步管道会自动取消订阅以避免潜在的内存泄漏。当表达式的引用发生变化时，异步管道会自动取消订阅旧的Observable或Promise，并订阅新的。
+         4. obj 可接受的值类型：Observable<T> | Subscribable<T> | Promise<T>、
+         5. 示例：
 
-      ```
+            ```dash
+            @Component({
+               selector: 'async-promise-pipe',
+               template: `<div>
+                  <code>promise|async</code>:
+                  <button (click)="clicked()">{{ arrived ? 'Reset' : 'Resolve' }}</button>
+                  <span>Wait for it... {{ greeting | async }}</span>
+               </div>`
+            })
+               export class AsyncPromisePipeComponent {
+               greeting: Promise<string>|null = null;
+               arrived: boolean = false;
+
+               private resolve: Function|null = null;
+
+               constructor() {
+                  this.reset();
+               }
+
+               reset() {
+                  this.arrived = false;
+                  this.greeting = new Promise<string>((resolve, reject) => {
+                     this.resolve = resolve;
+                  });
+               }
+
+               clicked() {
+                  if (this.arrived) {
+                     this.reset();
+                  } else {
+                     this.resolve!('hi there!');
+                     this.arrived = true;
+                  }
+               }
+            }
+            ```
+
+   2.
+
+      ```dash
+      <div>{{ books$ | async }}</div> 
       <div>{{ date | date: 'yyyy-MM-dd' }}</div> 2022-05-08
       <div>{{ money | currency: "Y" }}</div> // ¥123
       <div>{{  content | uppercase }}</div>
@@ -1003,15 +1054,94 @@
 
 ### 路由
 
-1. 位置：`<router-outlet></router-outlet>` 写在哪，路由就在哪里生效
-2. 跳转：`<a [routerLink]="['/menuDetail']" routerLinkActive="router-link-active">跳转</a>` 其中 routerLinkActive 是内置的一个样式入参，可以给跳转自定义一些样式
-3. 默认路由：给路由的path选项设置为空字符串'' 或者 两星通配符 `**` 注意是2星哦
-4. 子路由：利用children注册，然后在父页面里也设置一个 `<router-outlet></router-outlet>`用来防止子路由渲染
-5. 传参方式：两种传参互不影响
+1. 定义：
+2. 注册：
+   1. RouterModule.forRoot([]): This establishes the routes for the root of our application 这就为我们的应用程序的根建立了路由。
+   2. RouterModule.forChild([])
+
+   ```dash
+      // app.module.ts
+      @NgModule({
+         imports: [
+            RouterModule.forRoot( [] ) // 传入的 [] 是 routers array 导航数组
+         ]
+      })
+   ```
+
+3. 配置路由 Configuring Routes:
+   1. 数组里的每一个对象，就是一个 Route path 必须属性：就是要在 URL 中使用的路径片段。
+      1. 传参：例如 path:'abc' URL: 'www.baidu.com/abc'. 如果要传递参数，就用'/:parameterName'的形式传递
+      2. 默认路由： path：'' 默认重定向到 redirectTo 所指向的路径，路径匹配方式由 pathMatch 配置
+   2. 配置顺序原则：First-match-wins strategy。 从上到下，匹配第一个能匹配的。所以书写时，应该把按照:最具体的-没那么具体的-通配符 的顺序定义路由
+   3. 原理：当对应的 Route 被 activated, 对应的 component view 就会被 display
+
+   ```dash
+      // 将会传入 forRoot 或者 forChild
+      [
+         {path: 'aaa' , component: AaaComponent},
+         {path: 'bbb/:id' , component: BbbComponent}, // 传递参数
+         {path: '' , redirectTo: 'ccc', pathMatch: 'full'}, // 默认路由
+         {path: '**' , component: DddComponent}, // 通配符 是2颗星！！ 注意
+      ]
+   ```
+
+4. 使用：当哪个 Route is activated, 就会显示那个路由对应的 Component
+   1. 首先，在项目的 index.html 的 header 中，需要一个 `<base href='/' />` 标签元素。( Angular CLI 已经帮我们做了这一步 )。 href 会决定 Routers 如何合并 URLs, 比如当前设置的'/' 就会直接在用 path 在原来的 URL 后面拼接
+   2. 放置路由展示位置： `<router-outlet></router-outlet>` 写在哪，路由就在哪里生效
+   3. 触发 Activate a Router：
+      1. 使用 routerLink 指令：来指定该元素对应的 Router 的 path.  注意！指令要用 【方括号】括起来，
+
+         ```dash
+            <li>
+               <a [routerLink]="['/aaa']">AAA</a>
+            </li> 
+            // 简写: 如果路由没有参数要传递，只有 path 属性，可以直接简写
+            <li>
+               <a routerLink="/aaa">AAA</a>
+            </li> 
+
+            // 传参：传入的参数是个数组，第一个元素是对应的 path, 后面可以跟要传递的可选参数 parameter. 最终形成的 URL 是用 / 连接的 比如 www.baidu.com/bbb/2
+            <li>
+               <a [routerLink]="['/bbb', bbbComp.id ]">BBB</a>
+            </li> 
+            // 添加样式：
+            <a routerLink="/aaa" routerLinkActive="router-link-active">跳转</a>  // 其中 routerLinkActive 是内置的一个样式入参，可以给跳转自定义一些样式
+         ```
+
+      2. 使用代码更改路由
+
+         ```dash
+            import { Router } from '@angular/router';
+            constructor( private router: Router){}
+
+            onNavigate(): void {
+               this.router.navigate(['/aaa']);
+               this.router.navigate(['/bbb', bbbComp.id]); // 传参的方式一样
+            }
+         ```
+
+5. 获取路由参数：获取参数的 key 就是 Route 里 /:parameterName 的字符串 parameterName
+
+   ```dash
+      // {path: 'bbb/:id' , component: BbbComponent} // key: 'id'
+      // <a [routerLink]="['/bbb', bbbComp.id ]">BBB</a>
+
+      import { ActivateRoute } from '@angular/router';
+      constructor( private route: ActivatedRoute ){}
+      // Way 1  
+      this.route.snapshot.paramMap.get('id') // 这种方式提供了‘某个时间点’上的入参值，适用于展示组件时入参不会随之变化的场景
+      // Way 2
+      this.route.paramMap.subscribe( params => { // 这种方式可以监控参数变化，在有变化时会触发回调函数执行，适合入参可能会变化的场景。其中 paramMap 是一个 Observable 对象
+         let id = params.get('id');
+      })
+   ```
+
+6. 子路由：利用children注册，然后在父页面里也设置一个 `<router-outlet></router-outlet>`用来防止子路由渲染
+7. 传参方式：两种传参互不影响
    1. query: (推荐，因为不会有顺序的坑)
       1. 传递：
 
-         ```
+         ```dash
          // 直接在a标签上设置一个属性传递参数对象 
          <a [routerLink]="['/menuDetail']" [queryParams]="{id:3,name:'abc'}">跳转</a>
          ```
@@ -1022,7 +1152,7 @@
    2. params
       1. 传递：
 
-         ```
+         ```dash
          //在router配置中 name后配置参数
          path: 'menuDetail/:menuId/:nickname'
          //在 a标签传参时，第二个参数开始是参数 
@@ -1032,13 +1162,61 @@
       2. path变成: `/menuDetail/123/Bob?id=3&name=abc`
       3. 接收：在子路由页面中接收
 
-         ```
+         ```dash
          this.routerinfo.params.subscribe((params: Params) => {
             console.log(params);
          });
          ```
 
       4. 参数顺序：params 在router里注册的先后顺序，与传参数组里的顺序 是严格对应的
+8. Guards 守卫：本质是 Service
+   1. 四大守卫：Boolean类型时，当返回 true 则可以激活路由，返回 false 则不行
+      1. CanActivate: to guard navigation to a route
+      2. CanDeactivate: to guard navigation away from the current route
+      3. Resolve: to prefetch data before activating a route
+      4. CanLoad: to prevent asynchronous routing
+   2. 定义：可以通过 Angular-CLI 快捷创建 ng g g folder/name
+
+      ```dash
+         // product-detail.guard.ts
+         import { Injectable } from '@angular/core'; 
+         import { ActivateRoute，CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, UrlTree } from "@angular/router';
+
+         // 本质是 Service
+         @Injectable({  
+            providedIn: 'root' 
+         }) 
+         export class ProductDetailGuard implements CanActivate { 
+
+            constructor( private route: ActivatedRoute ){}
+            canActivate(
+               router: ActivatedRouteSnapshot,  // 提供 activated router information 即当前被激活的路由信息，不限制时间，包含任何时间节点的路由信息
+               state: RouterStateSnapshot， // 提供 router state information 路由状态信息
+            ): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {  // 返回值类型可以是 boolean Observable Promise... 等 
+               // 判断  
+               let id = route.paramMap.get('id'); // 默认取出来的是 string 类型
+               id = Number(id); 
+               if(!id){   // 当传入的参数不符合判断，比如 www.baidu.com/bbb, 压根就没传
+                  this.router.navigate(['/aaa']);
+                  return false;  // 返回 false 就不会继续走 path: bbb 那条路由，而是像上面那样，直接转向 /aaa 了
+               }
+               return true; 
+            }
+         }
+      ```
+
+   3. 使用：
+
+      ```dash
+         RouterModule.forRoot([
+            {path: 'aaa' , component: AaaComponent},
+            {
+               path: 'bbb/:id' , 
+               component: BbbComponent,
+               canActivate: [ProductDetailGuard]  // 传入数组
+            },
+         ])
+      ```
 
 ### 特殊的选择器 ？？？
 
@@ -1053,12 +1231,12 @@
    2. 选择器匹配过程：选择器将会从当前元素，一直向上查找，匹配所有祖先节点/组件，直到 document root 元素. 无需将 ViewEncapsulation 设置为 none.
    3. 举例：
 
-      1. ```
+      1. ```dash
          :host-context(.dark-theme) .my-component { // set style }
          // 祖先节点中如果能找到 .dark-theme 类样式，当前style将会成功设置
          ```
 
-      2. ```
+      2. ```dash
          <div theme="dark">...</div>
          :host-context([theme="dark"]) .my-component { // set style}
          // 任一祖先节点上设置了 theme=dark，当前 style 将会成功设置
