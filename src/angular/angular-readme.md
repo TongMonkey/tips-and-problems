@@ -472,6 +472,23 @@
       2. 在 module 文件中，可以 declareations 和 exports 相关的 components
       3. component 文件，就是最小的文件层级了
 
+
+### 类里各个部分装饰器
+1. @Input 
+2. @ViewChild 
+   1. 定义：一个属性装饰器，用于配置一个视图查询。变更检测器会在视图DOM中查找能匹配该选择器的第一个元素或者指令。如果视图DOM更新，该属性装饰器匹配了新的子节点，该属性也会被更新。
+   2. 视图查询的配置时机：在调用 GgAfterViewInit 之前
+   3. 支持选择：
+      1. 任何带有 @Component 或 @Directive 装饰器的类
+      2. 字符串形式的模板引用变量（比如可以使用 @ViewChild('cmp') 来查询 `<my-component #cmp></my-component>`
+      3. 组件树中任何当前组件的子组件所定义的 privider 比如 service
+      4. 任何通过字符串令牌定义的提供者（比如 @ViewChild('someToken') someTokenVal: any）
+      5. TemplateRef（比如可以用 @ViewChild(TemplateRef) template; 来查询 `<ng-template></ng-template>`）
+3. @ViewChildren()
+   1. 定义：
+   2. 结果类型：QueryList[]
+
+
 ### 获取原生DOM对象
 
 1. 获取一个元素：利用 模版 #name
@@ -488,7 +505,7 @@
    ```
    <p #username></p>
    class AnotherComponent implements AfterViewInit {
-      @ViewChild("username"): nickname: ElementRef<HTMLParagraphElement> | undefined
+      @ViewChild("username") nickname: ElementRef<HTMLParagraphElement> | undefined
       ngAfterViewInit(){
          console.log(this.nickname?.nativeElement)
       }
@@ -809,7 +826,72 @@
     [ngStyle] = "{'color': isActive ？'red' : 'blue'}" // 在ts中定义 isActive:boolean = true
    ```
 
-### 事件绑定 + 模版引用变量
+### 指令
+1. 属性指令：
+   1. 定义：修改现有元素的外观或者行为，使用`[]`包裹
+   2. 分类
+      1. `[ngSwitch]` 注意写法，不是带星的
+         1. 注意：内部的选项是结构指令：*ngSwitchCase *ngSwitchDefault
+            ```
+             <div [ngSwitch]="type">
+                 <p *ngSwitchCase="1">1</p>
+                 <p *ngSwitchCase="2">2</p>
+                 <p *ngSwitchDefault>0</p>
+             </div>
+            ```
+      2. `[hidden]`: 根据条件显示 DOM 节点的显隐，与 display:none 同理
+         ```
+         <div [hidden]="1+1===2"></div>
+         ```
+2. 结构指令
+   1. 定义：修改 DOM 节点从而修改布局，使用 * 作为指令前缀
+   2. 分类
+      1. *ngIf / else + 'ng-template #template'
+         1. 作用：根据条件渲染或者移除 DOM 节点
+         2. 本质：相当于给html的标签设置一个`[ngIf]="true/false"`的属性
+            ```
+             <div *ngFor="let name of [1, 2, 3, 4]">
+                 <a [title]="'haha'" *ngIf="name % 2 === 0; else elseArea "> {{ name }} </a>
+             </div>
+             // 这里是用一个模版引用 #elseArea
+             <ng-template #elseArea>
+                 <div>奇数</div>
+             </ng-template>
+            ```
+      2. *ngFor
+         1. 作用：遍历数据生成HTML结构
+         2. Angular提供的内部变量：
+            1. let item of list
+            2. let i = index  序号从0开始
+            3. let isEven = even  是否是偶数
+            4. let isOdd = odd  是否是奇数
+            5. let isFirst = first  是否是第一个
+            6. let isLast = last  是否是最后一个
+         3. 
+            ```
+            <div *ngFor="let name of names let i=index let isOdd=odd">
+                  {{ name }}
+                  {{i}}
+                  {{isOdd}}
+               </div>
+               // 解析完相当于
+               <ng-template ngFor let-name [ngForOf]="names" let-i="index" let-odd="odd">
+                  <div>
+                     {{ name }}
+                     {{i}}
+                     {{isOdd}}
+                  </div>
+               </ng-template>
+            ```
+3. 自定义指令 ？？？
+   1. https://www.bilibili.com/video/BV1mQ4y1m7o6/?spm_id_from=pageDriver
+   2. 定义：自定义指令以操作 DOM
+   3. 创建：ng g d path/dName 也就是 ng generate directive path/dName，并且会被放进根模块的declaration中
+      ```
+      ng g d directives/hover
+      ```
+   4. 指令类：用 @Directive 装饰的类 
+
 
 1. 定义：事件用括号包裹起来表示是一个事件语法
 2. 直接获取事件对象`$event`:
@@ -998,57 +1080,185 @@
 3. 利用 setter 截听输入属性值的变化
    1. demo:
 
+         ```
+   3. Provider 提供者:
+      1. 定义：是注入器 Injector 的配置对象
+      2. 访问依赖对象的标识 provide：
+         1. 数据类型：既可以是对象比如 MailService 也可以是 "mail" 字符串。
+         2. 意义：将实力对象和外部的引用建立松耦合关系，外部通过标识获取实例对象，只要标识保持不变，内部代码怎么变化都不会影响到外部。
+         3. 用法：
+            ```
+            // resolveAndCreate 创建注入器
+            const injector = ReflectiveInjector.resolveAndCreate([
+               {
+                  // 注意：属性名是 provide 不是 provider
+                  // 这样写的时候，就不需要在 
+                  // provide: MailService,  // 用哪个标识去获取实例对象，也可以是字符串
+                  provide: “mail”,  // 用哪个标识去获取实例对象，也可以是字符串
+                  useClass: MailService //用那个类创建实例对象
+               }
+            ]);
+            ```
+      3. useValue: 作为配置对象，也可以传递一个对象 
+         ```
+         // resolveAndCreate 创建注入器
+         const injector = ReflectiveInjector.resolveAndCreate([
+            {
+               provide: “Config”,  // 用哪个标识去获取实例对象，也可以是字符串
+               // 使用 Object.freeze 使外部无法修改该对象
+               useValue: Object.freeze({
+                  APIKEY: '12345',
+                  APISCRET: '500-400-300',
+               })
+            }
+         ]);
+         ```
+      4. 
+
+
+### 服务
+1. 定义：用来放置和特定组件无关并希望能跨组件共享的数据或逻辑
+2. 好处：把组件和服务区分开，有助于提高模块性和复用性。通过把组件和视图有关的功能与其它类型的处理分离开，可以让组件类更加精简、高效
+3. 创建：
+   1. 命令：ng g serviceFolerName/serveName 创建后，通过 @Injectable()装饰器标识服务 
+   2. 注意：在使用服务时，不要用 new 手动创建服务，需要由 Angular 内置的依赖注入系统创建和维护。服务是依赖需要而被注入到组件中的！！
+   3. demo: /angular-demo/src/app/service/menu.service.ts
+4. 设置服务的 3 种作用域
+   1. 全局作用域：在根注入器中注册服务，所有模块使用同一服务实例对象. 
+      1. 默认root：root表示默认注入到 AppModule 里，就是app.module.ts
+      2. 注意！！ 如果暂时不想定义任何区域，可以传入 null, 不能让 Injectable 里传入空对象,会报错。
+      3. provedIn 的参数选项：  `({ providedIn: Type<any> | "root" | "platform" | "any" | null; } & InjectableProvider) | undefined`
+         ```
+         import { Injectable } from '@angular/core';
+         @Injectable({
+            // 1.全局作用域 默认 app.module.ts
+            providedIn: 'root', 
+            // providedIn: null
+         })
+         export class MenuService {}
+         ```
+   2. 模块级别：该 module 中的所有 components 使用同一服务实例对象。
+      1. 有两种语法都可以，第一种：在服务中用 providedIn 声明要在哪个 module 里生效
+         ```
+         import { Injectable } from '@angular/core';
+         import { SharedModule } from '../shared/share.module';
+         @Injectable({
+            // 在服务中用 providedIn 声明要在哪个 module 里生效
+            providedIn: sharedModule, // 2.模块作用域
+         })
+         export class MenuService {}
+         ```
+      2. 两种语法都可以，第二种：在模块中用 providers 表示使用哪些服务
+         ```
+         import {MenuService} from './menu.service'
+         @ngModule({
+            // 在模块中用 providers 表示使用哪些服务  
+            providers: [MenuService],
+         })
+         export class sharedModule{}
+         ```
+   3. 组件级别：该 component 组件及子组件中使用同一服务实例对象
       ```
-      // in child
-      export class NameChildComponent {
-         @Input()
-         get name(): string { return this._name; }
-         set name(name: string) {
-            this._name = (name && name.trim()) || '<no name set>';
-         }
-         private _name = '';
+      // 在组件中
+      import {MenuService} from './menu.service'
+      @Component({
+         providers: [MenuService]
+      })
+      export class MenuIndexComponent implements OnInit {
+         constructor(
+            private menuServer: MenuService,
+         ) {}
       }
-
-      // in parent
       ```
-
-4. 利用 ngOnChanges() 截听输入属性值的变化
-   1. ???
-5. 通过 put a local variable: #name 来代表元素：能在 parent-template 中 use or invoke child component's properties and methods
-   1. That gives you a reference to the child component and the ability to access any of its properties or methods from within the parent template.
-
+5. 使用：
+   1. 在app.module.ts中手动import并放进 @Component的providers数组
       ```
-         // in child
-         seconds = 0;
-         start(){}
-
-         // in parent
-         <div class="seconds">{{timer.seconds}}</div>
-         <button type="button" (click)="timer.start()">Start</button>
-         <app-countdown-timer #timer></app-countdown-timer>
+      @NgModule({
+         declarations: [...],
+         imports: [...],
+         // 存放服务 
+         providers: [ MenuService ],
+         bootstrap: [...],
+      })
+      export class AppModule {}
       ```
+   2. 在目标模块中也需要手动import，然后作为入参传给类的constructor. 之后可以通过 this.serviceName 查询到. 如果没有还没有处理，就得到一个空对象，可以给该服务类添加属性
+      1. 多个服务时，依靠服务的类别来判断使用哪个服务
+      2. private 权限修饰符表示：
+         1. 修饰的该服务，不作为参数，而是当前类的属性使用，所以可以通过 this.menuService 来访问。这是 Typescript的知识点
+         2. 修饰的该服务，只能在组件类中使用，不能在组件模版中使用。如果使用public修饰的，才可以在模版中使用。
+         ```
+         constructor(
+            private anotherServer: AnotherService,
+            private menuServer: MenuService,
+         ) {}
+         ```
+      3. 总结：通过类构造函数里的private服务，就可以在当前业务类中，使用this.服务.*来获取操作数据的方法
+6. 设计模式：单例模式，所以当服务本身修改时，所有依赖注入到的组件内都会使用到新的修改
 
    2. 缺点：只能在 parent-template 也就是 html 中调用 child, 在 parrent-component 组件中 has no access to the child.
 6. 通过 @ViewChild 获取元素: 能在 parent-component 中 获取对 child 的使用权限, inject the child component into the parent as a ViewChild.
    1. 通过指定'#字符串'，得到第一个匹配的子类
 
-      ```
-      // Parent Component
-      <app-child #targetChild></app-child>
-
-      // Child Component 还可以设置个别名isMe
-      @ViewChild('targetChild') isMe: ChildComponent;
-      ```
-
-   2. 直接指定'组件类'，通过类名获得第一个匹配的子类
+### 共享模块
+1. 定义：共享模块中放置的是 Angular 应用中模块级别的需要共享的组件或者逻辑
+2. 创建
+   1. 共享模块：ng g m shared  这里取名叫shared
+   2. 创建第一个组件：
+      1. 在该共享模块下 创建组件：ng g c shared/components/Layout  demo 取名叫Layout 
+      2. 此时，在shared.module.ts里可以看到，在declaration里已经自动注入了 LayoutComponent
+         ```
+         @NgModule({
+            declarations: [
+               LayoutComponent
+            ],
+            imports: [
+               CommonModule
+            ],
+            exports:[
+               LayoutComponent,
+               PrintComponent
+            ]
+         })
+         export class SharedModule { }
+         ```
+   3. 创建第二个组件：
+      1. 如果继续创建组件 ng g c shared/components/Print 
+      2. 此时，在shared.module.ts里可以看到,在 declarations 里已经自动添加了 printComponent, 但是在 exports 里没有自动添加，如果想导出，就自己手动添加，否则不导出是用不了的
+         ```
+         @NgModule({
+            declarations: [
+               LayoutComponent,
+               PrintComponent 
+            ],
+            imports: [
+               CommonModule
+            ],
+            // 导出
+            exports:[
+               LayoutComponent,
+               // 这里没有自动 添加进 exports，手动添加
+               PrintComponent
+            ]
+         })
+         export class SharedModule { }
+         ```
+3. 导出：在共享模块中导出共享组件: 在shared.module.ts中的 exports数组中指定要导出的模块名 LayoutComponent, PrintComponent
+4. 使用：
+   1. SharedModule 已经被自动导入了根组件 app.module.ts 的 imports 中了, 注意这里自动导入的是分享模块SharedModule，而不是内部的 LayoutComponent 或者 PrintComponent，但是可以直接引用 分享模块中的 components
+   2. 然后在想要使用的地方 直接引用标签就行了， `<app-layout></app-layout>`  `<app-print></app-print>`
 
       ```
       // Parent Component
       <app-child></app-child>
 
-      // Child Component
-      @ViewChild(ChildComponent) isMe: ChildComponent
-      ```
+### 组件交互
+1. 父2子：利用 @Input("变量名")
+2. 子2父：利用 @Output 父组件监听子组件的事件 eventEmitter
+3. 利用 setter 截听输入属性值的变化
+2. 利用 ngOnChanges() 截听输入属性值的变化
+4. 获得子组件实例：
+5. 服务
 
 7. 服务
 
@@ -1248,32 +1458,28 @@
 ### 内容投影 && 三种嵌入视图
 
 1. 定义：在组件标签之间的内容可以传递给组件中展示，这一过程就是投射
-2. ng-content
-   1. 单插槽投影：ng-content
-      1. 定义：创建一个组件，可以在其中投影一个组件
-      2. slot：`<ng-contnet></ng-content`
-      3. 但一插槽 且 没有select，会将所有内容都投影在一个 插槽中
-   2. 多插槽投影：ng-content
-      1. 定义：一个组件可以具有多个插槽。每个插槽可以指定一个CSS选择器，该选择器会决定将哪些内容放进该插槽。
-      2. slot + class:
-
-         ```
-         <app-menu-detail>
-            <div class="a">a</div>
-            <div class="b">b</div>
-         </app-menu-detial>
-      
-         // 在 menu-detail.component.html 中
-         <ng-content select=".a"></ng-content>
-         <ng-content select=".b"></ng-content>
-         ```
-
-      3. slot + select：定义了select属性的插槽是专门给定义了对应属性的内容投影的。其余没有select选项的内容默认都放到其他不带select属性的插槽中
-
-         ```
-         // 插槽
-         组件内部: `
-            <h2>Multi-slot content projection</h2>
+2. 单插槽投影：ng-content
+   1. 定义：创建一个组件，可以在其中投影一个组件
+   2. slot：`<ng-contnet></ng-content`
+   3. 但一插槽 且 没有select，会将所有内容都投影在一个 插槽中
+3. 多插槽投影：ng-content
+   1. 定义：一个组件可以具有多个插槽。每个插槽可以指定一个CSS选择器，该选择器会决定将哪些内容放进该插槽。
+   2. slot + class: 
+      ```
+      <app-menu-detail>
+         <div class="a">a</div>
+         <div class="b">b</div>
+      </app-menu-detial>
+     
+      // 在 menu-detail.component.html 中
+      <ng-content select=".a"></ng-content>
+      <ng-content select=".b"></ng-content>
+      ```
+   3. slot + select：定义了select属性的插槽是专门给定义了对应属性的内容投影的。其余没有select选项的内容默认都放到其他不带select属性的插槽中
+      ```
+      // 插槽
+      组件内部: `
+         <h2>Multi-slot content projection</h2>
 
             Default:
             <ng-content></ng-content>
@@ -1494,3 +1700,40 @@
 ### @ngModule 是什么，干什么的
 
 ### CommonModule 是干嘛的
+
+### 数据绑定的原理，在 Angular 和 Vue 中有什么不一样
+
+### 组件生命周期
+
+###  @HostBind 是啥
+
+###  @NgModule 里的 bootstrap 数组是啥
+
+
+
+### 视图封装 ViewEncapsulation   ？？？
+1. 定义：组件的样式可以封装在组件的宿主 DOM 元素中。
+2. 用法：每个组件的装饰器都提供了 encapsulation 选项，用来控制如何基于每个组件应用视图封装
+3. 视图包装的三种模式
+   1. ViewEncapsulation.None： 不应用任何形式的视图封装
+      ```
+      @Component({
+         selector: 'app-no-encapsulation',
+         template: `
+            <h2>None</h2>
+            <div class="none-message">No encapsulation</div>
+         `,
+         styles: ['h2, .none-message { color: red; }'],
+         encapsulation: ViewEncapsulation.None,
+      })
+      export class NoEncapsulationComponent { }
+      ```
+   2. ViewEncapsulation.ShadowDom ：Angular 使用浏览器内置的 Shadow DOM API 将组件的视图包含在 ShadowRoot（用作组件的宿主元素）中，并以隔离的方式应用所提供的样式
+   3. ViewEncapsulation.Emulated：Angular 会修改组件的 CSS 选择器，使它们只应用于组件的视图，不影响应用程序中的其他元素（模拟 Shadow DOM 行为）
+4. 代码： ？？？
+
+### Questions:
+1. How to generate a new component outside the 'src/app' folder ?
+2. interface Hero{ id: number; name: string}. hero: Hero = {id: 1, name:'abc'}; 接口是分号，实现的对象是逗号 ？
+3. [(ngModel)] 双向绑定的原理是什么 ？
+4. 
