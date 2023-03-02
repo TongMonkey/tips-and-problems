@@ -5,12 +5,12 @@
 ### DOM Virtualization
 
 1. Row Virtualization
-   1. 定义：优先只渲染视窗内的DOM的技术R
+   1. 定义：优先只渲染视窗内的DOM的技术
    2. Row Buffer:
       1. 定义：默认情况下，网格会在第一条可见行之前渲染10行，在最后一条可见行之后渲染10行。原文：By default the grid will render 10 rows before the first visible row and 10 rows after the last visible row
       2. 默认值：这个 20 就是 row buffer 的默认值。可以通过修改属性 rowBuffer 来修改该值，例如 `rowBuffer = 0`
       3. 作用：用来计算 rows 要渲染的高度。比如默认高度是 42px，如果设置 rowBuffer = 10, 那么就会默认创建一个 420px 的高度来优先渲染 grid.
-   3. 最大渲染数：
+   3. Ag Grid 最大渲染数：
       1. 500 rows
       2. 解除 500 条的限制：`suppressMaxRenderedRowRestriction=true`
    4. 取消行虚拟化：`suppressRowVirtualisation=true` 此时 Row Buffer 缓冲区没有了 并且设置的 rowBuffer 属性会被忽略而无效
@@ -30,7 +30,7 @@
    2. code: 要想知道网格确定的div的最大高度是多少，可以设置网格属性 `debug=true`，并注意日志输出： `AG Grid.RowContainerHeightService: maxDivHeight = 32000000`
 3. 问题：比如一个 div 的最大高度是32000000px, 每行 row 的最大高度是 100px时，那就最多能渲染 3200000 行。尽管 DOM Virtualisatioin 可以先渲染一部分节点，但是仍然需要正确设置 container 的高度，使滚动条能正确工作。如果要渲染的东西超过3200000rows，就需要解决高度限制的问题
 4. 解决办法：
-   1. Stretching 拉伸: 一个 能渲染 32000000 px 的 div 内，100px/row, 理论上能展示 3200000 rows. 但现在通过 scretching,可以展示 1000000 rows.
+   1. Stretching 拉伸: 一个 能渲染 32000000 px 的 div 内，100px/row, 理论上能展示 320000 rows. 但现在通过 scretching,可以展示 1000000 rows.
    2. 原理：
       1. 公式：
 
@@ -47,13 +47,12 @@
 
          ```
 
-      2. Div stretch offset: translateY(rowOffset):
+      2. Div stretch offset: transform: translateY(rowOffset):
          1. translate:
-            1. 不会改变元素的原始位置，检验方式：用 myDom.offsetTop 获取元素距离 top 的距离时，无法获取 translateY 的移动距离
-            2. 为什么 translate 不会改变原始位置：translate 不会触发浏览器的 reflow 或者 repaint，只会触发 compositions 复合绘制
-            3. 什么是 compositions? 浏览器绘制图层的流程是什么？
-            4. 为什么用transform更高效？ 使浏览器为元素创建一个 GPU 图层，translate改变位置时，元素依然会占据其原始空间，如果改变绝对定位会触发重新布局，进而触发重绘和复合。因此translate()更高效，可以缩短平滑动画的绘制时间。
-      3. 检验：在 Ag Grid 中设置属性 debug = true, 可以看到：AG Grid.RowContainerHeightService: Div Stretch Offset = 30836432.020472683 (68000000 * 0.4534769414775395) 其中小数是 scrollPercent 68000000 是 additionalPixelsNeeded
+            1. 不会改变元素的原始位置.检验方式：用 myDom.offsetTop 获取元素距离 top 的距离时，无法获取 translateY 的移动距离
+            2. 为什么 translate 不会改变原始位置：translate 不会触发浏览器的 reflow 或者 repaint，只会触发 composition 复合绘制, 
+            3. 什么是 compositions：浏览器绘制图层的流程是什么：参考《h5&browser-readme.md》里的 compositors 绘制步骤
+      3. 原理检验：在 Ag Grid 中设置属性 debug = true, 可以看到：AG Grid.RowContainerHeightService: Div Stretch Offset = 30836432.020472683 (68000000 * 0.4534769414775395) 其中小数是 scrollPercent 68000000 是 additionalPixelsNeeded
    3. 弊端：Scroll faster
       1. 当越多的 rows 根据 Row Offset 去调整了位置，约往下滚动，会发现 grid 好像滚动的更快了。这是因为，由于向下拉伸，但视窗大小不变，本质上是在把 row 往上拉(reposition rows up), 所以会形成相对速度，比正常的滚动看起来更快。
       2. 滚动速度增快的速率 与 所需额外空间 成正比。
