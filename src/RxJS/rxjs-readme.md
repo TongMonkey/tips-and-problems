@@ -97,7 +97,7 @@
    3. 缺点：不保证顺序
 5. exhaustMap: Ignores all subsequent subscriptions/requests until it completes.在未完成前，忽略后续所有的订阅或请求
    1. 用途：Use for login when you do not want more requests until the initial one is complete. 比如在登陆成功前，其他的请求或订阅不被允许，就可以用这个
-6. take(n): 
+6. take(n):
    1. 用途：Takes the first count values from the source, then completes.获取数据流中的前几个,然后这个 Observable 就自动结束了， After that, it completes, regardless if the source completes.无论这个源是否真的结束，此处的 subscribe 都不会收到新的值
    2. 示例:
 
@@ -132,7 +132,7 @@
     .subscribe(console.log)
    ```
 
-9.  throttleTime: 节流操作 限制一段时间内只能操作一次
+9. throttleTime: 节流操作 限制一段时间内只能操作一次
 
    ```dash
    import { throttleTime } from 'rxjs/operators';
@@ -176,7 +176,21 @@
    )
    ```
 
-13. catchError 捕捉错误的操作符。注意：它不会自动返回一个 Observable
+13. catchError 捕捉错误的操作符。
+    1. 入参：一个函数
+
+        ``` code
+        of([100]).pipe(
+         tap( n => console.log(n)),
+         catchError(this.handleError)
+        )
+        handleError(err: HttpErrorResponse){
+         return throwError(()=>'Error occurs.')
+        }
+
+        ```
+
+    2. 注意：它不会自动返回一个 Observable
 
 ### 操作符(二) 辅助方法: 都返回 Observable类对象
 

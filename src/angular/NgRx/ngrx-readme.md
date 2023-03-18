@@ -27,7 +27,7 @@
 
          ```bash
          export class MyCounterComponent {
-            count$: Observable<{num: number}>;// TODO: Connect `this.count$` stream to the current store `count` state
+            count$: Observable<{num: number}>;// Connect `this.count$` stream to the current store `count` state
             // Store< 这里面表示要引用的数据类型 >
             constructor( private store: Store<{ count: {num: number} }> ) { // The count is from `StoreModule.forRoot` from 'app.module.ts'
                this.count$ = store.select('count');// select 的字符串参数表示要取得的数据的名称是 count 的一部分数据， 也可以看出 store.select(...)的返回结果是一个 ovservable

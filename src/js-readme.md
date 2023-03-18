@@ -1,9 +1,10 @@
 ## Javascript
+
 参考面经
 `https://mp.weixin.qq.com/s/o9v3q88Ga8shNh1RyZRetQ`
 
-
 ### 用 es5 实现 const
+
 1. const的特征：
    1. 不可更改：就连 const a = 123; a=a或者 a = 123. 只要是重新赋值的语法就不行 TypeError: Assignment to constant variable.
    2. 块级作用域
@@ -12,6 +13,7 @@
 2. 实现：??
 
 ### JS 中的基本数据类型 及 判断方式
+
 1. 原始类型 与 原始类型的包装类
    1. 原始类型 primitive type
       1. Undefined 类型的值 为 undefined. typeof undefined // 'undefined'
@@ -26,9 +28,10 @@
       1. String
       2. Number
       3. Boolean
-   4. 原始类型 VS 原始类型包装类 VS 包装类构造函数 VS 转型函数 
+   4. 原始类型 VS 原始类型包装类 VS 包装类构造函数 VS 转型函数
       1. 基础类型能调用方法的本质：后台自动创建对应包装类实例、调用方法后删除实例
-        ```
+
+        ``` code
         let str = 'abc';
         typeof str; // ‘string'
         let s = str.substring(2); // 基础类型值调用方法
@@ -38,8 +41,10 @@
         let s = str.substring(3); //调用实例上的指定方法
         str = null; //销毁包装类实例
         ```
+
       2. 包装类 VS 引用类型 生成实例
-      ```
+
+      ``` code
       // 包装类型产生的实例只存在于执行代码的瞬间，之后立刻就被销毁掉了
       let str = 'abc';
       str.age = 1;  // 给基本类型添加属性，先自动创建一个包装类对象，添加属性后销毁
@@ -54,9 +59,10 @@
       str instanceof String; // true
       typeof str; // 'object'
       ```
-      1. 转型函数 VS new构造函数
-      ```
 
+      3. 转型函数 VS new构造函数
+
+      ``` code
       // 转型函数
       let str = String(123); // "123"
       typeof str // 'string'
@@ -66,10 +72,11 @@
         typeof str // 'object'
         str instanceof String; // true
       ```
-      1. 建议：不要显示第调用包装类生成对象，容易让人分不清在处理原始基本类型还是引用类型的值
+
+      4. 建议：不要显示第调用包装类生成对象，容易让人分不清在处理原始基本类型还是引用类型的值
    5. 判断是Number类型
       1. 不是数字类型的会被转成NaN。
-         1. 历史遗留问题：在Es5中 NaN==NaN;//false 
+         1. 历史遗留问题：在Es5中 NaN==NaN;//false
          2. 弥补错误：在ES6中新增了一个Number.isNaN，用来判断 NaN, 只有本身是NaN的才会返回true
       2. isNaN: 实际上是window.isNaN方法 是ES5中的方法
          1. window.NaN 实际上是一个全局属性，该属性的初始值就是NaN
@@ -78,15 +85,17 @@
          1. Number.NaN 实际上是一个Number类的属性，该属性的初始值也是NaN
          2. 重点：只有本身是NaN的才会返回true
       4. 易错点： 混淆 isNaN 与 Number.isNaN
-        ```
+
+        ``` code
         isNaN(NaN);                  // true 本身和强制转化后的NaN都会判断为true
         isNaN('hello world');        // true 
         Number.isNaN(NaN);           // true  只有本身是NaN的才会返回true
         Number.isNaN('hello world'); // false  
         ```
-2. 唯一引用类型：Object。 
+
+2. 唯一引用类型：Object。
    1. Object 类型派生了一系列类型 2-8 用typeof 求类型都是 'object'
-      1. Function 函数类型 有点特殊 typeof ()=>{} // ‘function' 
+      1. Function 函数类型 有点特殊 typeof ()=>{} // ‘function'
       2. Array 数组类型 [] instanceof Array // true 更建议使用Array.isArray(arr)
       3. Date 日期类型  new Date() instanceof Date //true
       4. RegExp 正则类型 new RegExp() instanceof RegExp //true
@@ -97,12 +106,14 @@
       9. WeakMap  new WeakMap() instanceof WeakMap // true
    2. 判断原型及派生原型的方法：4种  
       1. 示例代码：
-        ```
-        class A{};
-        class B extends A{}; 
-        class C extends B{}; 
-        let c = new C();
-        ```
+
+          ``` code
+            class A{};
+            class B extends A{}; 
+            class C extends B{}; 
+            let c = new C();
+          ```
+
       2. 直接继承: extends继承来的 或者是 new 实例来的
          1. c.constructor === C; //true   c.constructor === B; //false
          2. c.__proto__ === C.prototype; //true   C.__proto__ === B; //true
@@ -119,16 +130,17 @@
             4. value：该属性对应的值。可以是任何有效的 JavaScript 值（数值，对象，函数等）。默认为 undefined。
          2. 2个方法
             1. get(){} 当读取该属性时，会调用get方法。 函数默认为 undefined。
-            2. !!! set(v){} 当给该属性赋值，会调用set方法。 函数默认为 undefined。
+            2. set(v){} 当给该属性赋值，会调用set方法。 函数默认为 undefined。
       2. 注意：
          1. 创建属性时，configurable enumerable writable 默认都是false。但是当 obj = {..} 这样直接创建时，这三个属性都是true
          2. 当设置了set get方法 就不能设置 writabe value了 互斥
    5. 相关方法：
       1. Object.defineProperty
-         1. 定义：定义对象的某个属性 Object.defineProperty(target, property, descriptor); 
+         1. 定义：定义对象的某个属性 Object.defineProperty(target, property, descriptor);
          2. 注意：descriptor里的属性如果没有手动设置为true,默认为false
          3. 缺点：不能监听数组的下标变化，怎么解决:可以用Proxy
-            ```
+
+            ``` code
             var Obj = {}
             Object.defineProperty(Obj, 'a', {
                 get: function () {
@@ -140,10 +152,10 @@
                     v = val
                 }
             });
-            Obj.a = [] 		// set
-            Obj.a.push('1') 	// get（缺点,没存进去）下标问题
-            Obj.a[0] = 1 	// get（缺点,没存进去）
-            Obj.a.pop(1) 	// get（缺点,没存进去）
+            Obj.a = []   // set
+            Obj.a.push('1')  // get（缺点,没存进去）下标问题
+            Obj.a[0] = 1  // get（缺点,没存进去）
+            Obj.a.pop(1)  // get（缺点,没存进去）
             Obj.a = [1, 2, 3] // set
             ============================================================
             var arr = [];
@@ -160,9 +172,11 @@
             })
             p.push(1);  // 此时浏览器会打印 get get set set 各自被调用了两次，分别是：get数组的push方法 get数组的length set数组元素值 set数组长度
             ```
+
       2. Object.defineProperties(target, descriptorObject);
          1. 注意：descriptor里的属性如果没有手动设置为true,默认为false
-          ```
+
+          ``` code
           var obj = {};
           Object.defineProperties(obj, {
             'property1': {
@@ -176,25 +190,30 @@
             // etc. etc.
           });
           ```
+
       3. 遍历Object
          1. for in 对象自身+继承的 不包含Symbol属性的 只包含可枚举属性 的属性
          2. Object.keys()  返回一个数组，元素为：对象自身的 不包含Symbol属性的 只包含可枚举属性 的属性
          3. Object.getOwnPropertyNames(obj) 返回一个数组，元素为：对象自身的 不包含Symbol属性的 无论是否可枚举 的属性
          4. Reflect.ownKeys(obj) 返回一个数组，元素为：对象自身的，无论是否为Symbol的 无论是否可枚举 的属性
 
-
 ### ES5函数中的一些特殊对象都是什么
+
 #### 除了自定义的属性方法外，这些凭空出现的可用属性都是从原型链上继承的
+
 1. 属性 length： 表示函数定义时，希望传入的参数的个数
 2. 对象 arguments //直接用 包含函数执行时实际收到的所有参数的类数组对象
 3. arguments.callee // 是函数参数对象的属性，是指向拥有arguments的函数自身, 这样可以解藕对函数名的依赖
-   ```
+
+   ``` code
    funtion a(){ 
      arguments.callee == a;  //true 
     }
    ```
+
 4. 函数.caller // 是函数对象的属性，指向调用当前函数的函数, 用来追踪函数的调用链。在严格模式下禁用，因为会暴露源码。如果在顶层window中调用，会返回null
-   ```
+
+   ``` code
    function b(){ 
      console.log(b.caller); //打印调用当前函数的函数体
    } 
@@ -204,13 +223,15 @@
     c(); //会打印函数c的源代码 
     b(); // 打印 null
    ```
+
 5. arguments.callee.caller //指向调用当前函数的函数 在严格模式下禁用，因为会暴露源码 作用与funName.caller一样但不需要写死funName函数名，是解藕的写法
 6. 对象 this：function 声明的函数中，this的绑定和函数声明的位置没有关系，只取决于函数的调用方式。当一个函数被调用，会创建一个执行上下文。它会记录这个函数在哪被调用、调用方式、传入参数等信息，this就是这个执行上下文的一个属性，会在函数执行的过程中用到。
    1. 注意：常见的两个误区：1this指向函数本身，2this指向函数的词法作用域, 这两个说法都是错误的。this实际上是在函数调用时发生的绑定，它指向什么完全取决于函数在哪被调用。
    2. function函数中this绑定：  生效优先级 1>2>3>4
       1. new绑定：new构造函数创建对象的时候，有四步：1创建新对象、2给新对象绑定prototype、3给新对象绑定到函数调用的this上、4如果函数没返回对象就自动返回新对象。这个第3步中，就会把生成的实例绑定到this上
          1. 注意：当new调用构造函数时，发现构造函数是个硬绑定函数，就会使用新创建的this替换硬绑定的this
-            ```
+
+            ``` code
             function foo(something){
               this.a = something;
             }
@@ -222,6 +243,7 @@
             console.log(obj1.a); // 2 
             console.log(baz.a); // 3  意外!! baz是bar的实例所以bar绑定到了bar的this上，而bar的this已经绑定了obj1,理论上baz.a等于obj1.a, 也就是2。但实际上，当new调用构造函数时，发现构造函数是个硬绑定函数，就会使用新创建的this替换硬绑定的this
             ```
+
       2. 显示绑定：
          1. 用.call(obj) .apply(obj) 在调用函数时，直接指定this要绑定的对象. 如果传入的是基础类型数组也会被自动变成对象形式(装箱行为)。 注意，当只想传递参数时，第一个参数也就是作为this的对象，如果传递null undefined等，可能会被忽略并且应用默认绑定规则，所以最简单的办法是传递一个空对象，用Object.create(null)，这个对象没有prototype，比{}更空。
          2. 用.bind硬绑定
@@ -229,7 +251,8 @@
       4. 默认绑定：调用位置处于window对象中，函数this绑定到全局环境window中。注意：能不能绑定到window中取决于函数题是否没在严格模式下，至于调用位置是不是在严格模式下不重要。
    3. => 箭头函数中this: 定义函数时所处的环境上下文对象被箭头函数捕获作为自己的this,由声明位置决定，跟被谁调用的没关系
    4. 求输出
-      ```
+
+      ``` code
       var obj = {
         name: 'abc',
         // fn函数的this就是所处的外部环境window 但window中没有name属性
@@ -243,21 +266,25 @@
       obj.fn(); // undefined
       obj.bar(); //abc
       ```
+
 7. 方法 call / apply ：每个函数都包含两个非继承来的方法，apply和call。这两个方法的用途都是在特定的作用域中调用函数，实际上等于设置函数题内this对象的值。
    1. apply的用法：接收两个参数，funName.apply(要运行函数的作用域对象,参数数组也可以是argumens)
    2. call的用法：接收两个参数，funName.apply(要运行函数的作用域对象,...需要逐个列举参数)
    3. apply VS call: 只有第二个参数不同，其他都一样
 8. 方法 bind：接收一个对象参数，创建一个函数的新实例并返回，对象参数就是返回的函数中的this要绑定的执行环境对象
-9.  方法 toLocaleString / toString / valueOf : 返回函数代码
+9. 方法 toLocaleString / toString / valueOf : 返回函数代码
 10. 属性 enumerable: 判断该属性是否可枚举
 11. 属性 constructor：constructor属性指向的是该引用类型的构造函数，构造函数用来定义该引用类型的属性和方法。constrctor属性不可枚举，所以在对象上for-in查不到。像Object、Array等这种原生构造函数，在运行时会自动出现在执行环境中。
+
 ```
 function a(){}; a.constrctor;// Function(){};
 function Person(){}; Person.constrctor;// Function(){};
 Function.constructor; // Function(){}
 Object.constructor; // Function(){} Object是一个构造函数，函数的终点就是Function,所以它的constructor指向Function，也说明Function在Object的原型链上
 ```
+
 12. 属性 prototype: prototype属性指向的是一个对象，这个对象用来保存该引用类型的所有实例可共享的属性和方法.(该引用类型的实例就是通过new 该类型构造函数()产生的实例)。通过在这个对象上存储属性和方法，只需要让构造函数继承这些属性/方法，就不用在每一个构造函数中定义了，那么这个对象，就称为这些实例的‘原型对象’。每一个函数都有prototype属性，同样，所有的引用类型，prototype是保存他们所有实例(通用)方法的真正所在。prototype属性本身不可枚举，所以在对象上for-in查不到
+
 ```
 function Person(){
   // Person.protype 就是函数Person的原型对象 
@@ -270,9 +297,10 @@ let p2 = new Person();
 p1.name; // 'haha'
 p1.sayName === p2.sayName; //true
 ```
+
 13. 属性 __proto__: __proto__属性，属于new 构造函数()创建的新实例，每个新实例都有一个该属性，指向的是该构造函数的原型对象.注意：__proto__并不是js语言本身的属性，而是各个浏览器约定俗成的私有属性，所以并不建议在生产环境通过它来修改原型，可以使用Object.getPrototypeOf()获取prototype对象，其他环境可以
-14. 相关方法 
-     1. isPrototypeOf: `Person.prototype.isPrototypeOf(p1)` 可以判断 第一：实例p1有一个__proto__指针指向Person的原型对象，第二：p1是Person的实例。 
+14. 相关方法
+     1. isPrototypeOf: `Person.prototype.isPrototypeOf(p1)` 可以判断 第一：实例p1有一个__proto__指针指向Person的原型对象，第二：p1是Person的实例。
      2. 之后可以用 p1.getPrototypeOf() 返回的实例p1的Prototype对象, p1可以替换成任何实例。但注意，不能通过实例去操作原型对象
      3. Object.hasOwnProperty(p1) 判断是否是实例上的属性 true在实例上 false在原型上
      4. properName in Object 用in操作符可以判断该对象有没有该属性，包括实例上和原型上
@@ -280,25 +308,29 @@ p1.sayName === p2.sayName; //true
      6. Object.keys(p1) 返回一个数组,可以获取'实例对象'上的所有`[可枚举的属性名]`，只包含实例上的
      7. Object.getOwnPropertyNames(p1)返回数组 获取实例对象上的所有实例属性，无论是否可枚举，只包含实例上的
 
-### constructor 与 prototype 与 __proto__ 的关系:
+### constructor 与 prototype 与 __proto__ 的关系
+
 1. 只要创建一个函数，就会为该函数创建一个prototype属性指向其原型对象Prototype
 2. 同时，该原型对象Prototype会默认自动获得一个constructor属性指向当前prototype属性所属的函数；但如果手动创建了新的原型对象，那该原型的constructor是会指向Object的，可以手动修改(具体见《js高程第三版》P155)
 3. 通过 new 构造函数() 创建的实例对象中，会自动创建一个叫__proto__的指针，指向的是该构造函数对应的原型对象
-4. 通过图片理解：![constructor 与 prototype 与 __proto__ 的关系](/src/assets/原型_构造函数.png) 
-
+4. 通过图片理解：![constructor 与 prototype 与 __proto__ 的关系](/src/assets/原型_构造函数.png)
 
 ### 构造函数
+
 1. 定义：构造函数以大写字母开头，用来定义该对象类型的属性和方法 function Person(){this.a = 1;this.b= function(){}}
 2. 区别：与普通函数的区别仅仅是命名方式需要大写首字母、必需用new调用且会返回this,别的都一样，就是个函数而已
 3. 创建实例：使用 new 关键字 调用，返回新对象，新对象的construtor属性就指向构造函数
+
 ```
 let p1 = new Person('abc', ()=>{}); 
 p1.constructor === Person; //true
 ```
 
 ### new一个构造函数 的过程发生了啥
+
 1. 创建一个对象
 2. 将构造函数的作用域对象赋给新对象，所以当前this就指向了新对象(所以属性或方法挂在到this上就是挂在到新对象上了)
+
 ```
  // 注意：当前构造函数的作用域就是函数Person的作用域，而不是调用new Person的Global对象
  function Person(){
@@ -309,8 +341,10 @@ p1.constructor === Person; //true
  p2.sayName(); 
  // 结果：2 Person {sayName: ƒ} 1 Person {sayName: ƒ} 两个方法都执行了，返回的this都指向了Person
 ```
+
 3. 执行构造函数中的代码块(执行挂载属性和方法)
 4. 如果没有自定义返回对象，就返回新对象(就是返回this)
+
  ```
  function Person(name, callback){
    // 构造函数不用显式地创建对象；
@@ -319,14 +353,18 @@ p1.constructor === Person; //true
    // 构造函数不用手动return this;默认自动返回this
  }
  ```
-5. 检测是不是某构造函数的实例 用 a instanceOf A 方法 
+
+5. 检测是不是某构造函数的实例 用 a instanceOf A 方法
    1. 实例p1既是Person的实例，也是Object的实例
    2. 特殊：Object 和 Function 互为实例
+
    ```
    Object instanceof Function; //true  
    Function instanceof Object; //true
    ```
+
 6. 实现一个new函数
+
   ```
   function new(Fn){
     let obj = Object.create(null);  //或者直接 obj = {} 也行 区别是{}自带一个__proto__ //Object.prototype. 而Object.create(null).__proto__ //undefined
@@ -335,7 +373,9 @@ p1.constructor === Person; //true
     return typeof(res) === 'object' ? res: obj;  //如果构造函数的返回值是对象,则直接返回，否则返回新对象obj
   }
   ```
+
 7. 判断当前构造函数是被new Fn() 还是普通调用 Fn()。 解释：function定义的函数，fn()调用，内部的this是调用时的执行环境对象，这里就是window； 如果new Fn()调用，函数的this是生成的实例
+
    ```
    var Demo = function(){
      if( this instanceof Demo ){ } // new Fn()调用
@@ -344,16 +384,18 @@ p1.constructor === Person; //true
    ```
 
 ### Object.create() 创建的对象 VS {}这样创建的对象 VS  new Object() 创建的对象  三种方式有什么区别
+
 1. Object.create()
    1. var obj = Object.create(null); 此时 obj.__proto__; //undefined 没有原型对象 也不会继承原型链上的任何属性或方法
    2. var obj = Object.create(Object.prototype); //这样写就等同于{}或new Object()
 2. var obj = {}; 此时obj.__proto__ ; // Object.prototype; 自带原型对象的
-3. var obj = new Object(); 此时obj.__proto__ ; // Object.prototype; 自带原型对象的   
+3. var obj = new Object(); 此时obj.__proto__ ; // Object.prototype; 自带原型对象的
 4. 总结：{}.__proto__ === new Object().__proto__  === Object.create(Object.prototype) === Object.prototype; //true  
 
-
 ### 上下文 VS 调用栈 VS 作用域 VS 闭包
+
 前提：一段代码经过编译之后，会生成两部分：执行上下文 + 可执行代码
+
 1. 执行上下文：
    1. 定义: 也叫执行环境，定义了变量或者函数有权访问的其他数据，决定了它们各自的行为。每个执行环境都有一个与之关联的变量对象，环境中定义的所有变量和函数都保存在这个对象中。(虽然我们编写的代码无法访问这个对象，但解析器在处理数据的时候会在后台使用它)。
    2. 全局执行环境是最外围的一个执行环境，在浏览器中，全局执行上下文被认定是window对象，因为所有全局变量和函数都是作为window的属性和方法创建的。全局执行环境直到应用程序退出才被销毁。
@@ -361,22 +403,23 @@ p1.constructor === Person; //true
    4. 代码编译后，首先会初始化一个全局执行上下文+全局可执行代码。
    5. 执行上下文组成：由 变量环境 + 词法环境组成
       1. 变量环境：包含
-         1. 由 var 声明的变量和函数 
+         1. 由 var 声明的变量和函数
          2. function函数
          3. 一个指针outer:指向外部的执行上下文 全局执行上下文的outer=>NULL 注意，这个outer是在编译时跟创建执行上下文时一起创建的，它的指向是由词法作用域决定的，是在编译过程中就决定好了的
       2. 词法环境：由 let 和 const 声明的变量
    6. 代码中的变量和函数都保存在对应上下文的变量环境+词法环境中，将全局作用域压入调用栈，之后开始执行全局可执行代码，
    7. 全局可执行代码的调用过程中，当调用一个函数，会编译该函数，js引擎就会为其创建新的函数执行上下文+函数可执行代码，再把函数执行上下文压入调用栈，之后执行函数可执行代码
 2. 调用栈：是把执行上下文不断压入栈种，不包含可执行函数部分
-![调用栈VS执行上下文](/src/assets/调用栈.png) 
+![调用栈VS执行上下文](/src/assets/调用栈.png)
 3. 作用域链：
    1. 作用域就是变量与函数的可访问范围，即作用域控制着变量和函数的可见性和生命周期，是在编译过程中生成的
    2. 词法作用域：词法作用域就是指 作用域是由代码中函数声明的位置来决定的，所以词法作用域是静态的作用域，通过它就能够预测代码在执行过程中如何查找标识符。
    3. 作用域链 是由词法作用域决定的
    4. outer指针：根据词法作用域决定的函数位置，存储在某执行上下文中的变量环境中,指向其外部的执行上下文
    5. 总结：根据outer指针，在作用域中不断查找变量时的查找链条，就叫做作用域链。作用域链与函数调用顺序无关：由于outer是由词法作用域决定的，词法作用域又是在编译阶段根据开发顺序决定的，所以作用域链，也是在编译阶段就决定了的
-4. 作用域链查变量的顺序：ES6中的let/const声明变量可以实现块级作用域，所以词法变量里也是栈结果,而且各个代码块里的变量互相不影响，例如下图的变量1和变量2如果来自两个代码块，那他们完全可以使用同样的命名 
+4. 作用域链查变量的顺序：ES6中的let/const声明变量可以实现块级作用域，所以词法变量里也是栈结果,而且各个代码块里的变量互相不影响，例如下图的变量1和变量2如果来自两个代码块，那他们完全可以使用同样的命名
    1. 求输出
+
       ```
       var i = 1
       function b() {
@@ -388,7 +431,8 @@ p1.constructor === Person; //true
       }
       a(); // 1
       ```
-   2. ![浏览器里查找变量的顺序](/src/assets/调用栈查找变量顺序.png) 
+
+   2. ![浏览器里查找变量的顺序](/src/assets/调用栈查找变量顺序.png)
 5. 闭包：
    1. 定义：根据词法作用域的规则，内部函数总是可以访问外部函数中的变量。当通过调用一个外部函数返回一个内部函数后，即使该外部函数已经执行结束了，但是内部函数引用的属于外部函数的自由变量依然保存在内存中，我们就把这些变量的集合称为闭包。
    2. 闭包是怎么产生的：(前提：变量在内存中，普通类型放在栈中，引用类型放在堆中)
@@ -405,34 +449,36 @@ p1.constructor === Person; //true
    5. 怎么清除闭包：把对外部自由变量的引用切断。ref = null;
 
 ### 变量提升的原理
+
 1. 在编译过程中，将var声明的变量、function声明的函数 放进变量环境；此时，变量的值都只是声明，所以值为undefined,函数会整体被提升；只有在执行可执行代码时才会给变量赋值。这种能在代码顶层访问到的效果就是变量提升/函数提升
 2. 将let、const声明的变量放进词法环境。这里的变量和函数不提升，叫做暂时性死区，在未赋值之前调用会报错。let和const会产生块级作用域，所以在词法环境中，其实也是个栈的结构。
 
-
-
 ### 原型链
+
 1. 定义：一个构造函数的prototype属性指向一个原型对象，原型对象的constrctor指向构造函数，构造函数的实例的__proto__属性指向原型对象。让原型对象成为另一个类型的实例，那么就会形成一条通过__proto__不断指向的原型链 实例=>__proto__=>原型对象兼实例=>__proto__=>原型对象兼实例=>__proto__=>Object.prototype
-2. 取得原型对象：Super.prototype = Object.getPrototypeOf(Sub) 
+2. 取得原型对象：Super.prototype = Object.getPrototypeOf(Sub)
 3. Function 与 Object 哪个是原型链的尽头：
    1. Object的原型的原型是null: Object.getPrototypeOf(Object.prototype); //null
    2. Function的原型尽头是Object的原型： Object.getPrototypeOf(Function.prototype) === Object.prototype; // true
    3. 所有引用类型默认都继承了Object, 所有函数的默认原型都是Object的实例，因此默认原型都会有一个__proto__指向Object.prototype。所以所有的自定义类型都默认有toString和valueOf方法，都是来自Object.prototype的(参考js高程第三版p164)  
 4. ![原型链尽头](assets/原型链尽头.png)
 
-
 ### 实现一个.bind方法
 
 ### 实现一个.call方法
+
 ```
 
 ```
 
 ### 实现一个.apply方法
-```
 
 ```
 
-### 类型转换  参考链接https://mp.weixin.qq.com/s/FUrFCu2hb-1HYvYRoNamWg
+```
+
+### 类型转换  参考链接<https://mp.weixin.qq.com/s/FUrFCu2hb-1HYvYRoNamWg>
+
 1. == VS ===
    1. === 强等于，会先判断两个值的类型，相同类型再比较值，期间不会发生强制类型转换
    2. == 弱等于，如果两边类型不同，会先进行一次强制隐式类型转换后，再比较
@@ -443,15 +489,15 @@ p1.constructor === Person; //true
    4. Object VS Object: 对比对象所在堆的引用地址
    5. Symbol 在比较时，只有跟booleanl类型能比较，toBoolean会变成true, 其余toString和toNumber都会抛出错误
 3. 显式类型转换：有 Number、String、Boolean、parseInt、parseFloat、toString 等
-   1. ToNumber: 
-      1. Number([])=>0 
+   1. ToNumber:
+      1. Number([])=>0
       2. 直接比较一个boolean值 会先将boolean=>number类型(静默调用一个toNumber())方法。所以，不要直接跟boolean类型比较
       1. ![ToNumber](/src/assets/ToNumber.png)
-   1. ToBoolean: 
-      1. Boolean(null)=>false   // Boolean(*) *除了 undefined、null、0、NaN 之外，Boolean(*)都会返回true 
-      2. ![ToBoolean](assets/ToBoolean.png) 
-   2. ToString: 
-      1. String(null)=>'null' 
+   1. ToBoolean:
+      1. Boolean(null)=>false   // Boolean(*)*除了 undefined、null、0、NaN 之外，Boolean(*)都会返回true
+      2. ![ToBoolean](assets/ToBoolean.png)
+   2. ToString:
+      1. String(null)=>'null'
       2. ![ToString](assets/ToString.png)
 4. 隐式类型转换ToPrimitive
    1. toPrimitive(input [,Type:number]) 第二个参数是期待转换成的类型，根据input的原始类型+运算环境决定是string||number类型 number > string
@@ -461,10 +507,11 @@ p1.constructor === Person; //true
    5. 如果Type是number类型，就依次调用[valueOf, toString]。这也是为什么有的文档说valueOf的优先级大于toString,因为对象类型默认会转化成number类型，先执行valueOf
    6. ToPrimitive转化过程会在for循环上述数组方法([toString, valueOf]或者[valueOf, toString])并依次调用。过程中，如果能得到原始类型结果，就返回结果，跳出剩余循环；如果for结束了(调用完了toString和valueOf)还没有原始类型，就抛出错误TypeError
 5. 运算符优先级：
-    1. 逻辑非!操作符：!操作符会先转为boolean类型然后反转。 优先级：！大于 == 
+    1. 逻辑非!操作符：!操作符会先转为boolean类型然后反转。 优先级：！大于 ==
     2. 所以 !! 两个非操作符是将值变成布尔类型， 相当于ToBoolean，不会反转
     3. ！和 typeof 的优先级： 优先级都是17，顺序从右向左
 6. 求输出
+
 ```
    [] + []; // ""  //加操作符，[]优先被当成数值 调用valueOf获得[],不是基本类型再调一次toString,得到 ”“ + ”“ = ”“
    [] + {}; // "[object Object]" // 同理，{}.toString 得到"[object Object]"
@@ -491,16 +538,21 @@ p1.constructor === Person; //true
 ```
 
 ### 各种类型调用 toString valueOf 的结果
+
 1. valueOf
+
   ```
   [].valueOf() //[]
   ```
+
 2. toString
+
   ```
   [].toString() // ""
   ```
 
 ### Iterator接口
+
 1. 定义：返回一个遍历器对象
 2. ES6中默认的Iterator接口部署在数据结构的Symbol.iterator属性上。
 3. for...of： 一个数据结构只要具有Symbol.iterator属性就可以认为是可遍历的，可以被for…of循环所遍历。
@@ -512,12 +564,14 @@ p1.constructor === Person; //true
    4. 调用next方法返回的是一个包含value和done两个属性的对象,value属性就是当前成员的值,done属性是一个布尔值用来表示遍历是否结束。
 
 ### for-in VS for-of
+
 1. for of
    1. 在所有具有 Iterator 接口的对象上创建一个迭代循环。
-   2. 可迭代对象：Array Map Set String arguments DOM集合 等 
+   2. 可迭代对象：Array Map Set String arguments DOM集合 等
    3. 终止迭代： break、continue、throw...、return 都可以
    4. 注意：Object默认不带有 Iterator接口
    5. 给对象显示添加一个迭代器接口
+
       ```
       let obj = {
         [Symbol.iterator](){
@@ -530,38 +584,45 @@ p1.constructor === Person; //true
         }
       }
       ```
+
    6. 用for of遍历数组的时候，怎么拿到数组下标？
       1. 利用 Array.entries()
+
          ```
          for(let [k,v] of arr.entries()){
            // k即下标
          }
          ```
+
       2. 利用 Array.map()
+
          ```
          let newArr = arr.map((item,index)=>[index,item])
          for(let [k,v] of newArr){
            // k即下标
          }
          ```
+
 2. for in
    1. 以任意顺序遍历一个对象中，除了Symbol以外的所有可枚举属性，包括继承来的。
    2. 注意：Array一般不用for in来遍历，1如果这个数组对象含别的属性或者继承了别的属性，都会被遍历出来。2另外数组的元素，属性名是字符串类型的下标，在操作时要注意。3数组遍历出来的顺序可能是错乱的，因为for in遍历对象是按照任意顺序遍历
    3. 只关注对象本身的对象，
       1. 可以在遍历内用 Object.getOwnPropertyNames() 或者 Object.hasOwnProperty()来确认某属性是否是对象本身的属性，
-      2. 或者用 propertyIsEnumerable()判断是否是可枚举的。 
+      2. 或者用 propertyIsEnumerable()判断是否是可枚举的。
       3. 或者用 Object.keys()先获取独享的实力属性组成的数组
+
           ```
           for (let key of Object.keys(obj)) {
             console.log(key, obj[key]);
           }
           ```
-   4. 想遍历
 
+   4. 想遍历
 
 ### Set
 
 ### Map 与 WeakMap
+
 1. Map
    1. 基本方法/属性：set get has delete 方法 + size 属性
    2. 常用方法：keys、values、entries、forEach
@@ -576,14 +637,15 @@ p1.constructor === Person; //true
    1. 引用的对象不影响垃圾回收
    2. 没有size属性
 
-
 ### ES5普通函数 VS ES6箭头函数
+
 1. 命名方式：普通函数分为具名函数or匿名函数；箭头函数都是匿名函数
 2. this指向：
    1. 普通函数
       1. this是函数执行的环境对象，简言之，this是函数调用时所在的环境对象
       2. 作为构造函数调用时this为它创建的对象实例 new Fn()时默认返回this
    2. 箭头函数：本身不创建this,它在声明的时候可以捕获其所在上下文的this供自己使用，简言之this就是定义时所在的环境对象，并且一旦捕获就不再发生变化，就算使用.call或.apply或.bind也不会再变化
+
     ```
     function wrap(n){
         this.name="名字"
@@ -597,19 +659,22 @@ p1.constructor === Person; //true
     // 2解释：执行这段代码时，wrap作为普通函数在window中调用，它的this是所处上下文的this，指向window；func在声明时取最近的上下文中的this也就是wrap函数的this 即 window
     let en2 = wrap(2); // 2: window
     ```
+
 3. 参数arguments：普通函数有arguments，箭头函数没有 打印提示 arguments is not defined 解决办法：使用rest参数
    `let fn = (...p) =>{ //操作p数组 }`
 4. 用于构造函数：箭头函数因为不创建自身this所以不能用于构造函数使用new Fn()形式调用
 5. 原型：箭头函数没有prototype原型对象
+
    ```
    var a = () =>{}; var b = function(){};
    a.prototype; //undefined
    b.prototype; //{constrctor:function b}
    ```
 
+####
 
-#### 
 1. 求输出
+
 ```
 let a = 3;
 function func(a) {
@@ -619,7 +684,9 @@ function func(a) {
 func();
 console.log(a);
 ```
+
 2. 求输出，如果想输出1，2，3, 要怎么修改，有哪些方式
+
 ```
 for (var i = 0; i < 3; i++) {
   setTimeout(() => {
@@ -629,9 +696,10 @@ for (var i = 0; i < 3; i++) {
 console.log(new Date(), i);
 ```
 
-
 ### 柯里化 VS 闭包
+
 1. 柯里化定义：把一个多参数的函数转化为单参数函数的方法。
+
 ```
 // 普通函数
 function plus(x, y){
@@ -648,9 +716,11 @@ function plus(y){
 }
 plus(1)(2) // 输出 4
 ```
+
 2. 柯里化与闭包的关系：柯里化基于闭包而实现
 
 ### Generator 函数
+
 1. 定义：generator函数是一个能封装多个内部状态的状态机，执行函数会返回一个遍历器对象，可以遍历generator函数内部的每一个状态
 2. 使用：
    1. 执行generator函数，返回一个遍历器对象obj，这个对象本身就是一个有Iterator接口的可遍历对象，它的Symbol.iterator函数调用后返回自己本身
@@ -669,6 +739,7 @@ plus(1)(2) // 输出 4
       1. 相当于在generator函数内部部署一个for...of循环, 对里面的yield依次next
       2. 内外两层generator遍历效果是叠加的
       3. 应用：很方便取出嵌套数组的所有成员 或者 二叉树
+
          ```
          function * iterTree(tree){
            if(Array.isArray(tree)){
@@ -684,6 +755,7 @@ plus(1)(2) // 输出 4
            console.log(v); // 1 2 3 4 5
          }
          ```
+
       4. 继承：generator函数调用后返回一个遍历器，该遍历器是Generator的实例，也继承了Generator的原型，但是！Generator类型的函数不是构造函数，该对象就是遍历器对象，不是this对象！Generator函数不能跟new 一起用，会报错
    9. 半协程实现：Generator函数由调用者控制程序的执行权，是半协程的实现(如果任何程序都能控制执行权，才是协程的完全实现)  
 3. 注意：
@@ -700,6 +772,7 @@ plus(1)(2) // 输出 4
 6. 异步编程的方式：回调函数、事件监听、发布/订阅、Promise对象、Generator函数、async/await
 
 ### async await
+
 1. 定义：async函数可以看做是多个异步操作包装成的一个Promise对象，await命令就是内部then的语法糖。当函数执行的时候，一旦遇到await命令就先返回Promise,等到一步操作完成，在接着执行函数体后续的语句。
 2. 区别
    1. async函数的返回值是Promise对象、Generator函数返回Iterator遍历对象
@@ -714,8 +787,9 @@ plus(1)(2) // 输出 4
    3. await后面是一个Promise对象，
       1. 如果不是Promise对象会被转成一个立刻resolve的Promise对象；await 100相当于 Promise.resolve(100)
       2. 如果await后面的Promise对象变成reject状态，这个状态也会被async函数返回的promise对象的catch函数捕获。即：只要一个await语句后面的Promise编程reject,那整个async函数都会中断执行，后面的await都不会再执行
-      3. 解决一个await出现reject会影响后续的问题：方法1:将await语句都放在try...catch块中 方法2:将await后面的各个Promise都设置catch方法。 
+      3. 解决一个await出现reject会影响后续的问题：方法1:将await语句都放在try...catch块中 方法2:将await后面的各个Promise都设置catch方法。
    4. 优化：如果await后面的一步操作不存在继发关系，最好让他们同时触发
+
       ```
       // 方法一：
       let [foo,bar] = await Promise.all(getFoo(), getBar());
@@ -723,13 +797,15 @@ plus(1)(2) // 输出 4
       let foo = await getFoo(); //遇到await就先返回promise,所以方法二里也是并发的异步请求
       let bar = await getBar();
       ```
-   5. 注意： 
+
+   5. 注意：
       1. 最好把await后面命令放在trycatch中或者对单个Proisme catch
       2. await只能用在async函数里
       3. forEach和map中使用async/await要谨慎 因为forEach/map函数里的异步调用是并发执行，同步代码是顺序执行
 4. 与Generator的关系
    1. 是Generator函数的语法糖。将Generator函数和自动执行器包装在一个函数里
 5. 求输出
+
    ```
     function HaveResolvePromise(){
         return new Promise((resolve, reject) => {
@@ -752,17 +828,17 @@ plus(1)(2) // 输出 4
 
 ### 实现一个async/await函数
 
-
-
-
 ### 设计模式
-参考模式：https://juejin.cn/post/6844904032826294286#heading-66
+
+参考模式：<https://juejin.cn/post/6844904032826294286#heading-66>
+
 1. 工厂模式
    1. 定义：在一个函数中，根据入参，决定创建一个类的实例，这个类的原型对象中，定义了各种工厂方法。
    2. 适用场景：多个实例都有相同的行为
 2. 单例模式
    1. 定义：一个类只有一个实例，并提供一个访问它的全局访问点
    2. 代码：
+
       ```
        class LoginForm {
             //...
@@ -780,9 +856,11 @@ plus(1)(2) // 输出 4
         let obj2 = LoginForm.getInstance()
         console.log(obj1 === obj2); // true
       ```
-3. 原型模式 
+
+3. 原型模式
    1. 定义：原型链继承，
    2. 代码
+
       ```
       class Person {
         constructor(name) {
@@ -802,13 +880,15 @@ plus(1)(2) // 输出 4
       }
       let student = new Student("xiaoming")
       student.sayHello()
-      ```                  
+      ```
+
 4. 代理模式
    1. 作为一个中介操作对象
    2. 实例：ES6中的 Proxy
 5. 适配器模式
    1. 定义：将一个类的接口转化为另外一个接口，以满足用户需求，使类之间接口不兼容问题通过适配器得以解决
    2. 代码：
+
       ```
       class Plug {
         getName() {
@@ -826,9 +906,11 @@ plus(1)(2) // 输出 4
       let target = new Target();
       target.getName(); // iphone充电头 适配器转Type-c充电头
       ```
+
 6. 状态模式：
    1. 定义：对象的内部状态发生改变，导致行为变化。优化后，在函数中返回调用独享，可以实现链式调用
    2. 代码：
+
       ```
       const StateResult = (function(){
         let states = {
@@ -844,15 +926,17 @@ plus(1)(2) // 输出 4
       })();
       StateResult.action('a');
       ```
+
 7. 策略模式: 跟状态模式特别相似
 8. 迭代器模式
    1. 定义：提供一种方法顺序一个聚合对象中各个元素。其实就是将顺序遍历数组/对象的代码放进一个函数，这个函数就叫一个迭代器
 9. 观察者模式
 10. 发布-订阅模式：
-    1.  一处发布，可多处订阅
+    1. 一处发布，可多处订阅
 11. 命令模式
-    1.  定义：将命令与实现分离。将实现提取到函数中，开发者只需要调用方法时传入命令，就会自动调用实现。 应用：就是各种Api,只要传入参数即可调用对应方法
-    2.  代码：
+    1. 定义：将命令与实现分离。将实现提取到函数中，开发者只需要调用方法时传入命令，就会自动调用实现。 应用：就是各种Api,只要传入参数即可调用对应方法
+    2. 代码：
+
         ```
         var commander = (function(){
           let actions = {
@@ -866,15 +950,17 @@ plus(1)(2) // 输出 4
         })();
         commander.excute({action:'action1'})
         ```
+
 12. 组合模式
 13. 生产者消费者模式
-    1.  参考链接：https://blog.csdn.net/qq_39575279/article/details/87940298
-    2.  应用：消息队列
+    1. 参考链接：<https://blog.csdn.net/qq_39575279/article/details/87940298>
+    2. 应用：消息队列
 14. 解释器模式
 15. 备忘录模式
 16. 中介者模式
-    1.  定义：增加一个中介者对象后，所有的 相关对象都通过中介者对象来通信，而不是互相引用，所以当一个对象发生改变时，只需要通知 中介者对象即可
-    2.  代码：
+    1. 定义：增加一个中介者对象后，所有的 相关对象都通过中介者对象来通信，而不是互相引用，所以当一个对象发生改变时，只需要通知 中介者对象即可
+    2. 代码：
+
         ```
         class A {
             constructor() {
@@ -920,12 +1006,14 @@ plus(1)(2) // 输出 4
         b.setNumber(10, m)
         console.log(a.number, b.number)
         ```
+
 17. 职责链模式
     1. 定义：使多个对象都有机会处理请求，从而避免请求的发送者和接受者之间的耦合关系，将这些对象连成一条链，并沿着这条链传递该请求，直到有一个对象处理它为止
     2. 应用：JS 中的事件冒泡、作用域链、原型链、promise
 18. 装饰者模式：
     1. 定义：在原来功能基础上添加新的功能，不需要关注原来的具体实现
     2. 代码：
+
         ```
         function my(origin){
           origin();
@@ -936,14 +1024,16 @@ plus(1)(2) // 输出 4
 19. 桥接模式
 20. MVVM模式
 
-
 ### pc兼容性问题/移动端兼容问题
+
 #### 要在不同的角度回答，比如同样问你有没有处理过兼容性问题，对前面的面试官，就可以回答遇到过的不兼容的场景和解决细节，遇到后面 leader 的面试就可以更多地从如何高效验证排查兼容性问题这个角度回答，注意场景
 
-### Promise 
+### Promise
+
 1. Promise 是个构造函数 通过 new Promise 生成实例
 2. 构造函数的入参函数是(resolve, reject)=>{} resolve, reject 都是JS引擎提供的，resolve负责向后传递数据，reject负责捕获在此之前的错误并抛出错误
 3. new Promise() 执行时，传入的参数函数是立即执行的！！ 并且resolve、reject不会终结promise的参数函数的后续执行,但如果在它后面抛出错误，是不会生效的，因为promise的状态一旦改变，就不会再变化了
+
   ```
   // 这段代码的结果是：“promise \n window” 
   let p = new Promise((resolve,reject)=>{
@@ -960,7 +1050,9 @@ plus(1)(2) // 输出 4
   // window
   // 3
   ```
+
 3. p1.resolve(p2) 传的值除了异步的结果，还可能是另一个Promise实例
+
   ```
   var p1 = new Promise((resolve, reject)=>{
     reject('i am p1-err')
@@ -973,6 +1065,7 @@ plus(1)(2) // 输出 4
   .catch(err=>console.log(err)) //p2的状态无效了，由p1的状态决定
   // 最终打印 i am p1-err
   ```
+
 4. Promise.resolve():
    1. 作用：将一个非Promise的现有对象，变成Promise实例并返回
    2. 用法：
@@ -982,6 +1075,7 @@ plus(1)(2) // 输出 4
          2. 如果一个promise.then()方法里返回了一个thenable对象，会生成一个NowPromiseResolveThenableJob 微任务，被放进微任务队列，这个微任务后面如果还有then还会生成一个微任务，放进队列，即相当于产生了两个微任务。 ？？？？
       3. 参数是没有then方法的对象或者根本不是对象：会返回一个状态为resolved的新promise实例，这个新实例出生就是resolved状态，所以如果该实例注册了then函数，会立即将then的函数放进事件循环的微任务中等待执行
       4. 不带参数：Promise.resolve()不带参数也会返回一个已经是resolved状态的promise实例，所以如果该实例注册了then函数，会立即将then的函数放进事件循环的微任务中等待执行
+
       ```
       Promise.resolve().then(()=>{
         console.log(1)
@@ -993,12 +1087,14 @@ plus(1)(2) // 输出 4
       console.log(4);
       //  3  4  1  2
       ```
+
    3. 状态为pending的promise，调用.then(onfilled)方法时,会将onfilled存到该promise的一个数组属性中，数组名为PromiseFulfillReactions,存到数组的末尾
    4. 当该promise从pending变为fulfilled, 就会将PromiseFulfillReactions数组中的各个callback依次拿出来enqueue放入微队列等待执行。
 
 5. Project.reject()
    1. 作用：返回一个状态为rejected的新promise实例
    2. 用法：与Promise.resolve不同，不管什么样的参数，都会原封不动的往后传给catch做参数。返回的值天生就是rejected状态，所以catch函数回调函数也会立刻执行(其实也是放在事件循环的微任务中)
+
     ```
     Promise.resolve().then(()=>{
       console.log(1)
@@ -1013,6 +1109,7 @@ plus(1)(2) // 输出 4
     console.log(4);
     //  3  4  1  1.5  2
     ```
+
    3. 状态为pending的promise，调用.then(onfilled,onrejected)方法时,会将onrejected存到该promise的一个数组属性中，数组名为PromiseRejectReactions,存到数组的末尾
    4. 当该promise从pending变为rejected, 就会将PromiseRejectReactions数组中的各个callback依次拿出来enqueue放入微队列等待执行。
 6. Promise.all
@@ -1021,6 +1118,7 @@ plus(1)(2) // 输出 4
    3. 返回值promise实例的回调函数的参数：如果都成功了，就返回所有结果的数组，结果是按照请求的顺序排列的；如果有任何一个没成功，第一个rejected的值回传递给catch。简单说：全成功了结果都返回，否则的只返回第一个失败结果
    4. 想在promise.all().then接受结果的话，有两种情况
       1. 如果入参实例本身调用了then，记得在then中把结果return出来；
+
       ```
       var p1 = new Promise((resolve, reject) => {
         resolve('hello');
@@ -1045,7 +1143,9 @@ plus(1)(2) // 输出 4
       // 2, hello
       // 3, [undefined, undefined]  这里没有把内容返回回来是因为p1和p1的then没有向下一个promise传递值，相当于return undefined
       ```
+
       1. 入参自己没有调用then,那就可以直接在.all()..中接收
+
       ```
         var p1 = new Promise((resolve, reject) => {
           resolve('hello');
@@ -1058,7 +1158,9 @@ plus(1)(2) // 输出 4
           .catch(e => console.log(e));
         // ['hello', 'hello']
       ```
+
    5. 如果入参实例本身有catch, 那自己捕获错误，之后自己的状态变成resolved, 且不会触发.all返回的实例的catch
+
     ```
       var p1 = new Promise((resolve, reject) => {
         resolve('hello');
@@ -1074,20 +1176,24 @@ plus(1)(2) // 输出 4
       // [hello, undefined]  p2自己捕获错误后相当于resolve()了，所以promise.all().then接受的参数是undefined，而catch方法根本不会触发
 
     ```
+
 7. Promise.allSettled
    1. 与Promise.all类似，不同的是，.all需要所有都成功了才会回调；.allSetted只要所有的实例都完成了异步操作就回调，无论这些实例的状态是否成功或失败。
    2. 所有的实例都执行结束后，.allSettled生成的实例状态只可能变成resolved的，然后把实例结果的数组传给自己的then方法接收。
    3. 返回：结果数组的顺序与前面实例数组参数的顺序是一致的，结果数组里的每一项都是一个对象，格式固定
+
     ```
     // 异步操作成功时
     {status: 'fulfilled', value: value}
     // 异步操作失败时
     {status: 'rejected', reason: reason}
     ```
+
 8. Promise.race
    1. 参数：跟Promise.all一样，参数数组中都要求是promise实例，如果不是，就先变成实例；返回一个新的promise实例
    2. 返回第一个promise，它可以是完成（ resolves），也可以是失败（rejects），这要取决于第一个完成的promise的状态是什么，一旦第一个完成了，后面就不关心什么状态了
    3. 应用：
+
       ```
       // 如果5秒内fetch没有返回结果，就。。
         Promise.race([
@@ -1099,13 +1205,15 @@ plus(1)(2) // 输出 4
           .then(res=>{console.log(res)})
           .catch(e=>console.error(e))
       ```
-9.  Promise.any
+
+9. Promise.any
     1. 接受一组promise实例做参数，返回一个新promise实例
-    2. 返回第一个成功的promise, 
+    2. 返回第一个成功的promise,
     3. any 与 race 的区别,有两个:
-       1. any是返回的是第一个成功的，而race不在乎成功与否，只要是第一个就行； 
+       1. any是返回的是第一个成功的，而race不在乎成功与否，只要是第一个就行；
        2. any要等所有的都执行完发现全部都rejected了才设置为rejected，而race如果第一个reject了那么就是rejected，不关心后面死活
-    4. .any方法抛出的错误比较特殊，不是普通的Error对象，而是一个AggregateError实例(AggregateError是Array的子类)，相当于一个数组，记录每一个成员实例被rejected时抛出的错误. 
+    4. .any方法抛出的错误比较特殊，不是普通的Error对象，而是一个AggregateError实例(AggregateError是Array的子类)，相当于一个数组，记录每一个成员实例被rejected时抛出的错误.
+
     ```
     var resolved = Promise.resolve(42);
     var rejected = Promise.reject(-1);
@@ -1120,11 +1228,14 @@ plus(1)(2) // 输出 4
         console.log(results); // [-1, Infinity]
       });
     ```
-### Promise.prototype上的方法：,
+
+### Promise.prototype上的方法
+
 1. Promise.prototype.then()
    1. 是在原型对象上的方法,可能有两个函数参数，第一个处理resolve的情况， 第二个，处理异常。 两个参数都是可选的。
    2. .then()返回一个新的Promise实例,不是之前那个
    3. 链式追踪：所以promise.then().then()....可以形成一条回调函数链条
+
       ```
       let p1 = Promise.resolve();
       // 新返回的p2 会追踪 p1的状态变化
@@ -1135,6 +1246,7 @@ plus(1)(2) // 输出 4
       })
       // log： 执行了onFulfilled
       ```
+
    4. 那么，`new Promise((resolve, reject)=>{resolve(*)}).then(*=>{})` 和 `.then(()=>{return *}).then(*=>{})` 都相当于用一个实例调用then()方法，有什么异同么
       1. 不同：resolve/return: 在.then().then()中 通过return * 将结果在链中传递：.then(()=>{return res}).then((res)=>{}) 即第一个回调函数完成后，return的结果会作为第二个函数的参数； 而在Promise构造函数的参数函数里，使用resolve或reject传递的;没有return就只是相互独立的任务而已
       2. 相同：都可以传递promise: 如果前一个的传递值仍然是个Proise实例，无论是resolve(p1) 还是 return p1, 那下一个then链仍然会等待p1的状态
@@ -1152,6 +1264,7 @@ plus(1)(2) // 输出 4
    1. 提供一个方法，总让它处于回调链的尾端，用来保证抛出所有错误，防止最后一个方法then或catch内有错误发生却没有被捕获
    2. 入参：没有参数 或者 包含resolved或rejected状态的回调函数
    3. 实现一个done
+
       ```
       Promise.prototype.done = function (onFulfilled, onRejected) {
         this
@@ -1164,10 +1277,12 @@ plus(1)(2) // 输出 4
           })
       }
       ```
+
 4. Promise.prototype.finally
    1. 接受一个普通函数参数，无论promies最后的状态如何都会执行的这个参数函数
    2. .finally()返回一个promise对象
    3. 实现一个finally函数
+
    ```
     Promise.prototype.finally = function (callback) {
       let P = this.constructor;
@@ -1177,15 +1292,20 @@ plus(1)(2) // 输出 4
       );
     };
    ```
+
 5. done VS finally: done应该在finaly后面执行，因为finally会返回一个promise对象，后面可能还会有then或catch
 
 ### 实现 Promise
+
 1. 实现：Node/src/custom_promise/promise.js
 2. 如何串行执行多个promise
+
    ```
    
    ```
+
 3. 求输出
+
 ```
 async function async1() {
   console.log("async1 start");
@@ -1208,7 +1328,9 @@ new Promise((resolve) => {
 });
 console.log("script end");
 ```
+
 1. 求输出
+
 ```
 const promise1 = Promise.resolve("First");
 const promise2 = Promise.resolve("Second");
@@ -1224,18 +1346,17 @@ runPromises()
   .catch((err) => console.log(err));
 ```
 
-
 ### 判断数组有几种方式
+
 1. Object.prototype.toString.call(obj) === '[object Array]'
-2. obj.__proto__ === Array.prototype; 
-3. Array.prototype.isPrototypeOf(obj); 
-4. obj instanceof Array; 
+2. obj.__proto__ === Array.prototype;
+3. Array.prototype.isPrototypeOf(obj);
+4. obj instanceof Array;
 5. obj.constructor === Array;
 6. Array.isArray(obj)
 
-
-
 ### 数组去重，几种方案
+
 1. 双重for
 2. indexOf
 3. includes
@@ -1245,8 +1366,8 @@ runPromises()
 7. filter+indexOf
 8. reduce+includes
 
-
 ### 求输出
+
 ```
 var a = { name: "Sam" };
 var b = { name: "Tom" };
@@ -1257,6 +1378,7 @@ console.log(o[a]); //2
 ```
 
 ### 求输出
+
 ```
 
 let promise1 = Promise.resolve()
@@ -1287,9 +1409,11 @@ console.log(typeof main())
 
 ### chrome 浏览器最多同时加载多少个资源，那如果想同时加载更多资源应该怎么办
 
-### 防抖 参考链接：https://www.jianshu.com/p/c8b86b09daf0
+### 防抖 参考链接：<https://www.jianshu.com/p/c8b86b09daf0>
+
 1. 宗旨：触发事件后在 n 秒内函数只能执行一次，如果在 n 秒内又触发了事件，则会重新计算函数时间n秒后再执行
 2. 非立即执行版本：第一次调用就要等待wait时长
+
    ```
    function debounce(func, wait) {
       let timeout;
@@ -1303,7 +1427,9 @@ console.log(typeof main())
       }
     }
    ```
+
 3. 立即执行版本：第一次调用是立即调用，后面每隔wait时长才能执行一次，中间触发事件就重新开始计时wait后再执行
+
    ```
     function debounce(func,wait) {
       let timeout;
@@ -1319,7 +1445,9 @@ console.log(typeof main())
       }
     }
    ```
+
 4. 综合强大版：
+
    ```
     /**
     * @desc 函数防抖
@@ -1350,8 +1478,10 @@ console.log(typeof main())
    ```
 
 ### 节流
+
 1. 宗旨：类似于水龙头每隔几秒滴一滴水，触发事件后每n秒只执行一次
 2. 时间戳版
+
    ```
    function throttle(func, wait) {
       let previous = 0;
@@ -1366,7 +1496,9 @@ console.log(typeof main())
       }
     }
    ```
+
 3. 定时器版
+
    ```
    function throttle(func, wait) {
       let timeout;
@@ -1385,23 +1517,25 @@ console.log(typeof main())
    ```
 
 ### 大数相加问题
+
 1. 原因：js的Number是64-bits的双精度数值。在2^53即以内的整数都是精确的，但是超过了这个范围就会出现精度丢失
 2. 解决：
    1. 转化成字符串，按位相加，逢10进位
 
-
 ### 0.1 + 0.2 为什么不等于 0.3，为什么会有误差，如何解决 浮点数问题
+
 1. 问题原因：浮点的误差来自十进制小数跟二进制小数之间的转换，有些十进制的小数 变成 二进制的小数时，成了无限循环的小数了，例如，十进制 0.2 换算为二进制：0.0011 0011 0011 0011 ...... (0011 无限循环)。 取舍后精度就会不准确
 2. 解决：
    1. 将小数转换成整数计算：例如 10.1元，可以表示成 101毛， 尽量用整数换算
    2. 如果一定要小数，就约定小数转化为二进制后的数位，例如 (0.1+0.2).toFixed(12) == 0.3;// true
-   3. 
-
+   3.
 
 ### 大数加法 并打成独立npm工具包
 
-### 模块打包方式：
+### 模块打包方式
+
 1. AMD: Asynchronous Module Definition 异步模块定义
+
    ```
     // （ 定义模块名，依赖数组，回调函数 ）
     define('getSum', ['math'], function(math){
@@ -1416,26 +1550,31 @@ console.log(typeof main())
       module.sum(1,2);
     })
     ```
+
 2. CommonJS：
+
    ```
    const math = require('./math'); //用require函数引入
    exports.getSum = function(a,b){ // 用 exports对象导出
      return a+b;
    }
    ```
+
 3. ES6：
+
    ```
    import math from './math'; //用import 引入
    export function getSum(a,b){  //用export 导出
      return a+b;
    }
    ```
+
 4. ES6 和 commonJS 的 的模块化的区别:
    1. 加载时间/导入时机：
       1. commonJS require 运行时加载，只有在运行时才能加载整个对象，取用其中的方法或属性
       2. es6 import 静态加载，在编译时就能确定模块的依赖关系
-   2. export输出的类型 
-      1. commonJS 单个值导出，导出一个对象，使用属性或方法就是查找对象的属性或方法 module.exports = {*} 
+   2. export输出的类型
+      1. commonJS 单个值导出，导出一个对象，使用属性或方法就是查找对象的属性或方法 module.exports = {*}
       2. es6 模块可以导出多个值，导出的不是对象
    3. export输出的内容
       1. commonJS 输出的是值的缓存/拷贝，不存在动态实时更更新
@@ -1455,11 +1594,13 @@ console.log(typeof main())
 5. 未来趋势：现在浏览器端一般遵守ES6规范，Node环境遵守CommonJs规范。但Node已经在逐渐向全面支持ES6方向改变。
 
 ### 聊聊 axios
+
 1. axios 是个同构的工具，它是如何实现区分 Node 和浏览器环境的 ？？
 2. axios 内部如何把xhr变成Promise的 ？？
 3. 如何处理请求异常 ？？
 
 ### 举例一下 Map 和 object 的区别，如果需要一个字典的需求，都是 key: value 的形式，那应该怎么选择这两个呢
+
 1. 结论：使用Map
 2. 原因：
    1. 字典有顺序要求 而Map会按照插入顺序排序 对象没有顺序
@@ -1467,6 +1608,7 @@ console.log(typeof main())
    3. 其他 ？？
 
 ### Map VS WeakMap VS Object
+
 1. 相同：都有set get clear delete has forEach keys values entries方法
 2. Map VS WeakMap
    1. 不同：Map有size属性 WeakMap没有
@@ -1474,15 +1616,18 @@ console.log(typeof main())
 3. Map VS Object
    1. size：Map 有size属性 对象没有size
    2. 键类型：对象键必须是字符串、Map 键可以是任何数据类型
-   3. 键顺序：对象键没有很好地排序	Map 键按插入排序
-   4. 默认键：对象有默认键	Map 没有默认键
+   3. 键顺序：对象键没有很好地排序 Map 键按插入排序
+   4. 默认键：对象有默认键 Map 没有默认键
 4. Map 与其他类型转换
    1. Map转Array:用拓展运算符 会得到一个二位数组 数组的每个元素，是一个有两个元素的数组
+
       ```
       const myMap = new Map().set(true, 7).set({foo: 3}, ['abc']);
       [...myMap];  // [ [ true, 7 ], [ { foo: 3 }, [ 'abc' ] ] ]
       ```
-   2. Array转Map: 二维数组作为 new Map的入参。这个二维数组的每个元素都是一个包含两个元素的数组 
+
+   2. Array转Map: 二维数组作为 new Map的入参。这个二维数组的每个元素都是一个包含两个元素的数组
+
       ```
       new Map([
         [true, 7],
@@ -1493,8 +1638,10 @@ console.log(typeof main())
       //   Object {foo: 3} => ['abc']
       // }
       ```
+
    3. Map转Object:
       1. 所有 Map 的键都是字符串，它可以无损地转为对象.如果有非字符串的键名，那么这个键名会被转成字符串，再作为对象的键名
+
       ```
       function strMapToObj(strMap) {
         let obj = Object.create(null);
@@ -1509,79 +1656,84 @@ console.log(typeof main())
       strMapToObj(myMap)
       // { yes: true, no: false }
       ```
-   4. Object转Map: 
+
+   4. Object转Map:
       1. Object.entries拿到所有的键值对后，依次放进map里
+
       ```
       // Object.entries({a:1,b:2}); [['a',1],['b',2]]
       new Map(Object.entries(obj));
       ```
+
    5. Map转JSON:
    6. JSON转Map:
 
+### Set & WeakSet
 
-### Set & WeakSet 
 1. 相同：都有add clear delete has forEach keys values entries方法
 2. 不同：Set有size属性 WeakSet没有
 3. 不同：Set引用的对象不能够被释放内存 WeakSet引用的对象，无论是普通对象还是Dom 都不会影响其垃圾回收
 4. 实现一个Set:
+
 ```
 class Set {
-	constructor() {
-		this.items = {};
-	}
-	has(value) {
-		return this.items.hasOwnProperty(value);
-	}
-	add(value) {
-		if (!this.has(value)) {
-			this.items[value] = value;
-			return true;
-		} else {
-			return false;
-		}
-	}
-	remove(value) {
-		if (this.has(value)) {
-			delete this.items[value];
-			return true;
-		} else {
-			return false;
-		}
-	}
-	clear() {
-		this.items = {};
-	}
-	size() {
-		let count = 0;
-		for (let key in this.items) {
-			if (this.items.hasOwnProperty(key)) {
-				++count;
-			}
-		}
-		return count;
-	}
-	keys() {
-		let keys = [];
-		for (let key in this.items) {
-			if (this.items.hasOwnProperty(key)) {
-				keys.push(key);
-			}
-		}
-		return keys;
-	}
-	values() {
-		let values = [];
-		for (let value in this.items) {
-			if (this.items.hasOwnProperty(value)) {
-				values.push(this.items[value]);
-			}
-		}
-		return values;
-	}
+ constructor() {
+  this.items = {};
+ }
+ has(value) {
+  return this.items.hasOwnProperty(value);
+ }
+ add(value) {
+  if (!this.has(value)) {
+   this.items[value] = value;
+   return true;
+  } else {
+   return false;
+  }
+ }
+ remove(value) {
+  if (this.has(value)) {
+   delete this.items[value];
+   return true;
+  } else {
+   return false;
+  }
+ }
+ clear() {
+  this.items = {};
+ }
+ size() {
+  let count = 0;
+  for (let key in this.items) {
+   if (this.items.hasOwnProperty(key)) {
+    ++count;
+   }
+  }
+  return count;
+ }
+ keys() {
+  let keys = [];
+  for (let key in this.items) {
+   if (this.items.hasOwnProperty(key)) {
+    keys.push(key);
+   }
+  }
+  return keys;
+ }
+ values() {
+  let values = [];
+  for (let value in this.items) {
+   if (this.items.hasOwnProperty(value)) {
+    values.push(this.items[value]);
+   }
+  }
+  return values;
+ }
 }
 ```
 
 ### 写一个发布订阅模式的 on/emit/off
+
 7.1 如果需要把订阅者执行成功和失败的方法分开，需要怎么做
 7.2 如果希望失败的可追溯，找到是哪个订阅者的报错，需要怎么做
 7.3 实现一下 before 和 after 方法，可以添加一些前置的和后置的订阅者
@@ -1589,19 +1741,22 @@ class Set {
 7.5 如果需要给某一个订阅者单独加一个打点，需要如何设计
 
 ### 写代码 数组转成嵌套对象
+
 `["a","b","c","d"] => {a: {b: {c: {d: null}}}}`
 
 ### ==和===的区别，a==1&&a==2 有什么方式让它返回 true 考察 toString 和 valueOf()
 
 ### js加载为什么会阻塞渲染，为什么要异步加载js，方案有哪些，css加载会不会阻塞渲染，img加载会不会阻塞渲染
+
 ![异步脚本](assets/异步脚本对比defer_async.png)
+
 1. 背景：当浏览器打开一个tab并访问一个页面，会打开一个渲染进程，渲染进程接收到网络请求返回的HTML页面后就交给渲染进程中的GUI线程解析html+css。由于GUI线程和JS引擎线程互斥，当解析的过程中遇到script标签，GUI就让出控制权，交给JS引擎"下载+执行"js脚本，等js工作完之后再将控制权交还给GUI完成后面的解析和渲染，在js下载和执行结束之前，页面渲染处于阻塞状态。
 2. 异步加载JS的方案
-   1. `<script defer>` 
+   1. `<script defer>`
       1. 只适用于外部脚本，新开一个线程执行下载，
       2. 页面渲染完再执行执行脚本； 是个小乖乖
       3. 执行顺序即书写顺序
-   2. `<script async>` 
+   2. `<script async>`
       1. 只适用于外部脚本，新开一个线程执行下载，
       2. 不等页面渲染，下载完就执行，执行后再接着渲染。 不如 defer 乖
       3. 执行顺序不可控
@@ -1615,15 +1770,15 @@ class Set {
    3. img也不会阻塞渲染，但它不会下载下来就渲染，而是等GUI把html和css都解析完，合成render tree后，再展示
 4. 总结：除了js会跟GUI互斥而阻塞渲染，js下载阻塞渲染，其他资源的下载都不会阻塞GUI渲染；
 
-
-
 ### es6 Proxy
+
 1. 定义：proxy 在目标对象的外层搭建了一层拦截 `var proxy = new Proxy(target目标, handler处理对象)`
 2. 作用：
    1. 拦截和监视外部对对象的访问
    2. 降低函数或类的复杂度
    3. 在复杂操作前对操作进行校验或对所需资源进行管理
-3. 方法： 
+3. 方法：
+
     ```
     get(target, key, receiver)
     // 拦截对象属性的读取，比如proxy.foo和proxy['foo']。
@@ -1644,7 +1799,7 @@ class Set {
     
     Object.keys()   //的返回结果仅包括目标对象自身的可遍历属性。
     
-    getOwnPropertyDescriptor(target, key)	
+    getOwnPropertyDescriptor(target, key) 
     //拦截Object.getOwnPropertyDescriptor(proxy, key)，返回属性的描述对象。
     
     defineProperty(target, key, propDesc)
@@ -1671,12 +1826,15 @@ class Set {
     construct(target, args)
     // 拦截 Proxy 实例作为构造函数调用的操作，比如new proxy(...args)。
     ```
+
 4. Proxy Vs Object.defineProperty:
    1. 对数组处理：当 Object.defineProperty() 添加的属性是个数组，数组内的元素变化无法触发get/set方法。只有替换数组地址才会触发；
-5. 
+5.
 
 ### 数组扁平化：将数组嵌套变成只有一层的数组
+
 1. 普通递归
+
    ```
    let arr = [1, [2, [3, 4, 5]]];
     function flatten(arr) {
@@ -1696,7 +1854,9 @@ class Set {
     }
     console.log(flatten(arr));  //  [1, 2, 3, 4，5]
    ```
+
 2. 用reduce实现
+
    ```
    let arr = [1, [2, [3, 4]]];
     function flatten(arr) {
@@ -1706,7 +1866,9 @@ class Set {
     }
     console.log(flatten(arr));//  [1, 2, 3, 4，5]
    ```
+
 3. 扩展运算符
+
    ```
    let arr = [1, [2, [3, 4]]];
     function flatten(arr) {
@@ -1717,7 +1879,9 @@ class Set {
     }
     console.log(flatten(arr)); //  [1, 2, 3, 4，5]
    ```
+
 4. toString + split
+
    ```
    let arr = [1, [2, [3, 4]]];
     function flatten(arr) {
@@ -1725,7 +1889,9 @@ class Set {
     }
     console.log(flatten(arr)); //  [1, 2, 3, 4]
    ```
+
 5. JSON.stringify + 正则
+
    ```
    let arr = [1, [2, [3, [4, 5]]], 6];
     function flatten(arr) {
@@ -1737,7 +1903,9 @@ class Set {
     }
     console.log(flatten(arr)); //  [1, 2, 3, 4，5]
    ```
+
 6. Array.prototype.flat([depth]) 按照设置的深度递归遍历数组，拼接成新数组 depth可选 默认为1
+
    ```
    let arr = [1, [2, [3, 4]]];
     function flatten(arr) {
@@ -1749,31 +1917,40 @@ class Set {
 ### 手写实现一下forEach
 
 ### 手写实现一下reduce函数
+
 ### 手写实现一下map
+
 ### 用reduce 实现map
+
 ### 手写实现一下filter
+
 ### 手写实现一下every
+
 ### 手写实现一下some
+
 ### 手写实现一下indexOf
 
 ### 手写实现一下find/findIndex 手写二分查找+分析复杂度
 
 ### 实现一个sort 手写五种排序算法+分析复杂度
+
 1. 冒泡排序
-2. 
+2.
 3. 快速排序
 
 ### 写代码 判断一个对象是否是循环引用对象
 
 ### 深拷贝/浅拷贝  
-参考链接https://blog.csdn.net/cc18868876837/article/details/114918262
+
+参考链接<https://blog.csdn.net/cc18868876837/article/details/114918262>
+
 1. 深拷贝
    1. JSON.stringigy 和 JSON.parse 的局限： 适合拷贝单层简单对象
-      1.  存在BigInt类型、循环引用，执行会报错：
-      2.  拷贝Date引用类型会变成字符串。
-      3.  会跳过 Function、Undefined、Symbol 这几种类型
-      4.  Map、Set、RegExp这几种类型 会变成空
-      5.  无法拷贝：不可枚举属性、对象的原型链。
+      1. 存在BigInt类型、循环引用，执行会报错：
+      2. 拷贝Date引用类型会变成字符串。
+      3. 会跳过 Function、Undefined、Symbol 这几种类型
+      4. Map、Set、RegExp这几种类型 会变成空
+      5. 无法拷贝：不可枚举属性、对象的原型链。
    2. 考虑的问题
       1. 基本类型数据是否能拷贝？
       2. 键和值都是基本类型的普通对象是否能拷贝？
@@ -1785,6 +1962,7 @@ class Set {
       8. 不可枚举属性是否能拷贝？
       9. 循环引用是否能拷贝？
    3. 代码
+
    ```
    function deepClone(target) {
       const map = new WeakMap()
@@ -1846,13 +2024,15 @@ class Set {
       return clone(target)
     }
    ```
-2. 浅拷贝：创建一个新的对象，来接受你要重新复制或引用的对象值。如果对象属性是基本的数据类型，复制的就是基本类型的值给新对象；但如果属性是引用数据类型，复制的就是内存中的地址，如果其中一个对象改变了这个内存中的地址所指向的对象，肯定会影响到另一个对象。 
+
+2. 浅拷贝：创建一个新的对象，来接受你要重新复制或引用的对象值。如果对象属性是基本的数据类型，复制的就是基本类型的值给新对象；但如果属性是引用数据类型，复制的就是内存中的地址，如果其中一个对象改变了这个内存中的地址所指向的对象，肯定会影响到另一个对象。
    1. Objece.assign 或 扩展运算符{...} 浅复制 的局限
       1. 不能复制继承来的属性 (浅拷贝不用管)
       2. 不能复制不可枚举属性
       3. 可以拷贝Symbol的值
       4. 只能复制属性的值，不能复制背后的set/get(赋值/取值)方法 (浅拷贝不用解决，深拷贝的解决办法：使用Object.getOwnPropertyDescriptors获取)
    2. 代码
+
    ```
    // 基础版
    function shallowClone(target) {
@@ -1871,13 +2051,14 @@ class Set {
    ```
 
 ### 继承全家桶
+
 1. 原型链继承：只继承原型
    1. 核心：一个原型对象是另一个类型的实例，于是在原型对象之间通过__proto__形成了一条链
    2. 用法：Sub.prototype = new Super()
    3. 缺点：1 上一个父类的实例属性会变成子类的原型对象上的属性；2 创建实例时，不能给父类的构造函数传参数
 2. 构造函数继承： 只继承构造函数
    1. 核心：在子类构造函数内部调用父类的构造函数，就会在新生成的子类对象上执行父类构造函数中定义的所有对象初始化带么，子类的每个实例就会具有父类的属性了
-   2. 用法：function Sub{ Super.call(this, ...arguments) } 
+   2. 用法：function Sub{ Super.call(this, ...arguments) }
    3. 缺点：1 函数都定义在构造函数中，函数就没办法复用了； 2 父类在原型中定义的方法，子类用不了
 3. 组合继承： 上两种的结合
    1. 核心：用原型链继承原型属性，用构造函数继承实例上属性
@@ -1893,6 +2074,7 @@ class Set {
 6. 寄生组合式继承： 子类的原型不是new来的，而是用一个新原型对象，这个对象是父类原型的浅复制
    1. 核心：组合继承的缺点需要解决 + 寄生式继承依赖原型式继承。将这两类结合：构造函数继承靠调用父类构造函数 + 原型继承靠对父类原型浅拷贝再将父类原型的副本指给子类做原型。
    2. 写法：
+
    ```
    function inheritPrototype(subType, superType){
      var prototype = Object.create(superType.prototype); //父原型的副本
@@ -1907,9 +2089,11 @@ class Set {
    }
    inheritPrototype(Sub, Super); 
    ```
+
 7. Class实现继承：两条继承链，构造函数继承构造函数 + 原型继承原型 ![类继承的两条继承链](assets/类继承的两条继承链.png)
    1. 核心： 子类的__proto__表示构造函数的继承，指向父类 + 子类的prototype的__proto__表示方法的继承，指向父类的prototype
 8. 原生的inherit继承是咋实现的
+
 ```
 const Sub = {
   __proto__: Super,
@@ -1926,7 +2110,9 @@ const Sub = Object.create(
 ```
 
 ### 实现一下Object.create函数
+
 1. 原生的用法：第一个参数是原型对象，第二个参数对象，可选，是要添加的属性+属性描述对象，省略的属性描述值为false
+
 ```
 var obj = Object.create({}, {
   p: { //给对象obj添加一个属性p obj.p;//42 
@@ -1937,7 +2123,9 @@ var obj = Object.create({}, {
   }
 });
 ```
+
 2. 实现
+
 ```
 function newCreate(proto, propertiesObject) {
     if (typeof proto !== 'object' && typeof proto !== 'function') {
@@ -1963,9 +2151,10 @@ function newCreate(proto, propertiesObject) {
 
 ### 什么是偏函数
 
-
 ### 手写实现jsonp
-参考链接：https://www.jianshu.com/p/88bb82718517
+
+参考链接：<https://www.jianshu.com/p/88bb82718517>
+
 ```
 const jsonp = ({ url, params, callbackName }) => {
     const generateUrl = () => {
@@ -1990,12 +2179,10 @@ const jsonp = ({ url, params, callbackName }) => {
 }
 ```
 
-
-
 ### 实现一个Map
 
-
 ### 实现instanceof函数
+
 ```
 function instance_of(Case, Constructor) {
     // 基本数据类型返回false
@@ -2012,10 +2199,10 @@ function instance_of(Case, Constructor) {
 }
 ```
 
-
 ### 把一个JSON对象的key从下划线形式（Pascal）转换到小驼峰形式（Camel）
 
 ### 实现数据类型判断函数
+
 ```
 function myTypeof(obj) {
    return Object.prototype.toString.call(obj).slice(8, -1).toLowerCase() 
@@ -2025,7 +2212,9 @@ function myTypeof(obj) {
 ### 实现数组转树
 
 ### 实现sleep函数
+
 1. ES6实现
+
    ```
    const sleep = (time,fn) => {
     return new Promise(resolve => setTimeout(()=>{
@@ -2034,7 +2223,9 @@ function myTypeof(obj) {
     }
     sleep(1000,callback).then(fn=>fn())
    ```
+
 2. ES5实现
+
    ```
    function sleep(callback,time) {
       if(typeof callback === 'function')
@@ -2042,9 +2233,10 @@ function myTypeof(obj) {
     }
    ```
 
-
 ### Class 类
+
 1. 定义：Es6的类完全可以看做构造函数的另一种写法，但类不能变量提升。类相当于实例的原型。
+
    ```
    class B{};
    let b = new B();
@@ -2053,8 +2245,10 @@ function myTypeof(obj) {
    B === B.prototype.constructor; //true // 类本身就指向构造函数
    B.prototype.constructor === B; //true prototype对象的constructor属性直接指向类本身
    ```
+
 2. 对比ES6的Class与ES5的构造函数写法
-   1.  es5: 除了构造函数内定义的方法，其他需要手动绑定到*。prototype上
+   1. es5: 除了构造函数内定义的方法，其他需要手动绑定到*。prototype上
+
     ```
     function Point(x, y) {
       this.x = x;
@@ -2065,14 +2259,18 @@ function myTypeof(obj) {
     };
     var p = new Point(1, 2);
     ```
+
     2. es6: 所有定义在类里的方法，都是定义在类的prototype属性上，按照es5的理解,都在构造函数的prototype对象上 所以一个Es6类的实例能使用类的方法，就相当于在es5中一个构造函数的实例能使用其原型上的方法
+
     ```
     class Point{
       constructor(){}
       toString(){}
     }
     ```
+
 3. 类及类的方法声明
+
       ```
       let propName = 'valueOf'; //先声明后使用 否则会报unexpected identifier
       class Point {
@@ -2095,7 +2293,9 @@ function myTypeof(obj) {
       Object.getOwnPropertyNames(Point); // ["length","name","prototype"]
       Object.getOwnPropertyNames(Point.prototype); // ["constructor","toString","valueOf"]
       ```
+
      1. 类的表达式定义法
+
       ```
       // 这个类的名字是Me，但是Me只在 Class 的内部可用，指代当前类。在 Class 外部，这个类只能用MyClass引用
       const MyClass = class Me {
@@ -2117,23 +2317,29 @@ function myTypeof(obj) {
       }('张三');
       person.sayName(); // "张三"
       ```
+
      2. 对比
         1. 类可以看做是构造函数的另一种写法，验证一下：
+
         ```
         class Point { }
         typeof Point; //"function"
         Point === Point.prototype.constructor; //true
         ```
+
         2. 类不存在函数提升、Es5的普通函数声明可以
         3. 类里默认就是严格模式
 4. 类的方法：
    1. 给一个类添加方法，可以添加到类的原型对象上，
+
     ```
       Object.assign(Point.prototype, {
         toString(){}, //也没用function 声明
       })
     ```
+
     1. ES6中类的内部的方法，都是不可枚举的。注意：这个特性跟ES5中表现不一样
+
     ```
     // es6
     class Point{}
@@ -2144,7 +2350,8 @@ function myTypeof(obj) {
     Person.prototype.toString = function(){};
     Object.getOwnPropertyNames(Point.prototype); // ["constructor","toString"]
     Object.keys(Person.prototype); //["toString"] 查得出
-    ```   
+    ```
+
 5. 类的调用：必须用new调用，直接调用会报错，这也是跟es5的构造函数的区别
 6. get / set  
    1. 是对某个属性 取值/赋值的函数，拦截该属性的 存取行为。
@@ -2152,6 +2359,7 @@ function myTypeof(obj) {
    3. 用Object.getOwnPropertyDescriptors 方法查看
 7. 类中的this
    1. 类的方法内部如果含有this，它默认指向类的实例
+
     ```
     class Logger {
       constructor(name="init"){
@@ -2164,7 +2372,9 @@ function myTypeof(obj) {
     const logger = new Logger();
     logger.printName(); // Hello init
     ```
+
    2. 本来this是指向实例，但如果单独将类的方法导出，在外部环境调用，类的方法的this是该方法运行时的环境；而类内部是严格模式，顶层运行环境为undefined
+
     ```
     class Logger {
       constructor(name="init"){
@@ -2181,7 +2391,9 @@ function myTypeof(obj) {
     const { printName } = logger;
     printName(); // TypeError: Cannot read property 'print' of undefined
     ```
+
    3. 解决上述第2点，导出方法中this指向顶层undefined的问题：
+
     ```
       // 1. 在构造方法中绑定this
       class Logger {
@@ -2213,6 +2425,7 @@ function myTypeof(obj) {
       }
       const logger = selfish(new Logger());
     ```
+
 8. 类的静态方法：
    1. 定义：类相当于实例的原型，所有在类中的方法都会被实例继承。如果在一个方法前加上static关键字，就表示该方法不会被实例继承，而是直接通过类调用
    2. 子类可继承父类的静态方法，而实例不可以。注意 子类 和 实例 不是一个对象哦
@@ -2220,13 +2433,16 @@ function myTypeof(obj) {
    4. 实例调用静态方法回报错
    5. 类的静态方法里的this指向的是该类本身
 9. 类的静态属性： 在实例属性前面加上static就是静态属性，只能类来调用，不能用在实例上
+
     ```
     class A{
       static name = 'aa'  // 第一种写法(推荐)
     }
     A.age = 34 //第二种写法
     ```
+
 10. 类的实例属性：在类中直接用等式写入的属性, 不需要let之类的声明, 在A的实例上可以读到,子类的实例上也可以
+
    ```
    class A{
      name = 'aa'
@@ -2234,21 +2450,25 @@ function myTypeof(obj) {
    class B extends A{}
    new B().name; //'aa'
    ```
-11. new.target: 在构造函数内部可以通过 new.target判断当前构造函数是不是用new 调用的 
-    1.  如果是 new 构造函数的就会返回构造函数，否则返回undefined
-    2.  如果子类继承父类，实现子类时，即使在父类的构造函数里打印，new.target的值也是子类
-    3.  只能在构造函数里调用，否则报错
+
+11. new.target: 在构造函数内部可以通过 new.target判断当前构造函数是不是用new 调用的
+    1. 如果是 new 构造函数的就会返回构造函数，否则返回undefined
+    2. 如果子类继承父类，实现子类时，即使在父类的构造函数里打印，new.target的值也是子类
+    3. 只能在构造函数里调用，否则报错
+
       ```
       class Person(name){
         if(new.target!==undefined) this.name = name;
         else throw new Error('必须使用new生成实例')
       }
       ```
+
 12. super：可以做对象or函数
     1. 作为对象：
        1. 在静态方法中,super就是父类，子类继承后可以调用父类的静态方法 static Fn(){}，通过super对象取得, 在子类中执行super.Fn()
-       2. 在普通方法中,super就是父类的原型对象，super.p()就是Father.prototype.p()。 
+       2. 在普通方法中,super就是父类的原型对象，super.p()就是Father.prototype.p()。
           1. 在普通方法中由于super指向父类的原型对象，所以定义在父类实例上的方法或属性，是无法通过super调用的
+
             ```
             class A{
               d(){return 1} //直接定义在类中的方法其实是定义在类的prototype对象上了
@@ -2265,10 +2485,12 @@ function myTypeof(obj) {
             new B().m();
             new B().name; // ‘aa' 父类的实例属性可以直接通过子类实例获得，但是用super在普通函数中无法获得
             ```
+
           2. 在普通方法中super是父类的prototype，调用super的方法时，super会绑定子类的this。
              1. 用super对属性赋值时，super就是子类this；
              2. 用super对属性取值或方法调用时，super就是父类的prototype
              3. 验证：
+
               ```
               class A{
                 constructor(){
@@ -2293,8 +2515,10 @@ function myTypeof(obj) {
               }
               new B().m(); //2 //4 //4 //undefined
               ```
+
     2. 作为函数：super是父类的构造函数，子类必须在也只能在constructor里调用它。
        1. super虽然代表父类的构造函数，但super()返回的是子类的实例，即super的内部this指向子类
+
           ```
           class A{}
           class B extends A{
@@ -2304,7 +2528,9 @@ function myTypeof(obj) {
           }
           new B(); //返回的内部this指向B,是B的实例
           ```
+
        2. 直接继承Object时,比较特殊，无法通过super给父类Object的构造函数传参。因为ES6改变了Object构造函数的行为，一旦发现Object不是通过new Object()这种形式调用的，Object构造函数会忽略参数
+
           ```
           class A extends Object{
             constructor(){
@@ -2314,34 +2540,38 @@ function myTypeof(obj) {
           var a = new A({age:123}); 
           a.age //123
           ```
+
     3. 使用super的时候，必须显示指定是作为函数还是作为对象使用的，不然会报错 例如 console.log(super) // error
     4. 由于对象总是继承其他对象的，所以可以在任意一个对象中使用super关键字
-      
-13. 获取父类的方法：Super = Object.getPrototypeOf(Sub); 
+
+13. 获取父类的方法：Super = Object.getPrototypeOf(Sub);
 14. 类继承的两条继承链 ![类继承的两条继承链](assets/类继承的两条继承链.png)
-    1.  子类的__proto__表示构造函数的继承，指向父类
-    2.  子类的prototype的__proto__表示方法的继承，指向父类的prototype
-
-
+    1. 子类的__proto__表示构造函数的继承，指向父类
+    2. 子类的prototype的__proto__表示方法的继承，指向父类的prototype
 
 ### ES5 VS ES6 继承中 this 产生的本质
+
 1. ES5 的继承实质是先创建子类的实例对象this，然后再将父类的方法添加到子类的this中
 2. ES6 的继承实质完全不同！ 是先创造父类的实例对象this，然后子类通过调用super得到父类的this, 再用子类的构造函数修改this。 即子类实例的构建，是基于对父类的实例加工。必须先调用super才能返回父类实例
 3. 一个类没有自定义的构造函数时，系统给类默认添加的构造函数是这样的
+
    ```
    constrctor(...args){
      super(...args);
    }
    ```
+
 4. 所以，子类中，构造函数里，super调用后，才能使用this
 
-
 ### Es6的Class和继承 是怎么实现的ES5的语法糖
+
 ### 实现一个ES6的Class
 
 ### 实现一个ES6的Class extends  ???
-1. 用Es6实现： 
+
+1. 用Es6实现：
    1. 利用Proxy:
+
       ```
       function extend(sup,base) {
         var descriptor = Object.getOwnPropertyDescriptor(
@@ -2376,10 +2606,13 @@ function myTypeof(obj) {
       console.log(Peter.name); // "Peter"
       console.log(Peter.age);  // 13
       ```
+
 2. 用Es5降级实现：
 
 ### 类函数的this指向问题
+
 1. 求输出
+
   ```
     class A {
       constructor() {
@@ -2396,6 +2629,7 @@ function myTypeof(obj) {
   ```
 
 ### 写一个异步加载图片的方法
+
   ```
     function loadImageAsync(url) {
       return new Promise(function(resolve, reject) {
@@ -2415,6 +2649,7 @@ function myTypeof(obj) {
   ```
 
 ### 封装一个AJAX请求
+
   ```
     const getJSON = function(url) {
       const promise = new Promise(function(resolve, reject){
@@ -2451,6 +2686,7 @@ function myTypeof(obj) {
 ### 如何给类添加私有方法、私有属性
 
 ### 求输出
+
 ```
 (function A() {
     console.log(A); // [Function A]
@@ -2468,59 +2704,71 @@ function myTypeof(obj) {
 ```
 
 ### 回调函数是不是异步代码
+
 不一定。 有的回调函数本身是同步代码，但异步代码会依赖回调函数完成操作
 
 ### 用一个Promise形成一个链式管道 怎么控制异步最大并发数 实现高并发
 
 ### 实现一个 lodash 的高频方法，例如 flat 方法、 memorized 方法
 
-### 实现一个 compose 洋葱函数 
+### 实现一个 compose 洋葱函数
+
 axios里的compose
 koa-compose
 
-### 自己实现一个 defineOwnProperty 
+### 自己实现一个 defineOwnProperty
 
 ### Immutable Object 不可变对象
+
 1. 定义：不可更改的对象
 2. 基础实现：Object.freeze
 3. ImmutableJS库：
-  1. 作用：对 Immutable object的修改，都会返回一个新的 Immutable object
-  2. 原理：这个库并不是用Object.freeze实现的，而是应用一种叫做"结构共享"的思想，会创建一棵树，每个节点最多有32个分支。只会对有修改的节点进行更新，复用其他节点。参考链接：https://zhuanlan.zhihu.com/p/29983598
-  3. 应用：在react中有用。比如 useEffect(cb,depsArr) 中的依赖depsArr遍历判断元素变化的方法是 Object.is，是一个浅比较方法，只要对象地址没变就不会重新调用cb，但这是错误的；如果手动深度遍历对象去比较，性能又很差。使用ImumutableObject就可以解决这个问题，只要每次更改deps元素都是返回一个新的immutableobject,地址是变化的，就可以准确监听到了。而且“结构共享”的特点使其性能优异。
+1. 作用：对 Immutable object的修改，都会返回一个新的 Immutable object
+2. 原理：这个库并不是用Object.freeze实现的，而是应用一种叫做"结构共享"的思想，会创建一棵树，每个节点最多有32个分支。只会对有修改的节点进行更新，复用其他节点。参考链接：<https://zhuanlan.zhihu.com/p/29983598>
+3. 应用：在react中有用。比如 useEffect(cb,depsArr) 中的依赖depsArr遍历判断元素变化的方法是 Object.is，是一个浅比较方法，只要对象地址没变就不会重新调用cb，但这是错误的；如果手动深度遍历对象去比较，性能又很差。使用ImumutableObject就可以解决这个问题，只要每次更改deps元素都是返回一个新的immutableobject,地址是变化的，就可以准确监听到了。而且“结构共享”的特点使其性能优异。
 
 ### Object.freeze VS Object.seal
+
 1. freeze：冷冻对象，返回该对象
    1. 所有属性都不可配置、不可写， 所以 增、删、改 都不行
    2. 如果属性是对象， 对象的地址不可更改，但对象的属性可以更改，除非该属性对象也是冷冻对象 Object.isFrozen()可以判断
+
       ```
       obj = Object.freeze({score:[1,2,3]}); obj.score.push(4); // obj.score为[1,2,3,4]
       ```
+
    3. 如果属性是数组：数组地址不可更改，数组元素不可更改
+
       ```
       obj = Object.freeze([1,2]); obj.push(3); //TypeError: object is not extensible
       ```
+
    4. 原型不可修改： __proto__指向或者 setPrototypeof 都不行
    5. es5 与 es6 的差异： Object.freeze(1) 在ES5会报错， es6里当成普通对象返回1
-2. seal: 密封对象， 返回该对象 
+2. seal: 密封对象， 返回该对象
    1. 不能添加新属性
    2. 旧属性的configurable可配置性置为false, 不能删除属性
    3. 旧属性的writable原来是可写的话，就可以修改
    4. 如果属性是数组：数组地址不可更改，数组元素不可更改. 跟freeze一样
+
       ```
       obj = Object.freeze([1,2]); obj.push(3); //TypeError: object is not extensible
       ```
+
    5. 原型不可修改： __proto__指向或者 setPrototypeof 都不行
 3. freeze VS seal 区别: seal 后 的属性如果之前是writable:true 还有可能可以更改属性值，freeze不行
 
 ### 偏函数
 
-### 求输出 
+### 求输出
+
 ```
 [1, 2, 3].map(parseInt) 
 // [1,NaN, NaN]
 ```
 
 ### 求输出
+
 ```
 function Foo() {
   getName = function () { console.log(1) }
@@ -2551,6 +2799,7 @@ new new Foo().getName()
 ```
 
 ### 创建二维数组的方法
+
 ```
 // 用false做默认值
 // 注意 fill传入的对象，是对象的引用，对其中一个对象的更改会反应在数组中的每一项
@@ -2561,11 +2810,14 @@ Array.from(new Array(3),()=>{return new Array(3).fill(false)})
 ```
 
 ### js 的正常模式(松散模式) VS 严格模式的变化
-参考：https://www.ruanyifeng.com/blog/2013/01/javascript_strict_mode.html
+
+参考：<https://www.ruanyifeng.com/blog/2013/01/javascript_strict_mode.html>
 
 ### 实现一下 `console.log(_+_+_+_); // abcd`
+
 1. 思路：用Object.defineProperty 或者 Proxy
 2. code:
+
    ```
    Object.defineProperty(window, '_', {
      get(){
@@ -2579,9 +2831,11 @@ Array.from(new Array(3),()=>{return new Array(3).fill(false)})
    ```
 
 ### 捕获错误
+
 1. window.onerror 缺点：并不可靠，因为它在一些旧的浏览器中无法提供错误堆栈
 
 ### 求输出 ？？？ 不理解
+
 ```
 let promise1 = Promise.resolve()
     .then(res => console.log(1))
@@ -2620,9 +2874,8 @@ undefined
 5
 ```
 
-
-
 ### 实现一个函数add函数,使 add(1,2,3)(4)(5,6); 输出 21
+
 ```
 let sum = 0;
 function add(){
@@ -2634,7 +2887,8 @@ sum; //21
 ```
 
 ### js对url编码
-1. encodeURL 
+
+1. encodeURL
    1. 适合对整个URL转码
    2. 不会对 `ASCII字母、数字、~!@#$&*()=:/,;?+'` 这些字符编码，会对空格等进行编码
 2. encodeURLComponent
@@ -2644,12 +2898,12 @@ sum; //21
    1. 对整个url用 encodeURL
    2. 对get请求的参数用 encodeURLComponent
 
-
-
 ### MessageChannel
+
 1. 定义：js允许使用messageChannel创建一个新的消息通道，并通过它的两个MessagePort 属性发送数据。
 2. 用法：
-   1. 跨通道通信 port.postMessage(data) 
+   1. 跨通道通信 port.postMessage(data)
+
       ```
       var channel = new MessageChannel();
       var port1 = channel.port1;
@@ -2663,8 +2917,10 @@ sum; //21
       port1.postMessage("发送给port2");
       port2.postMessage("发送给port1");
       ```
+
    2. 跨域/跨文档/跨iframe之间通信  window.postMessage(data, origin)
       1. 用法：
+
          ```
          1. postMessage(data,origin)方法接受两个参数
             data: 要传递的数据，html5规范中提到该参数可以是JavaScript的任意基本类型或可复制的对象，然而并不是所有浏览器都做到了这点儿，部分浏览器只能处理字符串参数，所以我们在传递参数的时候需要使用JSON.stringify()方法对对象参数序列化，在低版本IE中引用json2.js可以实现类似效果。
@@ -2674,7 +2930,9 @@ sum; //21
             event.origin: 发送端指定的接收方。只有协议主机端口号三个都符合的才会接受到这条消息
             event.source: 对发送消息的窗口对象的引用; 您可以使用此来在具有不同origin的两个窗口之间建立双向通信
          ```
+
       2. 消息的发送方为自己： 有两个页面a.html 与 b.html 不同源，在a页面中用iframe加载b, 通过b.contentWindow发送消息到b的域名下的接口，b页面里接收到消息后，再a.window再向a发消息, a页面再接收消息
+
          ```
          //a.html
          <iframe src="b.html" id="myIframe"></iframe>
@@ -2695,12 +2953,14 @@ sum; //21
    3. 可以在web_worker之间： ？？？
 
 ### JS 事件体系
+
 1. 事件流：单来说就是事件执行的顺序流。DOM树中有大量的元素，元素之间出现嵌套时，给父子元素同时设置了事件，父子元素的事件执行会按照某种顺序执行，这就是事件流。
 2. 事件阶段
    1. 捕获阶段
    2. 目标阶段
    3. 冒泡阶段
 3. 事件方法
+
    ```
    preventDefault()    取消事件默认行为，如阻止点击提交按钮时对表单的提交
    stopImmediatePropagation()   取消事件冒泡同时阻止当前节点上的事件处理程序被调用
@@ -2708,11 +2968,12 @@ sum; //21
    cancelBubbe()     取消事件冒泡
    returnValue()      取消事件默认行为
    ```
+
 4. 不会冒泡的事件有哪些
    1. scroll  
       1. 所以只能在捕获阶段捕获scroll，别的事件做事件委托是在冒泡阶段，scroll就只能在捕获阶段
       2. 并且无法取消(没有冒泡的基本都没法取消) scroll回调中的 e.stopPropagation(); e.preventDefault();这两个方法也都无效。
-   2. blur & focus 
+   2. blur & focus
       1. 也无法取消e.stopPropagation(); e.preventDefault();这两个方法都无效。
    3. mouseLeave & mouseEnter
       1. 注意：相似的两个 mouseOut 和 mouseOver 会触发冒泡。mouseover与mouseout成对，mouseenter与mouseleave成对。mouseover触发优先级高于mouseenter，mouseout触发优先级高于mouseleave
@@ -2726,6 +2987,7 @@ sum; //21
    1. 定义：通过冒泡机制，把一个元素的事件绑定到更高级别的另一个元素上，例如把子元素的事件绑定到顶层父元素了，就可以在该父元素监听处理子元素中事件。
    2. 事件委托的好处：前端优化的一个主要方向就是减少与dom的交互。如果有一百个dom上都有事件，就需要遍历100次每次执行一个事件。但如果可以事件委托到一个dom上，就只需要交互一次，都在js中执行所有逻辑
    3. 实现：列表委托到顶层，但是顶层ul不能触发
+
       ```
       <ul id="ul1">
       <li>1</li>
@@ -2748,11 +3010,11 @@ sum; //21
       ```
 
 ### 图片格式
-参考链接：https://zhuanlan.zhihu.com/p/129810715
 
-
+参考链接：<https://zhuanlan.zhihu.com/p/129810715>
 
 ### 输出
+
 ```
 function run(func) {
     func();
@@ -2769,22 +3031,23 @@ function run(func) {
 ```
 
 ### Ascll 编码 VS Unicode码
-1. 参考链接：AscII码  和 unicode码是什么关系？ - 石溪的回答 - 知乎 https://www.zhihu.com/question/57461614/answer/274634720
+
+1. 参考链接：AscII码  和 unicode码是什么关系？ - 石溪的回答 - 知乎 <https://www.zhihu.com/question/57461614/answer/274634720>
 2. 总结：Unicode 是兼容 Ascll 基础上更大的编码集
 3. 发展过程：
-  1. 最初在英语国家，ascll码用一位字节就能标记字母、数字、部分符号。
-  2. 但中国汉字很多，acsll码不够，中国发布了GB-2312字符集，向下兼容Ascll；
-  3. 后来生僻字繁体字日韩字不够用了，又有了GBK字符集,向下兼容GB2312。
-  4. 但是各个系统的编码不同，常常引起乱码(互相无法正确解码对方的二进制信息), 所以最终ISO国际标准化组织发布了一套Unicode新标准，包含了全世界所有的文字和符号字符。其中表示汉字使用2位字节。
-4. 关于 UTF-8 和 UTF-16: 
-  1. 前置知识：字符代码 和 字符编码 是不同的
+1. 最初在英语国家，ascll码用一位字节就能标记字母、数字、部分符号。
+2. 但中国汉字很多，acsll码不够，中国发布了GB-2312字符集，向下兼容Ascll；
+3. 后来生僻字繁体字日韩字不够用了，又有了GBK字符集,向下兼容GB2312。
+4. 但是各个系统的编码不同，常常引起乱码(互相无法正确解码对方的二进制信息), 所以最终ISO国际标准化组织发布了一套Unicode新标准，包含了全世界所有的文字和符号字符。其中表示汉字使用2位字节。
+4. 关于 UTF-8 和 UTF-16:
+1. 前置知识：字符代码 和 字符编码 是不同的
     1. 字符代码：是特定字符在某个字符集中的序号
     2. 字符编码：是在传输、存储过程当中用于表示字符的以字节为单位的二进制序列
-  2. 在Ascll编码集中，字符代码和字符编码是一样的，所以忽略了差异
-  3. 在Unicode编码集中，每个字符的字符代码都用4个字节来表示，其中字符代码0~127兼容ASCII字符集，一般的通用汉字的字符代码也都集中在65535之前，需要超过两个字节来表示的字符代码是比较少的。
-  4. 所以，原本英文和汉字都只需要2位字节来表示字节代码，现在却被要求4个字节表示，对于存储或传输资源而言是很不划算的。因此就需要在字符代码和字符编码间进行再编码，这样就引出了UTF-8、UTF-16等编码方式。
-  5. UTF-8: 是针对位于不同范围的字符代码转化成不同长度的字符编码，同时这种编码方式是以字节为单位，并且完全兼容ASCII编码，也是用一个字节来编码ASCII字符集，用三个字节来进行汉字字符的编码。
-  6. UTF-16: 就是以16位二进制数为基本单位对Unicode字符集中的字符代码进行再编码，原理和UTF-8一致。
+2. 在Ascll编码集中，字符代码和字符编码是一样的，所以忽略了差异
+3. 在Unicode编码集中，每个字符的字符代码都用4个字节来表示，其中字符代码0~127兼容ASCII字符集，一般的通用汉字的字符代码也都集中在65535之前，需要超过两个字节来表示的字符代码是比较少的。
+4. 所以，原本英文和汉字都只需要2位字节来表示字节代码，现在却被要求4个字节表示，对于存储或传输资源而言是很不划算的。因此就需要在字符代码和字符编码间进行再编码，这样就引出了UTF-8、UTF-16等编码方式。
+5. UTF-8: 是针对位于不同范围的字符代码转化成不同长度的字符编码，同时这种编码方式是以字节为单位，并且完全兼容ASCII编码，也是用一个字节来编码ASCII字符集，用三个字节来进行汉字字符的编码。
+6. UTF-16: 就是以16位二进制数为基本单位对Unicode字符集中的字符代码进行再编码，原理和UTF-8一致。
 5. 在 javascript 中字符串与 Unicode 对比/转化
 
     ```
