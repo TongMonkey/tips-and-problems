@@ -271,17 +271,140 @@
                1. 作用：使用一组键-值对，把类的属性映射到宿主元素的绑定（Property、Attribute 和事件）
                2. <https://angular-book.dev/ch05-09-host.html>
             5. providers:
-               1. 作用：每个被标记为 module/component 的 class 都可以声明自己的 providers 数组，用来定义要使用的是哪一个服务的某一个实例.
+               1. 作用：每个被标记为 module/component 的类都可以声明自己的 providers 数组，用来定义要使用的是哪一个服务的某一个实例.
                2. 作用范围
                   1. 两种：
                      1. component-level 在组件中生成一个 service instance 服务实例
                      2. module-level 在整个 module 中生成并共享同一个 instance
                   2. 优先级：component-level > module-level(global-leval) 所以如果用了同一个服务，component级别的可以“顶替掉”module级别的
                   3. 好处：允许使用多个 service 的实例，方便自定义组件逻辑实现
-               3. 用法：
+               3. providers 里的配置项
+                  1. provide
+                  2. provide && useClass
+                  3. provide && useFactory
+                  4. deps for useFactory:
+                     1. 作用：用来定义依赖关系，允许工厂函数在执行期间访问相应的实例对象。you can use additional deps property to define dependencies and allow your factory function to access corresponding instances during execution.
+                  5. provide:String && useFactory && @Inject。 具体见 @Inject decorator 部分
+                  6. provide && useValue
+                  7. provide && alias && useExisting 创建别名
+               4. 用法：
 
                   ``` code
-                  
+                     // 在整个 Module 里设置的 provider, 下面所有的 components 都共用这些服务
+                     import { ClickCounterService } from './click-counter.service';
+                     import { LogService } from './services/log.service';
+                     import { CustomLogService } from './services/custom-log.service';
+                     @NgModule({
+                        providers: [ 
+                           // 1-1. 在模块中使用
+                           ClickCounterService,
+                           // 2-1. 使用对象类型：此时 key && value 都是 LogService，
+                           {
+                              provide: LogService,  
+                              useClass: LogSerivce
+                           },
+                           // 2-2. 此时 key && value 是不同的类
+                           {
+                              provide: LogService,  // Key: 被注入了 LogService 类的
+                              useClass: CustomLogService  // Value: 实际上使用的是 CustomLogService 的实例
+                           },
+                           // 3: 创建多个实例：一般constructor parameter 传进去的类都只会被创建一个实例，Angular 提供了一种方式，可以控制创建多个实例化对象
+                           {
+                              provide: LogService, 
+                              useFactory: customLogServiceFactory // 这是个 factory function，返回对象作为实例给 LogService 用
+                           },
+                           // 4: deps for useFactory:
+                           {
+                              provide: AuthenticationService, 
+                              useFactory: authServiceFactory 
+                              deps: [RoleService, LogService] // 是 AuthenticationService 需要的服务
+                           },
+                           // 5: provede 提供字符串，与 @Inject 结合使用
+                           { 
+                              provide: 'DATE_NOW',    // 字符串
+                              useFactory: dateFactory
+                           }
+                           // 6-1: 与 useFactory 很相似，都会先创建出实例化对象
+                           const logService = new CustomLogService();
+                           { 
+                              provide: LogService, 
+                              useValue: logService  // value 是实例化对象
+                           }
+                           // 6-2: 可以用来传递配置对象给组件或者服务，用来初始化或者配置。
+                           {
+                              LogService,
+                              {
+                                 provide: 'logger.config',
+                                 useValue: {
+                                    logLevel: 'info',
+                                    prefix: 'my-logger'
+                                 }
+                              }
+                           }
+                           // 7: 给组件取别名
+                           SafeAuthenticationService,  // 正常注册
+                           { 
+                              provide: AuthenticationService,  // 所有引用了 AuthenticationService 类的地方
+                              useExisting: SafeAuthenticationService // 其实使用的是 SafeAuthenticationService 的实例。而且允许我们使用的是 singleton 单例实例。这是与 useClass 的区别。useClass 产生的和注入的实例，是两个不同的实例，这不是理想状态。
+                           }
+
+                        ],
+                     })
+                     export class AppModule { }
+
+                     <!-- 分割线，下面functions是对上面配置用到的函数的补充 -->
+                     // 3-customLogServiceFactory
+                     export function customLogServiceFactory() {
+                        const service = new CustomLogService();
+                        return service;
+                     }
+                     // 4-AuthenticationService
+                     @Injectable({ providedIn: 'root' })
+                     export class AuthenticationService {
+                        constructor(private roles: RoleService, private log: LogService) {}
+                     }
+                     // 4-authServiceFactory
+                     export function authServiceFactory(roles: RoleService, log: LogService) {
+                        const service = new AuthenticationService(roles, log);
+                        // do some additional service setup
+                        return service;
+                     }
+                     // 5-dateFactory
+                     export function dateFactory() {
+                        return new Date();
+                     }
+                     // 6-2:为了方便类型管理，可以创建一个 TypeScript 接口来描述这个 setting object
+                     export interface LoggerConfig {
+                        logLevel?: string;
+                        prefix?: string;
+                     }
+
+                     <!-- 分割线：使用 -->
+                     // 1-2 在组件中使用：在某个 component 里设置的 provider, 就单独使用服务的一个 instance copy
+                     import { ClickCounterService } from '../click-counter.service';
+                     @Component({
+                        selector: 'app-component-b',
+                        providers: [ClickCounterService ]
+                     })
+                     export class ComponentBComponent implements OnInit {
+                        // ...
+                     }
+                     // 6-2：使用：此时任何 component/service/directive 一旦注入字符串‘logger.config',都可以获取到配置的 value。
+                     @Injectable({ providedIn: 'root' })
+                     export class LogService {
+                        constructor(
+                           @Inject('logger.config') config: LoggerConfig
+                        ) {
+                           console.log(config);
+                        }
+                        info(message: string) {
+                           console.log(`[info] ${message}`);
+                        }
+                     }
+
+                     
+
+
                   ```
 
             6. exportAs: 定义一个名字，用于在模板中把该指令赋值给一个变量
@@ -342,15 +465,84 @@
             ```
 
       3. @Injectable decorator
-         1. 作用：将一个 class 标记成可注入的,将会参与 DI 依赖注入，可以被注入到例如 service/component/directives/pipes 等其他实体。而要注入的实例，就是由 Angular 创建的这些类的实例.通常都是以`单例模式`来创建，injects into other primitives on demand.?? 
+         1. 作用：将一个 class 标记成可注入的,将会参与 DI 依赖注入，可以被注入到例如  services, components, directives or pipes 等其他实体。Angular 框架会将这些 @Injectable 的类，通过单例模式，创建出(可多个)实例，然后注入到需要的地方。
          2. 原文：We use a special @Injectable decorator here to mark the class and instruct Angular that the given class should participate in the dependency injection layer. All classes marked with @Injectable can get imported into other entities like services, components, directives or pipes. The Angular framework creates instances of those classes, usually in the form of "singletons", and injects into other primitives on demand.
          3. 用法：
 
             ``` code
-            
+               // 使这个类成为一个可注入服务
+               @Injectable({ providedIn: 'root' })
+               export class LogService {
+                  constructor() { }
+                  info(message: string) {
+                     console.log(`[info] ${message}`);
+                  }
+               }
+
+               // 使用这个可注入类
+               import { Component } from '@angular/core';
+               import { LogService } from './../services/log.service';
+               @Component({/*...*/})
+               export class Component1Component {
+                  // 通过 constructor parameters 来注入要使用的可注入实例,这里是个服务类。 这中间的步骤就由 Angular 框架负责了，它会去找到预期的类型 LogService, 实例化一个实例赋值给 logService
+                  constructor(logService: LogService) {
+                     logService.info('Component 1 created');
+                  }
+               }
+
+
             ```
 
-      4. @ViewChild:
+      4. @Inject decorator
+         1. 作用：@Inject用来指示 Angular 在运行时注入给定的parameter参数。The @Inject decorator instructs Angular that a given parameter must get injected at runtime.
+            1. 也可以用来获取通过“字符串”设置的Injectables 的对象的引用。You can also use it to get references to "injectables" using string-based keys.
+            2. 也可以用来指明自定义类。In this case, you are getting access to real CustomLogService class that is injected by Angular for all the LogService keys. If your custom implementation has extra methods and properties, not provided by the LogService type, you can use them from within the component now.
+         2. 用法：2种
+
+            ```code
+            @NgModule({
+               providers: [
+                  { 
+                     provide: 'DATE_NOW',    // 字符串
+                     useFactory: dateFactory
+                  }
+               ],
+            })
+            export class AppModule { }
+
+            // 1-dateFactory
+            export function dateFactory() {
+               return new Date();
+            }
+
+
+            // 1-使用字符串做key
+            @Component({...})
+            export class Component1Component {
+               constructor(
+                  logService: LogService, 
+                  @Inject('DATE_NOW') now: Date
+               ) {
+                  logService.info('Component 1 created');
+                  logService.info(now.toString());
+               }
+            }
+
+            // 2-使用自定义的非同名类：此时可以访问真正的 CustomLogService 类，该类由 Angular 为所有的 LogSerivce Key 注入。如果自定义实现有额外的方法和属性，而不是由 LogService 提供的，就可以在本组件中使用他们了
+            @Component({/*...*/})
+            export class Component1Component {
+               constructor(
+                  @Inject(LogService) logService: CustomLogService 
+               ) {
+                  // 名字是 logSerivce, 看着被注入的是 LogService 类，但实际是 CustomLogService 的实例
+                  logService.info('Component 1 created');
+               }
+            }
+
+
+            ```
+
+      5. @ViewChild:
          1. 定义：是一个属性装饰器，用来配置视图查询
          2. 作用: The change detector looks for the first element or the directive matching the selector in the view DOM. If the view DOM changes, and a new child matches the selector, the property is updated.
          3. 查询时机：视图查询是在调用ngAfterViewInit回调之前设置的。
@@ -367,10 +559,10 @@
             @ViewChild(selector, )
             ```
 
-      5. @ViewChildren
-      6. @ContentChild
-      7. @ContentChildren
-      8. @HostBinding ❓❓❓❓
+      6. @ViewChildren
+      7. @ContentChild
+      8. @ContentChildren
+      9. @HostBinding ❓❓❓❓
 
 ### Dependency Injection 简称 DI
 
@@ -485,6 +677,105 @@
                }
             ]);
             ```
+
+### 服务  Service
+
+1. 定义：用来放置和特定组件无关并希望能跨组件共享的数据或逻辑
+2. 好处：把组件和服务区分开，有助于提高模块性和复用性。通过把组件和视图有关的功能与其它类型的处理分离开，可以让组件类更加精简、高效
+3. 创建：
+   1. 命令：ng g serviceFolerName/serveName 创建后，通过 @Injectable()装饰器标识服务
+   2. 注意：
+      1. 在使用服务时，不要用 new 手动创建服务，需要由 Angular 内置的依赖注入系统创建和维护。服务是依赖需要而被注入到组件中的！！
+      2. Angular CLI 只管帮我们创建服务，不会自动放进 Provider 数组中
+   3. demo: /angular-demo/src/app/service/menu.service.ts
+4. 设置服务的 3 种作用域
+   1. 全局作用域：在根注入器中注册服务，所有模块使用同一服务实例对象.
+      1. 默认root：root表示默认注入到 AppModule 里，就是app.module.ts
+      2. 注意！！ 如果暂时不想定义任何区域，可以传入 null, 不能让 Injectable 里传入空对象,会报错。
+      3. provedIn 的参数选项：  `({ providedIn: Type<any> | "root" | "platform" | "any" | null; } & InjectableProvider) | undefined`
+
+         ```
+         import { Injectable } from '@angular/core';
+         @Injectable({
+            // 1.全局作用域 默认 app.module.ts
+            providedIn: 'root', 
+            // providedIn: null
+         })
+         export class MenuService {}
+         ```
+
+   2. 模块级别：该 module 中的所有 components 使用同一服务实例对象。
+      1. 有两种语法都可以，第一种：在服务中用 providedIn 声明要在哪个 module 里生效
+
+         ```
+         import { Injectable } from '@angular/core';
+         import { SharedModule } from '../shared/share.module';
+         @Injectable({
+            // 在服务中用 providedIn 声明要在哪个 module 里生效
+            providedIn: sharedModule, // 2.模块作用域
+         })
+         export class MenuService {}
+         ```
+
+      2. 两种语法都可以，第二种：在模块中用 providers 表示使用哪些服务
+
+         ```
+         import {MenuService} from './menu.service'
+         @ngModule({
+            // 在模块中用 providers 表示使用哪些服务  
+            providers: [MenuService],
+         })
+         export class sharedModule{}
+         ```
+
+   3. 组件级别：该 component 组件及子组件中使用同一服务实例对象
+
+      ```
+      // 在组件中
+      import {MenuService} from './menu.service'
+      @Component({
+         providers: [MenuService]
+      })
+      export class MenuIndexComponent implements OnInit {
+         constructor(
+            private menuServer: MenuService,
+         ) {}
+      }
+      ```
+
+5. 使用：
+   1. 在app.module.ts中手动import并放进 @Component的providers数组
+
+      ```
+      @NgModule({
+         declarations: [...],
+         imports: [...],
+         // 存放服务 
+         providers: [ MenuService ],
+         bootstrap: [...],
+      })
+      export class AppModule {}
+      ```
+
+   2. 在目标模块中也需要手动import，然后作为入参传给类的constructor. 之后可以通过 this.serviceName 查询到. 如果没有还没有处理，就得到一个空对象，可以给该服务类添加属性
+      1. 多个服务时，依靠服务的类别来判断使用哪个服务
+      2. private 权限修饰符表示：
+         1. 修饰的该服务，不作为参数，而是当前类的属性使用，所以可以通过 this.menuService 来访问。这是 Typescript的知识点
+         2. 修饰的该服务，只能在组件类中使用，不能在组件模版中使用。如果使用public修饰的，才可以在模版中使用。
+
+         ```
+         constructor(
+            private anotherServer: AnotherService,
+            private menuServer: MenuService,
+         ) {}
+         ```
+
+      3. 总结：通过类构造函数里的private服务，就可以在当前业务类中，使用this.服务.*来获取操作数据的方法
+6. 设计模式：单例模式，所以当服务本身修改时，所有依赖注入到的组件内都会使用到新的修改
+
+   1. 缺点：只能在 parent-template 也就是 html 中调用 child, 在 parrent-component 组件中 has no access to the child.
+7. 通过 @ViewChild 获取元素: 能在 parent-component 中 获取对 child 的使用权限, inject the child component into the parent as a ViewChild.
+   1. 通过指定'#字符串'，得到第一个匹配的子类
 
 #### Service 服务
 
@@ -1251,103 +1542,6 @@
          ```
 
       4.
-
-### 服务
-
-1. 定义：用来放置和特定组件无关并希望能跨组件共享的数据或逻辑
-2. 好处：把组件和服务区分开，有助于提高模块性和复用性。通过把组件和视图有关的功能与其它类型的处理分离开，可以让组件类更加精简、高效
-3. 创建：
-   1. 命令：ng g serviceFolerName/serveName 创建后，通过 @Injectable()装饰器标识服务
-   2. 注意：在使用服务时，不要用 new 手动创建服务，需要由 Angular 内置的依赖注入系统创建和维护。服务是依赖需要而被注入到组件中的！！
-   3. demo: /angular-demo/src/app/service/menu.service.ts
-4. 设置服务的 3 种作用域
-   1. 全局作用域：在根注入器中注册服务，所有模块使用同一服务实例对象.
-      1. 默认root：root表示默认注入到 AppModule 里，就是app.module.ts
-      2. 注意！！ 如果暂时不想定义任何区域，可以传入 null, 不能让 Injectable 里传入空对象,会报错。
-      3. provedIn 的参数选项：  `({ providedIn: Type<any> | "root" | "platform" | "any" | null; } & InjectableProvider) | undefined`
-
-         ```
-         import { Injectable } from '@angular/core';
-         @Injectable({
-            // 1.全局作用域 默认 app.module.ts
-            providedIn: 'root', 
-            // providedIn: null
-         })
-         export class MenuService {}
-         ```
-
-   2. 模块级别：该 module 中的所有 components 使用同一服务实例对象。
-      1. 有两种语法都可以，第一种：在服务中用 providedIn 声明要在哪个 module 里生效
-
-         ```
-         import { Injectable } from '@angular/core';
-         import { SharedModule } from '../shared/share.module';
-         @Injectable({
-            // 在服务中用 providedIn 声明要在哪个 module 里生效
-            providedIn: sharedModule, // 2.模块作用域
-         })
-         export class MenuService {}
-         ```
-
-      2. 两种语法都可以，第二种：在模块中用 providers 表示使用哪些服务
-
-         ```
-         import {MenuService} from './menu.service'
-         @ngModule({
-            // 在模块中用 providers 表示使用哪些服务  
-            providers: [MenuService],
-         })
-         export class sharedModule{}
-         ```
-
-   3. 组件级别：该 component 组件及子组件中使用同一服务实例对象
-
-      ```
-      // 在组件中
-      import {MenuService} from './menu.service'
-      @Component({
-         providers: [MenuService]
-      })
-      export class MenuIndexComponent implements OnInit {
-         constructor(
-            private menuServer: MenuService,
-         ) {}
-      }
-      ```
-
-5. 使用：
-   1. 在app.module.ts中手动import并放进 @Component的providers数组
-
-      ```
-      @NgModule({
-         declarations: [...],
-         imports: [...],
-         // 存放服务 
-         providers: [ MenuService ],
-         bootstrap: [...],
-      })
-      export class AppModule {}
-      ```
-
-   2. 在目标模块中也需要手动import，然后作为入参传给类的constructor. 之后可以通过 this.serviceName 查询到. 如果没有还没有处理，就得到一个空对象，可以给该服务类添加属性
-      1. 多个服务时，依靠服务的类别来判断使用哪个服务
-      2. private 权限修饰符表示：
-         1. 修饰的该服务，不作为参数，而是当前类的属性使用，所以可以通过 this.menuService 来访问。这是 Typescript的知识点
-         2. 修饰的该服务，只能在组件类中使用，不能在组件模版中使用。如果使用public修饰的，才可以在模版中使用。
-
-         ```
-         constructor(
-            private anotherServer: AnotherService,
-            private menuServer: MenuService,
-         ) {}
-         ```
-
-      3. 总结：通过类构造函数里的private服务，就可以在当前业务类中，使用this.服务.*来获取操作数据的方法
-6. 设计模式：单例模式，所以当服务本身修改时，所有依赖注入到的组件内都会使用到新的修改
-
-   2. 缺点：只能在 parent-template 也就是 html 中调用 child, 在 parrent-component 组件中 has no access to the child.
-6. 通过 @ViewChild 获取元素: 能在 parent-component 中 获取对 child 的使用权限, inject the child component into the parent as a ViewChild.
-   1. 通过指定'#字符串'，得到第一个匹配的子类
 
 ### 共享模块
 
