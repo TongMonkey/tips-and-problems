@@ -44,4 +44,54 @@
    1. Observable = Publisher + Iterator
 
 
+### Code Observable VS Hot Observable
+1. 定义：
+   1. Hot Observable: 观察者错过了就错过了，只需要接受从订阅那一刻开始Observable产生的数据就行，就像看电视直播
+   2. Cold Observable: 观察者不能错过，需要获取 Observable 之前产生的数据，就像打开一部电影，都是从头开始放的。
+2. 区别：
+   1. 生产者与观察者之间关系的区别
+      1. 理解 Hot Observable: 概念上有一个独立于 Observable 对象的“生产者”， 这个生产者的创建和 subscribe 调用没有关系， subscribe 调用只是让 观察者连接上“生产者” 而已。
+      2. 理解 Cold Observable: 每一次订阅，都会产生一个新的“生产者”，这个生产者会从头开始生产数据
+   2. hot or cold 都是对 生产者 而言的：如果每次订阅的时候，已经有一个热的生产者准备好了，那就是 hot；相反，如果每次订阅都要产生一个新的生产者，就像汽车引擎刚启动时肯定是冷的，所以就是 cold。
+3. 一些例子
+   1. 产生 Hot Observable 的操作符:
+   2. 产生 Cold Observable 的操作符: of
+
+
+### 实现 new Observable 
+1. code
+
+   ```code
+      import { Observable } from 'rxjs/Observable';
+      //2-1. 而这个 onSubscribe 函数接受一个 observer 观察者 作为入参，obSubscribe 函数可以任意操作观察者对象，比如在函数体内会调用 observer 的 next 函数，从而把数据推给 observer。
+      //2-2. onSubscribe 的被调用时机：是 subscribe 方法调用的时候，触发 onSubscribe
+      const onSubscribe = observable => {
+         observer.next(1);
+         observer.next(2);
+         observer.next(3);
+         //5-1. 返回一个对象，需要有一个 unsubscribe 函数，用来切断 publisher 和 observer 的关联
+         return {
+            unsubscribe: () => {
+
+            }
+         }
+      };
+      //1. onSubscribe 函数作为 Observable 构造函数的入参，完全决定了 Observable 对象的行为
+      const source$ = new Observable(onSubscribe);
+      //3. 观察者没有什么特别之处，只要求它必须有一个 next 函数，等待被 onSubscribe 调用
+      const theObserver = {
+         next: item => console.log(item);
+      }
+      //4. 通过 subscribe 函数将 publisher 和 observer 关联起来
+      //5-2. 并返回一个对象
+      const subscription = source$.subscribe(theObserver);
+      //6. 此时 theObserver 不会再收到推送过来的数据了，但作为 Observable 的 source$ 并没有终结，只要没有调用 complete 或者 error 就没有结束，只不过不会再调用观察者的 next 函数了。
+      subscription.unsubscribe();
+
+   ```
+
+### 实现 操作符
+
+1. map
+
 ### Chapter 10: Subject 

@@ -1,7 +1,11 @@
-## Angular
+# Angular
 
 1. 视频课：<https://www.bilibili.com/video/BV1oS4y1c7or?p=1>
 2. 视频课：<https://www.acfun.cn/v/ac25920410_1>
+
+## Questions
+
+1.
 
 ### Angular vs Angular.js
 
@@ -229,7 +233,7 @@
 
 ### Decorator 装饰器
 
-   1. 定义：❓❓❓
+   1. 定义：使用 @ 来开头的保留字段，具有对应的装饰作用，表示类有特殊的含义
    2. 成员:
       1. @Directive:
          1. 定义: 把一个类标记为 Angular 指令。
@@ -413,8 +417,64 @@
                2. <https://angular-book.dev/ch05-10-queries.html>
             8. jit:
             9. standalone:
+               1. 用处：表示一个 component/directive/pipe 是独立的。
+               2. 背景：以往我们想在一个组件A中引用另一个组件B时，必须依赖 @ngModule 并在 @ngModule-declarations array 里声明这个组件B，这就导致我们始终无法摆脱 ngModule. 有了 standalone 后，将组件A 和 组件B 都声明成独立组件，就可以在 @componentA-imports array 里直接引入B
+               3. 用法：
+                  1. 在对应的 component 的 decorator 里新增设置 `standalone: true`; 就可以将该组件标记为独立组件
+
+                     ```code
+                        @Component({
+                           standalone: true, // 本身标记为独立组件
+                           selector: 'photo-gallery',
+                           imports: [ImageGridComponent],  //ImageGridComponent 也是 standalone:true
+                           template: ` <image-grid [images]="imageList"></image-grid>`,
+                        })
+                        export class PhotoGalleryComponent {}
+                     
+                     ```
+
+                  2. 如果要使用的某个 component/directive/pipe 可能还没有被标记为独立的(那么就一定被某个现有的 ngModule 声明并导出着), 这种情况可以直接将这个 module 导入
+
+                     ```code
+                        @Component({
+                           standalone: true,
+                           selector: 'photo-gallery',
+                           imports: [MatButtonModule], // an existing module is imported directly into a standalone component
+                           template: `<button mat-button>Next Page</button>`,
+                        })
+                        export class PhotoGalleryComponent {}
+                     ```
+
+                  3. 也可以将独立组件像普通组件一样导入到 ngModule imports array 中
+                  4. 通过使用独立组件作为程序的根组件， 一个 Angular 程序可以在没有任何 NgModule 的情况下被启动，通过一个 API: bootstrapApplication 完成。
+               4. 注意：
+                  1. ❓❓❓
+               5. 文档地址：`https://angular.io/guide/standalone-components#bootstrapping-an-application-using-a-standalone-component`
             10. hostDirectives:
-      2. @Component decorator:
+      2. @NgModule decorator:
+         1. 作用：标记一个模块
+         2. metadata:
+            1. bootstrap array:
+               1. 定义：数组用来定义一个项目的初始组件。 The bootstrap array of @NgModule devorator defines the component that is the starting point of the application. Those components will be loaded when the application once launched.
+               2. 注意：
+                  1. 每个应用至少应该有一个组件，Every application must bootstrap at lease one component, the root application component.
+                  2. bootstrap 只能用在根模块中,当我们创建其他模块时，都不再配置 bootstrap 数组了。Bootstrap array should only be used in root application module: AppModule. As we build other Angular modules, we won't use the bootstrap array.
+            2. declaration array:
+               1. 作用：定义属于本 module的 components/directives/pipes 的集合。The set of components, directives, and pipes (declarables) that belong to this module.
+               2. 注意：
+                  1. 每个模块、指令、管道，都必须属于一个也只能属于一个模块。Every component,directive, and pipe we create must belong to one and only one Angular module.
+                  2. 只能用来声明 component/directive/pipe，不能用来声明别的类。
+                  3. 默认情况下，声明的这三样东西是 private 私人的，只有属于同一个Module 里才能使用这三个。All declared components, directives, and pipes are private by default. They are only accessibe to other components, direcitives, and pipes declared in the same module.
+            3. imports array:
+               1. 作用：导入，声明哪些 modules 的 component/directive/pipe 可以在本模块中被使用。The set of NgModules whose exported declarables are available to templates in current module.
+               2. 注意：
+            4. exports array:
+               1. 作用：由当前 ngModule 声明的 component/directives/pipes 被导出后，其他 ngModule 只要导入了这个模块，其他 ngModule 下的任意 component 都可以使用这些 component/directives/pipes, 这些导出的类可以理解成该模块的公共api。 原文：The set of components, directives, and pipes declared in this NgModule that can be used in the template of any component that is part of an NgModule that imports this NgModule. Exported declarations are the module's public API.
+         3. Comparison:
+            1. declaration VS imports:
+               1. imports makes the exported declarations of other modules available in the current module.
+               2. declarations are to make directives (including components and pipes) from the current module available to other directives in the current module. Selectors of directives, components or pipes are only matched against the HTML if they are declared or imported.
+      3. @Component decorator:
          1. 定义：标记一个类是一个组件
          2. Component Metadata：可以有很多属性，至少应该传入 selector 和 template
             1. selector(required & Inherited from @Directive)
@@ -1320,7 +1380,7 @@
 2. 直接获取事件对象`$event`:
 
    ```
-   // 在change share函数体内都可以直接使用event
+   // 在change share函数体内都可以直接使用$event
    <input (input)="change($event)"/>
    <button (click)="share($event)">分享</button>
    ```
@@ -1502,10 +1562,7 @@
 2. 子2父：利用 @Output 父组件监听子组件的事件 eventEmitter
 3. 利用 setter 截听输入属性值的变化
    1. demo:
-
-         ```
-
-   3. Provider 提供者:
+   2. Provider 提供者:
       1. 定义：是注入器 Injector 的配置对象
       2. 访问依赖对象的标识 provide：
          1. 数据类型：既可以是对象比如 MailService 也可以是 "mail" 字符串。
@@ -1542,6 +1599,10 @@
          ```
 
       4.
+
+4. 利用 ngOnChanges() 截听输入属性值的变化
+5. 获得子组件实例：
+6. 服务
 
 ### 共享模块
 
@@ -1600,15 +1661,6 @@
       // Parent Component
       <app-child></app-child>
 
-### 组件交互
-
-1. 父2子：利用 @Input("变量名")
-2. 子2父：利用 @Output 父组件监听子组件的事件 eventEmitter
-3. 利用 setter 截听输入属性值的变化
-2. 利用 ngOnChanges() 截听输入属性值的变化
-4. 获得子组件实例：
-5. 服务
-
 7. 服务
 
 ### 路由
@@ -1618,7 +1670,7 @@
    1. RouterModule.forRoot([]): This establishes the routes for the root of our application 这就为我们的应用程序的根建立了路由。
    2. RouterModule.forChild([])
 
-   ```dash
+   ```code
       // app.module.ts
       @NgModule({
          imports: [
@@ -1908,7 +1960,7 @@
 
 <https://angular.cn/guide/elements>
 
-### 网络请求模块 HttpClientModule
+### 网络请求模块 HttpClient
 
 1. 用途：发送http请求，用于发送请求的方法都返回 Observable 对象
 2. 使用步骤：
@@ -1991,9 +2043,10 @@
 
 6. 响应内容
    1. 通过设置一个type, 可以取出返回内容
-   2. type HttpObserve = 'body' | 'response'
+   2. type HttpObserve = 'body' | 'response | text'
       1. body: 表示返回的response中的响应体
       2. response: 表示整个返回的内容 包含 body headers ok status type 等
+      3. text: 表示返回的是 text 类型的内容
    3. demo：
 
       ``` code
@@ -2005,10 +2058,46 @@
       .subscribe(console.log);
       ```
 
-7. 拦截器 ？？？
-   1. 定义：在全局范围内，捕获和修改由 HttpClientModule模块发出的 Http 请求和响应
-   2. <https://www.bilibili.com/video/BV1UP4y1J762/?spm_id_from=pageDriver>
-   3.
+7. Interceptor 拦截器
+   1. 定义：在全局范围内，捕获和修改由 HttpClientModule模块发出的 Http 请求和响应。如果没有拦截器，开发者需要为每一个 httpClient 方法实现一遍处理逻辑
+   2. 原理：
+      1. 双向拦截器链：Multiple interceptors form a forward-and-backward chain of request/response handlers. 多个拦截器形成了一个请求/响应处理程序的前向和后向链。
+      2. `interceprt()`: 一个 interceptor,就是实现接口 HttpInterceptor 的 intercept 方法. intercept 方法将一个请求转化成一个最终返回 http response 的 Observable. 从这个角度来说， 每个拦截器都有足够的能力自己处理整个request.
+      3. 传递给next:大多数拦截器在进入时检查请求，并将可能被改变的请求转发给下一个对象的handle()方法，这个对象实现了. Most interceptors inspect the request on the way in and forward the potentially altered request to the handle() method of the next object which implements the.
+
+            ``` code
+            import { Injectable } from '@angular/core';
+
+            import {
+               HttpEvent, HttpInterceptor, HttpHandler, HttpRequest
+            } from '@angular/common/http';
+
+            import { Observable } from 'rxjs';
+
+            /** Pass untouched request through to the next request handler. */
+            @Injectable()
+            export class NoopInterceptor implements HttpInterceptor {
+
+               intercept(req: HttpRequest<any>, next: HttpHandler):
+                  Observable<HttpEvent<any>> {
+                  return next.handle(req);
+               }
+            }
+
+            ```
+
+      4. next 对象：在`next.handle()`中，next 代表了拦截器链中的下一个拦截器。The next interceptor in the chain of interceptors.
+      5. 最后一个 next 拦截器：链中的最后一个拦截器是 HttpClient backend handler, 负责真正向服务端发送请求和接受请求
+      6. 拦截器的工作流：每一个拦截器通过调用 `next.handle()` 将请求传递给下一个拦截器。大部分拦截器都会这样做，最终流向后端处理拦截器。但其实，也可以不调用这个方法，就会使拦截器链短路，实现绕过这个链条，返回一个Observable和自己造的服务端响应的效果。
+   3. 拦截器的顺序：按照定义的顺序 发送时 A-B-C, 响应时 C-B-A. The last interceptor in the process is always the HttpBackend that handles communication with the server. !['HttpClient-interceptor-order'](../assets/HttpClient-interceptor-order.png)
+   4. Immutable HttpRequest and HttpResponse: 这两个都是 readonly instance. 原因是，在每次请求后，都有可能retry, 为了保证每次重试的上游 request Observable 是 original 的，就要保证在流动的过程中不能被更改。
+   5. 注意：
+      1. 所以在写拦截器时，非必要不修改经过的事件(request & response). 如果非要改变，使用 clone 方法克隆 url/body 等 用于传给 next.handle
+      2. 如果想清除 request body, 需要明确地设置`req.clone({ body: null})`, 如果不复写或者设置为 undefined, 都将被认为成‘不修改’
+      3. 
+
+   6. 
+
 8. Angular Proxy  ???
    1. <https://www.bilibili.com/video/BV1Qa41167H1/?spm_id_from=pageDriver>
 
@@ -2047,8 +2136,6 @@
 
 ### ElementRef
 
-### @ngModule 是什么，干什么的
-
 ### CommonModule 是干嘛的
 
 ### 数据绑定的原理，在 Angular 和 Vue 中有什么不一样
@@ -2056,8 +2143,6 @@
 ### 组件生命周期
 
 ### @HostBind 是啥
-
-### @NgModule 里的 bootstrap 数组是啥
 
 ### 视图封装 ViewEncapsulation ❓❓❓
 
@@ -2083,13 +2168,6 @@
    3. ViewEncapsulation.Emulated：Angular 会修改组件的 CSS 选择器，使它们只应用于组件的视图，不影响应用程序中的其他元素（模拟 Shadow DOM 行为）
 4. 代码：❓❓❓
 
-### Questions
-
-1. How to generate a new component outside the 'src/app' folder ?
-2. interface Hero{ id: number; name: string}. hero: Hero = {id: 1, name:'abc'}; 接口是分号，实现的对象是逗号 ？
-3. [(ngModel)] 双向绑定的原理是什么 ？
-4.
-
 ### Injectable({ provideIn: 'root' }) ❓❓❓
 
 ### 性能优化
@@ -2098,3 +2176,34 @@
 
 1. Bundling Size
 2. Code Splitting
+
+### [(ngModel)] 双向绑定的原理是什么 ？
+
+### Angular project recommended structure 推荐的项目结构
+
+1. app 文件夹下的几大目录：参考链接：`https://zhuanlan.zhihu.com/p/63515048`
+   1. core：核心模块
+      1. 坚持在 core 目录下创建一个叫 CoreModule 的模块
+      2. 坚持把要共享给整个应用的单例服务放进核心模块
+      3. 可以把那些数量庞大、辅助性的、只用一次的类收集到核心模块，对外隐藏实现细节
+      4. 只会在根模块 AppModule 中被导入
+   2. feature:
+      1. 坚持为应用中每个明显的特性创建一个 ngModule
+      2. 坚持把特性模块放在与特性区同名的目录中
+      3. 特性区的名字应该能反映特性
+   3. routes：
+   4. shared: 共享模块
+      1. 坚持在共享文件夹中创建 sharedModule 的特性模块，考虑把有可能在整个应用中到处引用的模块命名为 sharedModule
+      2. 坚持在共享模块中声明那些可能被特性模块引用的可复用组件、指令和管道。Do declare components, directives, and pipes in a shared module when those items will be re-used and referenced by the components declared in other feature modules.
+      3. 避免在共享模块中指定应用级的单例服务提供者，如果是可以要得到多个服务单例也行，不过还是要小心。
+   5. service：服务模块
+      1. 在服务模块中处理数据交互或与数据相关的通用逻辑
+
+### 使用 Nx
+
+1. 创建 workspace: npx create-nx-workspace@latest
+2. 创建 component：npx nx g @nrwl/angular:component `${componentName}` --project=`${component-path}` --export
+3. 测试模块：npx nx test `${applicationName}`
+4. 运行本地：npx nx serve `${applicationName}`
+5. 打包模块：npx nx build `${applicationName}`
+6. 配置 pipeline: 链接 `https://nx.dev/angular-standalone-tutorial/4-task-pipelines#configuring-task-pipelines` ❓❓❓
