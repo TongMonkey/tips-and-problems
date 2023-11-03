@@ -3,9 +3,7 @@
 1. 视频课：<https://www.bilibili.com/video/BV1oS4y1c7or?p=1>
 2. 视频课：<https://www.acfun.cn/v/ac25920410_1>
 
-## Questions
-
-1.
+## Basic conceptions
 
 ### Angular vs Angular.js
 
@@ -70,8 +68,6 @@
 
 1. 用 cnpm install @angular/cli 可能会有问题，提示无权限安装，还是用npm直接安装吧
 2. 一直卡在 installing packages: 可以 ng new projectName --skip-install 之后在项目里用淘宝镜像安装依赖 cnpm intall
-
-## 核心概念 <https://angular.io/guide/architecture>
 
 ### Angular Module
 
@@ -446,11 +442,9 @@
                      ```
 
                   3. 也可以将独立组件像普通组件一样导入到 ngModule imports array 中
-                  4. 通过使用独立组件作为程序的根组件， 一个 Angular 程序可以在没有任何 NgModule 的情况下被启动，通过一个 API: bootstrapApplication 完成。
-               4. 注意：
-                  1. ❓❓❓
-               5. 文档地址：`https://angular.io/guide/standalone-components#bootstrapping-an-application-using-a-standalone-component`
-            10. hostDirectives:
+                  4. `bootstrapApplication`: ❓❓❓ 通过使用独立组件作为程序的根组件， 一个 Angular 程序可以在没有任何 NgModule 的情况下被启动，通过一个 API: bootstrapApplication 完成。
+               4. 注意：???
+            10. hostDirectives:❓❓❓
       2. @NgModule decorator:
          1. 作用：标记一个模块
          2. metadata:
@@ -524,7 +518,7 @@
 
             ```
 
-      3. @Injectable decorator
+      4. @Injectable decorator
          1. 作用：将一个 class 标记成可注入的,将会参与 DI 依赖注入，可以被注入到例如  services, components, directives or pipes 等其他实体。Angular 框架会将这些 @Injectable 的类，通过单例模式，创建出(可多个)实例，然后注入到需要的地方。
          2. 原文：We use a special @Injectable decorator here to mark the class and instruct Angular that the given class should participate in the dependency injection layer. All classes marked with @Injectable can get imported into other entities like services, components, directives or pipes. The Angular framework creates instances of those classes, usually in the form of "singletons", and injects into other primitives on demand.
          3. 用法：
@@ -553,7 +547,7 @@
 
             ```
 
-      4. @Inject decorator
+      5. @Inject decorator
          1. 作用：@Inject用来指示 Angular 在运行时注入给定的parameter参数。The @Inject decorator instructs Angular that a given parameter must get injected at runtime.
             1. 也可以用来获取通过“字符串”设置的Injectables 的对象的引用。You can also use it to get references to "injectables" using string-based keys.
             2. 也可以用来指明自定义类。In this case, you are getting access to real CustomLogService class that is injected by Angular for all the LogService keys. If your custom implementation has extra methods and properties, not provided by the LogService type, you can use them from within the component now.
@@ -602,7 +596,7 @@
 
             ```
 
-      5. @ViewChild:
+      6. @ViewChild:
          1. 定义：是一个属性装饰器，用来配置视图查询
          2. 作用: The change detector looks for the first element or the directive matching the selector in the view DOM. If the view DOM changes, and a new child matches the selector, the property is updated.
          3. 查询时机：视图查询是在调用ngAfterViewInit回调之前设置的。
@@ -619,41 +613,20 @@
             @ViewChild(selector, )
             ```
 
-      6. @ViewChildren
-      7. @ContentChild
-      8. @ContentChildren
-      9. @HostBinding ❓❓❓❓
+      7. @ViewChildren
+      8. @ContentChild
+      9. @ContentChildren
+      10. @HostBinding ❓❓❓
 
-### Dependency Injection 简称 DI
+### Dependency Injection (DI)
 
-   1. 定义：依赖性注入被用来为组件提供它们可以使用的服务。为了在Angular中把一个类定义为一个服务，我们使用了@Injectable()装饰器。它提供了元数据，允许Angular将其作为一个依赖关系注入到组件中。同样地，@Injectable()装饰器被用来表示一个组件或其他类（如另一个服务、一个管道或一个NgModule）有一个依赖关系。原文：Dependency injection is used to provide components with the services they can use. To define a class as a service in Angular, the @Injectable() decorator is used. It provides the metadata that allows Angular to inject it into a component as a dependency. Similarly, the @Injectable() decorator is used to indicate that a component or other class (such as another service, a pipe, or an NgModule) has a dependency.
-      1. 依赖项是指某个类执行其功能所需的服务或对象。依赖项注入（DI）是一种设计模式，在这种设计模式中，类会从外部源请求依赖项而不是创建它们。是面向对象编程中的一种设计原则，用来减少代码之间的耦合度
-      2. Injection 注入： 通过传参的方式，将依赖类对象从参数传入，而不是直接在类里调用依赖对象
-      3. 手动注入的缺点：当被依赖类发生变化，所有对依赖的实现和调用都需要变动，所以 Angular 提供了一个 DI 框架，自动完成这一套注入，
-   2. DI 框架
-      1. 4个核心概念：
-         1. Dependency: 组件要依赖的服务实例对象
-         2. Injection Token: 依赖的服务实例对象有很多，用 Token 做服务实例对象的标识，即通过 Token 来获取服务实例对象
-         3. Injector：注入器，负责创建和维护服务类的实例对象，并通过传参的方式，自动向组件中注入需要的服务实例对象
-         4. Provider:
-            1. 定义：服务提供者，是个对象，用来配置 Injector，指明要创建的服务实例对象所属的服务类+用来获取服务实例对象的Token
-            2. 文档链接：<https://angular.cn/guide/providers>
-            3. demo:
+   1. 定义：
+   2. 4个核心概念：
+      1. Dependency: 组件要依赖的服务实例对象
+      2. Injection Token: 依赖的服务实例对象有很多，用 Token 做服务实例对象的标识，即通过 Token 来获取服务实例对象
 
-               ``` code
-                  import { Injectable } from '@angular/core';
-
-                  @Injectable({
-                     providedIn: 'any', ❓❓❓
-                  })
-                  export class UserService {
-                  }
-
-               ```
-
-      2. InjectionToken ❓❓❓
-      3. Injectors 注入器：
-         1. 定义：负责创建服务类实例对象，并将服务类实例对象注入到需要的组件中
+      3. Injector 注入器：
+         1. 定义：负责创建服务类实例对象，并将服务类实例对象注入到需要的组件中. An injector for an application (created automatically during bootstrap) instantiates dependencies when needed, using a configured provider of the service or value.
          2. 用法：
 
             ```code
@@ -738,6 +711,9 @@
             ]);
             ```
 
+      5. 当前层级 injector 没找到，就去上一层找 ❓❓❓
+      6. providedIn: 'any', ❓❓❓
+
 ### 服务  Service
 
 1. 定义：用来放置和特定组件无关并希望能跨组件共享的数据或逻辑
@@ -754,7 +730,7 @@
       2. 注意！！ 如果暂时不想定义任何区域，可以传入 null, 不能让 Injectable 里传入空对象,会报错。
       3. provedIn 的参数选项：  `({ providedIn: Type<any> | "root" | "platform" | "any" | null; } & InjectableProvider) | undefined`
 
-         ```
+         ```code
          import { Injectable } from '@angular/core';
          @Injectable({
             // 1.全局作用域 默认 app.module.ts
@@ -767,7 +743,7 @@
    2. 模块级别：该 module 中的所有 components 使用同一服务实例对象。
       1. 有两种语法都可以，第一种：在服务中用 providedIn 声明要在哪个 module 里生效
 
-         ```
+         ```code
          import { Injectable } from '@angular/core';
          import { SharedModule } from '../shared/share.module';
          @Injectable({
@@ -779,7 +755,7 @@
 
       2. 两种语法都可以，第二种：在模块中用 providers 表示使用哪些服务
 
-         ```
+         ```code
          import {MenuService} from './menu.service'
          @ngModule({
             // 在模块中用 providers 表示使用哪些服务  
@@ -790,7 +766,7 @@
 
    3. 组件级别：该 component 组件及子组件中使用同一服务实例对象
 
-      ```
+      ```code
       // 在组件中
       import {MenuService} from './menu.service'
       @Component({
@@ -806,7 +782,7 @@
 5. 使用：
    1. 在app.module.ts中手动import并放进 @Component的providers数组
 
-      ```
+      ```code
       @NgModule({
          declarations: [...],
          imports: [...],
@@ -823,7 +799,7 @@
          1. 修饰的该服务，不作为参数，而是当前类的属性使用，所以可以通过 this.menuService 来访问。这是 Typescript的知识点
          2. 修饰的该服务，只能在组件类中使用，不能在组件模版中使用。如果使用public修饰的，才可以在模版中使用。
 
-         ```
+         ``` code
          constructor(
             private anotherServer: AnotherService,
             private menuServer: MenuService,
@@ -975,7 +951,7 @@
 1. 获取一个元素：利用 模版 #name
    1. 给模版对象设置一个模版引用变量 username，通过模版名称直接取得DOM ,从而可以获取事件对象的值
 
-      ```
+      ```code
       <input #username/>
       <button (click)="share(username.value)">分享</button>
       // share(val){// val即为input输入}
@@ -1027,7 +1003,7 @@
 
    2. 用法：
 
-      ```
+      ```code
       <input [(ngModel)]="title">
       <p>{{title}}</p>
       ```
@@ -1046,14 +1022,14 @@
       2. 在使用表单的模块中 import { NgForm } from '@angular/forms';
       3. 将普通的 DOM 表单转化成 ngForm 表单 #name="ngForm"
 
-         ```
+         ```code
          // 这里的 f 是自定义的名字
          <form #f="ngForm" (submit)="onSubmit(f)">
          ```
 
       4. 声明表单字段为 ngModel：标识该字段受 ngForm 表单管控
 
-         ```
+         ```code
          // 3
          <form #f="ngForm" (submit)="onSubmit(f)">
             // 4
@@ -1064,7 +1040,7 @@
 
       5. 之后就可以获取表单字段值了 form.value 对象里包含所有字段值
 
-         ```
+         ```code
          onSubmit(form: NgForm){
             console.log('form',form.value)
             console.log('验证通过',form.valid)
@@ -1074,7 +1050,7 @@
 
    3. 表单分组 ngModelGroup
 
-      ```
+      ```code
       <form #f="ngForm" (submit)="onSubmit(f)">
          <ng-container ngModelGroup="user">
             用户名：<input type="text" name="username" ngModel/>
@@ -1097,7 +1073,7 @@
       3. 具体表单项验证：
          1. 获取表单项：使用 #name="ngModel"
 
-            ```
+            ```code
             // 这里的 #username 里，username 是自定义名
             用户名：<input type="text" name="username" ngModel #username="ngModel"/>
             <div *ngIf="username.touched"> 出现</div>
@@ -1123,7 +1099,7 @@
       1. 在根模块中: import { ReactiveFormModule } from '@angular/forms',并在模块的 imports 中注入 ReactiveFormModule
       2. 在使用表单的模块中： import { FormControl, FormGroup } from '@angular/forms'，并且创建表单组对象
 
-         ```
+         ```code
          import { FormControl, FormGroup } from '@angular/forms'
          export class AppComponent
          ```
@@ -1132,7 +1108,7 @@
          1. formGroup 绑定表单对象，该表单对象是个引用，所以要用方括号将 formGroup框起来
          2. formControlName 绑定表单项的名字，名字是string, 它不是一个实时变化的数据，所以不需要方括号框起来
 
-         ```
+         ```code
          // 使用 formGroup 跟 ts 类中定义的表单对象关联起来,需要[]
          <form [formGroup]="loginForm">
             // formControlName 绑定的是 string 类型的名字，不需要[]
@@ -1147,7 +1123,7 @@
          2. 表单项是 FormControl 实例, new 初始化的入参是默认值
          3. 通过表单.value 获取表单数据
 
-         ```
+         ```code
          // 模型驱动表单
          loginForm: FormGroup = new FormGroup({
             // new 的时候可以传入默认值
@@ -1166,7 +1142,7 @@
          1. 在 html 中：
             1. formGroupName：注意：表单绑定用`[formGroup]`绑定对象, 内部的组用 formGroupName 绑定字符串
 
-            ```
+            ```code
             <form [formGroup]="loginForm" (submit)="done()">
             // formGroupName 绑定名称
                <div formGroupName="fullName">
@@ -1184,7 +1160,7 @@
                1. 通过数组：`表单.get(['parentName', 'childName'])` 传入表单组层级`数组`，可以获取对应的表单项
                2. 通过点运算符：`表单.get('parentName.hildName')` 传入表单组层级名称，注意这里不用数组了哦
 
-            ```
+            ```code
             loginForm: FormGroup = new FormGroup({
                fullName: new FormGroup({
                   firstName: new FormControl(),
@@ -1211,7 +1187,7 @@
          3. html 中遍历 formArray: 实际上遍历的是 `formNameObj.controls`
          4. 表单数组中的表单，遍历的 formGroupName 的值 实际上是遍历`formNameObj.controls`时的 index
 
-            ```
+            ```code
             <div formArrayName="contacts">
                // 真正遍历的是 fromArray实例的controls 属性 
                // i 是变量而不是字符串，所以formGroupName 要用 [] 框起来
@@ -1229,7 +1205,7 @@
          1. Angular 内置规则
             1. 创建规则：
 
-               ```
+               ```code
                import { FromControl, FormGroup，Validators } from '@angular/forms"
                myForm: FormGroup = new FormGroup({
                   name: new FormControl('默认值', [
@@ -1242,7 +1218,7 @@
 
             2. 规则验证：
 
-               ```
+               ```code
                // 在 ts 中
                this.myform.valid //boolean 
                // 在 html 中
@@ -1268,7 +1244,7 @@
 
 1. class：
 
-    ```
+    ```code
     // 都可以
     [class.big-btn] = "true" //单一类样式
     [class] = "'big-btn big-btn2'" 
@@ -1279,7 +1255,7 @@
 
 2. style
 
-   ```
+   ```code
    [style.width] = "300px" //单一样式
    [style.width.px] = "300" // 也可以，但不如上边的常用
    [style] = "'width:300px, color:red'" 
@@ -1288,14 +1264,14 @@
 
 3. ngClass 相当于绑定了一个class
 
-   ```
+   ```code
    // class="myClass"
    [ngClass] = "{'myClass': isActive}" // 在ts中定义 isActive:boolean = true
    ```
 
 4. ngStyle
 
-   ```
+   ```code
     [ngStyle] = "{'color': isActive ？'red' : 'blue'}" // 在ts中定义 isActive:boolean = true
    ```
 
@@ -1307,7 +1283,7 @@
       1. `[ngSwitch]` 注意写法，不是带星的
          1. 注意：内部的选项是结构指令：*ngSwitchCase*ngSwitchDefault
 
-            ```
+            ```code
              <div [ngSwitch]="type">
                  <p *ngSwitchCase="1">1</p>
                  <p *ngSwitchCase="2">2</p>
@@ -1317,7 +1293,7 @@
 
       2. `[hidden]`: 根据条件显示 DOM 节点的显隐，与 display:none 同理
 
-         ```
+         ```code
          <div [hidden]="1+1===2"></div>
          ```
 
@@ -1328,7 +1304,7 @@
          1. 作用：根据条件渲染或者移除 DOM 节点
          2. 本质：相当于给html的标签设置一个`[ngIf]="true/false"`的属性
 
-            ```
+            ```code
              <div *ngFor="let name of [1, 2, 3, 4]">
                  <a [title]="'haha'" *ngIf="name % 2 === 0; else elseArea "> {{ name }} </a>
              </div>
@@ -1349,7 +1325,7 @@
             6. let isLast = last  是否是最后一个
          3.
 
-            ```
+            ```code
             <div *ngFor="let name of names let i=index let isOdd=odd">
                   {{ name }}
                   {{i}}
@@ -1370,29 +1346,29 @@
    2. 定义：自定义指令以操作 DOM
    3. 创建：ng g d path/dName 也就是 ng generate directive path/dName，并且会被放进根模块的declaration中
 
-      ```
+      ``` code
       ng g d directives/hover
       ```
 
    4. 指令类：用 @Directive 装饰的类
 
-1. 定义：事件用括号包裹起来表示是一个事件语法
-2. 直接获取事件对象`$event`:
+      1. 定义：事件用括号包裹起来表示是一个事件语法
+      2. 直接获取事件对象`$event`:
 
-   ```
-   // 在change share函数体内都可以直接使用$event
-   <input (input)="change($event)"/>
-   <button (click)="share($event)">分享</button>
-   ```
+         ``` code
+         // 在change share函数体内都可以直接使用$event
+         <input (input)="change($event)"/>
+         <button (click)="share($event)">分享</button>
+         ```
 
-3. 获取 DOM: 利用 模版 #name
-   1. 给模版对象设置一个模版引用变量 username，通过模版名称直接取得DOM ,从而可以获取事件对象的值
+      3. 获取 DOM: 利用 模版 #name
+      4. 给模版对象设置一个模版引用变量 username，通过模版名称直接取得DOM ,从而可以获取事件对象的值
 
-      ```
-      <input #username/>
-      <button (click)="share(username.value)">分享</button>
-      // share(val){// val即为input输入}
-      ```
+         ``` code
+            <input #username/>
+            <button (click)="share(username.value)">分享</button>
+            // share(val){// val即为input输入}
+         ```
 
 ### 管道 Pipe
 
@@ -1453,6 +1429,13 @@
       <div>{{  object | json }}</div> // 就不会直接打印出[Object object],而是展开的对象，在一行
       <div><pre>{{  object | json }}</pre></div> //再用 pre标签包裹，就会把对象在大括号处换行，格式清晰明了
 
+      // The KeyValue Pipe converts given Object or Map into an array of key-value pairs. 
+      <ul>
+         <li *ngFor="let item of objOrMap | keyvalue">
+            {{item.key}} ---> {{item.value}}
+         </li>
+      </ul>
+
       ```
 
 3. 自定义管道：
@@ -1476,7 +1459,7 @@
       1. 用途：检测输入属性的变化, respond when angular sets or resets data-bound input properties. 如果没有 input 就不会调用到这个钩子
       2. 入参：SimpleChanges 类实例：当前和上一次发生了变化的 input properties 会存储在对象中
 
-         ```
+         ``` code
          // in component
          @Input() hero!: Hero;
          @Input() power = '';
@@ -1540,7 +1523,7 @@
    1. 调用： ![生命周期调用顺序](../assets/angular_lifecycle.png)
 8. 阶段：
 
-   ```
+   ``` code
    // 挂载阶段
    constructor
    ngOnChanges
@@ -1569,7 +1552,7 @@
          2. 意义：将实力对象和外部的引用建立松耦合关系，外部通过标识获取实例对象，只要标识保持不变，内部代码怎么变化都不会影响到外部。
          3. 用法：
 
-            ```
+            ``` code
             // resolveAndCreate 创建注入器
             const injector = ReflectiveInjector.resolveAndCreate([
                {
@@ -1584,7 +1567,7 @@
 
       3. useValue: 作为配置对象，也可以传递一个对象
 
-         ```
+         ``` code
          // resolveAndCreate 创建注入器
          const injector = ReflectiveInjector.resolveAndCreate([
             {
@@ -1613,7 +1596,7 @@
       1. 在该共享模块下 创建组件：ng g c shared/components/Layout  demo 取名叫Layout
       2. 此时，在shared.module.ts里可以看到，在declaration里已经自动注入了 LayoutComponent
 
-         ```
+         ``` code
          @NgModule({
             declarations: [
                LayoutComponent
@@ -1633,7 +1616,7 @@
       1. 如果继续创建组件 ng g c shared/components/Print
       2. 此时，在shared.module.ts里可以看到,在 declarations 里已经自动添加了 printComponent, 但是在 exports 里没有自动添加，如果想导出，就自己手动添加，否则不导出是用不了的
 
-         ```
+         ``` code
          @NgModule({
             declarations: [
                LayoutComponent,
@@ -1657,11 +1640,11 @@
    1. SharedModule 已经被自动导入了根组件 app.module.ts 的 imports 中了, 注意这里自动导入的是分享模块SharedModule，而不是内部的 LayoutComponent 或者 PrintComponent，但是可以直接引用 分享模块中的 components
    2. 然后在想要使用的地方 直接引用标签就行了， `<app-layout></app-layout>`  `<app-print></app-print>`
 
-      ```
+      ``` code
       // Parent Component
       <app-child></app-child>
 
-7. 服务
+5. 服务
 
 ### 路由
 
@@ -1856,14 +1839,15 @@
    4. 必须组合：它只能与其他选择器组合使用
    5. 参考链接：<https://tinytip.co/tips/angular-host-context/#:~:text=The%20Angular%20%3Ahost-context%20%28%29%20selector%20allows%20you%20to,of%20your%20component%20up%20to%20the%20document%20root>.
 
-### 内容投影 && 三种嵌入视图
+### Content Projectioin 内容投影 && 三种嵌入视图
 
 1. 定义：在组件标签之间的内容可以传递给组件中展示，这一过程就是投射
-2. 单插槽投影：ng-content
+2. 官网文档：(<https://angular.io/guide/content-projection>)
+3. 单插槽投影：ng-content
    1. 定义：创建一个组件，可以在其中投影一个组件
    2. slot：`<ng-contnet></ng-content`
    3. 但一插槽 且 没有select，会将所有内容都投影在一个 插槽中
-3. 多插槽投影：ng-content
+4. 多插槽投影：ng-content
    1. 定义：一个组件可以具有多个插槽。每个插槽可以指定一个CSS选择器，该选择器会决定将哪些内容放进该插槽。
    2. slot + class:
 
@@ -1901,7 +1885,7 @@
          </子组件>
          ```
 
-3. ng-container
+5. ng-container
    1. 定义：不包含外部的例如`<div></div>`，只想要内容，可以用 ng-container代替 div
    2. 用法：
 
@@ -1923,10 +1907,10 @@
    3. 优点：不会实例化真实 DOM
    4. 用处：
       1. 创建一个 View-container ，动态调整 ？？？
-4. ng-template
+6. ng-template
    1. 定义：
    2.
-5. comparison:
+7. comparison:
    1. ???
 
 ### View Encapsulation 视图封装
@@ -2094,9 +2078,9 @@
    5. 注意：
       1. 所以在写拦截器时，非必要不修改经过的事件(request & response). 如果非要改变，使用 clone 方法克隆 url/body 等 用于传给 next.handle
       2. 如果想清除 request body, 需要明确地设置`req.clone({ body: null})`, 如果不复写或者设置为 undefined, 都将被认为成‘不修改’
-      3. 
+      3.
 
-   6. 
+   6.
 
 8. Angular Proxy  ???
    1. <https://www.bilibili.com/video/BV1Qa41167H1/?spm_id_from=pageDriver>
@@ -2124,11 +2108,9 @@
 
 ### 是不是只有service 才能被 injectede? false! ❓❓❓
 
-### 当前层级 injector 没找到，就去上一层找
-
 ### hostListener 监听dom自己的事件发生
 
-### HostBinding
+### HostBinding ❓❓❓
 
 ### host 是什么
 
@@ -2168,8 +2150,6 @@
    3. ViewEncapsulation.Emulated：Angular 会修改组件的 CSS 选择器，使它们只应用于组件的视图，不影响应用程序中的其他元素（模拟 Shadow DOM 行为）
 4. 代码：❓❓❓
 
-### Injectable({ provideIn: 'root' }) ❓❓❓
-
 ### 性能优化
 
 参考链接：`https://app.pluralsight.com/guides/bundling-and-code-splitting-in-angular`
@@ -2207,3 +2187,37 @@
 4. 运行本地：npx nx serve `${applicationName}`
 5. 打包模块：npx nx build `${applicationName}`
 6. 配置 pipeline: 链接 `https://nx.dev/angular-standalone-tutorial/4-task-pipelines#configuring-task-pipelines` ❓❓❓
+
+### Change Detection & Zone.js & NgZone
+
+1. Change Detection：
+   1. 定义：是Angular 检测应用状态是否发生改变的过程，以及是否有任何 DOM 需要更新。 在高层次上，Angular从上到下检查你的组件，寻找变化。Angular定期运行它的变化检测机制，以便将数据模型的变化反映在应用程序的视图中。变化检测可以通过手动或异步事件（例如，用户互动或XMLHttpRequest完成）来触发。
+   2. 注意：可能会引起减速，所以不能运行太频繁。
+2. Zone.js:
+   1. 定义：Zone.js是一种信号机制，Angular用它来检测应用程序的状态何时可能改变。它捕捉异步操作，如setTimeout、网络请求和事件监听器。Angular根据Zone.js的信号来安排变化检测。
+   2. 背景：在某些情况下，scheduled tasks 或 microtasks 不会对 data model 进行任何改变，这使得运行变化检测成为不必要的。常见的例子有：requestAnimationFrame、setTimeout或setInterval，以及一些由第三方库进行的任务或微任务调度。
+   3. 作用：Zone.js 用来识别这些情况，再决定是否执行变化检测
+   4. 情况：
+      1. 在Angular 外执行任务：例如 setTimeout, setInterval, requestAnimationFrame, or an event handler 产生的一系列调用，不需要变化检测，此时可以使用 NgZone.runOutsideAnguar 来实现
+3. NgZone:
+   1. 定义：是 Angular 集成 Zone.js 后内置的一个服务
+   2. 在 Angular 外执行
+
+      ```code
+      import { Component, NgZone, OnInit } from '@angular/core';
+      @Component(...)
+      class AppComponent implements OnInit {
+         constructor(private ngZone: NgZone) {}
+         ngOnInit() {
+            this.ngZone.runOutsideAngular(
+               // 这样，执行 pollForUpdates 函数后不会引起 change detection
+               () => setInterval(pollForUpdates),
+               500
+            );
+         }
+      }
+
+      ```
+
+4. 疑问：
+   1. 怎么判断应不应该检测变化呢，比如一个树状图，异步回调后要刷新某个节点，这样应该检测变化嘛，页面状态并么有改变？？

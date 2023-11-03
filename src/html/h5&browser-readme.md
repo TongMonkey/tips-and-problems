@@ -188,8 +188,9 @@ V8 是谷歌开源的 JavaScript 引擎，被用于 Chrome 和 Node.js 。程序
 1. 处于一个渲染进程中的事件队列线程，维护了一个栈，分为 宏任务 和微任务。
 2. 宏任务：
    1. setTimeout
-   1. setInterval
-   2. messageChannel
+   2. setInterval
+   3. messageChannel
+
 3. 微任务：
    1. Promise (包含promise.then promise.catch promise.finally)
    2. window.queueMicrotask 可以创建一个微任务
@@ -313,7 +314,7 @@ V8 是谷歌开源的 JavaScript 引擎，被用于 Chrome 和 Node.js 。程序
    4. 通常，栅格化过程都会使用 GPU 来加速生成。如果使用了GPU,光栅线程将图块交给GPU,最终生成位图的操作是在GPU进程中完成的，生成的位图被保存在 GPU 内存中。GPU是单独的进程，这中间涉及跨进程操作。
       1. ![跨进程栅格化](/src/assets/跨进程栅格化.webp)
    5. GPU完成所有图层里的各个图块的栅格化之后，将结果返回给合成线程
-8. 合成:
+8. 合成线程进行合成:
    1. 一旦元素被光栅化，就会被合成线程收集起来。一旦所有图层都完成栅格化，合成线程就会创建一个CompositorFrame合成帧,也是最终合成后的图层。
    2. 合成线程将合成帧通过IPC 跨进程通知browser浏览器主进程。
    3. browser浏览器主进程接收来自渲染进程的合成线程发过来的合成帧，浏览器主进程执行显示合成操作(Display Compositor)。

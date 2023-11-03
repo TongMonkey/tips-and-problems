@@ -21,6 +21,49 @@
    1. 方法 asObservable: 投射 subject 实例为一个observable 对象
 6. Schedulers (调度器): 用来控制并发并且是中央集权的调度员，允许我们在发生计算时进行协调, 以控制事件并发情况，例如 setTimeout 或 requestAnimationFrame 或其他。
 
+### Observable
+
+### Observer
+
+### operator
+
+### Subject
+
+### Schedular
+
+1. 定义：
+2. 原理：
+3. 分类：
+   1. asyncSchedular
+      1. 作用：
+      2. code理解：
+
+         ``` code
+            const observable = new Observable((proxyObserver) => {
+               proxyObserver.next(1);
+               proxyObserver.next(2);
+               proxyObserver.next(3);
+               proxyObserver.complete();
+            }).pipe(
+               observeOn(asyncScheduler)
+            );
+            const proxyObserver = {
+               next(val) {
+                  asyncScheduler.schedule(
+                     (x) => finalObserver.next(x),
+                     0, // delay
+                     val
+                  );
+               },
+
+               // ...
+            };
+         ```
+
+      3. 原理：
+         1. 官网原文：The async Scheduler operates with a setTimeout or setInterval, even if the given delay was zero. As usual, in JavaScript, setTimeout(fn, 0) is known to run the function fn earliest on the next event loop iteration. This explains why got value 1 is delivered to the finalObserver after just after subscribe happened.
+         2. 翻译：异步Scheduler使用setTimeout或setInterval进行操作，给定的延迟为0。通常，在JavaScript中，setTimeout(fn, 0)被认为是在下一个 Event Loop 的一开始运行函数fn。
+
 ### Observable subscribe 的本质
 
 1. 传入一个对象，拥有 next error 方法
@@ -97,7 +140,11 @@
    3. 缺点：不保证顺序
 5. exhaustMap: Ignores all subsequent subscriptions/requests until it completes.在未完成前，忽略后续所有的订阅或请求
    1. 用途：Use for login when you do not want more requests until the initial one is complete. 比如在登陆成功前，其他的请求或订阅不被允许，就可以用这个
-6. take(n):
+6. first():
+   1. 用途：
+   2. 示例：
+   3. 对比：
+7. take(n):
    1. 用途：Takes the first count values from the source, then completes.获取数据流中的前几个,然后这个 Observable 就自动结束了， After that, it completes, regardless if the source completes.无论这个源是否真的结束，此处的 subscribe 都不会收到新的值
    2. 示例:
 
@@ -111,14 +158,14 @@
       2. take(1) VS first()
       3. take(1) VS single()
 
-7. takeWhile: 根据条件从数据源前面开始获取。 注意：当数据流中某一个数据不满足条件，则遍历停止，后面还有符合条件的也不会生效。
+8. takeWhile: 根据条件从数据源前面开始获取。 注意：当数据流中某一个数据不满足条件，则遍历停止，后面还有符合条件的也不会生效。
 
    ```dash
    import { takeWhile } from 'rxjs/operators';
    range(1,10).takeWhile(x=>x<=3>).subscribe(console.log)
    ```
 
-8. takeUntil: 接收可观察对象，当可观察对象发出值时，终止主数据源 ![takeUntil](../assets/rxjs-operators-takeUntil.png)
+9.  takeUntil: 接收可观察对象，当可观察对象发出值时，终止主数据源 ![takeUntil](../assets/rxjs-operators-takeUntil.png)
 
    ```dash
    import { fromEvent } from 'rxjs';
@@ -132,7 +179,7 @@
     .subscribe(console.log)
    ```
 
-9. throttleTime: 节流操作 限制一段时间内只能操作一次
+10. throttleTime: 节流操作 限制一段时间内只能操作一次
 
    ```dash
    import { throttleTime } from 'rxjs/operators';
@@ -143,7 +190,7 @@
     .subscribe(console.log)
    ```
 
-10. debounceTime: 防抖 限制一段时间内的操作只有最后一次是生效的
+11. debounceTime: 防抖 限制一段时间内的操作只有最后一次是生效的
 
    ```dash
    import { debounceTime } from 'rxjs/operators';
@@ -154,7 +201,7 @@
     .subscribe(console.log)
    ```
 
-11. distinctUntilChanged: 检测数据源当前要发出的数据流是否和上次发出的相同，如果相同就跳过；不相同才发出
+12. distinctUntilChanged: 检测数据源当前要发出的数据流是否和上次发出的相同，如果相同就跳过；不相同才发出
 
    ```dash
    import { of } from 'rxjs'
@@ -166,7 +213,7 @@
    .subscribe(console.log)
    ```
 
-12. timer 延时 time(2000) 单位毫秒
+13. timer 延时 time(2000) 单位毫秒
 
    ```bash
    import { timer } from 'rxjs'
@@ -176,7 +223,7 @@
    )
    ```
 
-13. catchError 捕捉错误的操作符。
+14. catchError 捕捉错误的操作符。
     1. 入参：一个函数
 
         ``` code
@@ -260,3 +307,4 @@
    ```
 
 ### 怎么写 Observable 对象的 UT 单元测试 ❓❓❓
+

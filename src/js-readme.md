@@ -23,7 +23,7 @@
       5. Boolean 类型 typeof true // 'boolean'
       6. BigInt 类型 typeof 52n // 'bigint'
       7. Symbol 类型 typeof Symbol() // 'symbol'
-   2. 易错点：typeof NULL; //'undefined' js中类型是区分大小写的，并没有NULL这个类型，就当成一个自定义的变量，所以typeof的结果是未定义
+   2. 易错点：typeof NULL; // SyntaxError js中类型是区分大小写的，并没有NULL这个类型，就当成一个自定义的变量，所以typeof的结果是未定义
    3. 三个原始类型的包装类: 这三个类型都可以使用 ins = new Fn()来得到实例，得到的实例是对象类型 typeof ins // 'object'
       1. String
       2. Number
