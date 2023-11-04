@@ -15,3 +15,10 @@
       4. Use Array.includes instead of multiple 'or' conditions in if else loops
       5. Optional chaining
       6. Setting default value using selector operator.
+2. Extract the assinment of "..." from this expression
+
+   ``` code
+      let someBoolean = true;
+      // 在子表达式中赋值很难被发现，使代码的可读性下降
+      condifiton ? someFunc() : someBoolean = false;
+   ```

@@ -1,7 +1,9 @@
-## Angular
+# Angular
 
 1. 视频课：<https://www.bilibili.com/video/BV1oS4y1c7or?p=1>
 2. 视频课：<https://www.acfun.cn/v/ac25920410_1>
+
+## Basic conceptions
 
 ### Angular vs Angular.js
 
@@ -66,8 +68,6 @@
 
 1. 用 cnpm install @angular/cli 可能会有问题，提示无权限安装，还是用npm直接安装吧
 2. 一直卡在 installing packages: 可以 ng new projectName --skip-install 之后在项目里用淘宝镜像安装依赖 cnpm intall
-
-## 核心概念 <https://angular.io/guide/architecture>
 
 ### Angular Module
 
@@ -229,7 +229,7 @@
 
 ### Decorator 装饰器
 
-   1. 定义：❓❓❓
+   1. 定义：使用 @ 来开头的保留字段，具有对应的装饰作用，表示类有特殊的含义
    2. 成员:
       1. @Directive:
          1. 定义: 把一个类标记为 Angular 指令。
@@ -271,17 +271,140 @@
                1. 作用：使用一组键-值对，把类的属性映射到宿主元素的绑定（Property、Attribute 和事件）
                2. <https://angular-book.dev/ch05-09-host.html>
             5. providers:
-               1. 作用：每个被标记为 module/component 的 class 都可以声明自己的 providers 数组，用来定义要使用的是哪一个服务的某一个实例.
+               1. 作用：每个被标记为 module/component 的类都可以声明自己的 providers 数组，用来定义要使用的是哪一个服务的某一个实例.
                2. 作用范围
                   1. 两种：
                      1. component-level 在组件中生成一个 service instance 服务实例
                      2. module-level 在整个 module 中生成并共享同一个 instance
                   2. 优先级：component-level > module-level(global-leval) 所以如果用了同一个服务，component级别的可以“顶替掉”module级别的
                   3. 好处：允许使用多个 service 的实例，方便自定义组件逻辑实现
-               3. 用法：
+               3. providers 里的配置项
+                  1. provide
+                  2. provide && useClass
+                  3. provide && useFactory
+                  4. deps for useFactory:
+                     1. 作用：用来定义依赖关系，允许工厂函数在执行期间访问相应的实例对象。you can use additional deps property to define dependencies and allow your factory function to access corresponding instances during execution.
+                  5. provide:String && useFactory && @Inject。 具体见 @Inject decorator 部分
+                  6. provide && useValue
+                  7. provide && alias && useExisting 创建别名
+               4. 用法：
 
                   ``` code
-                  
+                     // 在整个 Module 里设置的 provider, 下面所有的 components 都共用这些服务
+                     import { ClickCounterService } from './click-counter.service';
+                     import { LogService } from './services/log.service';
+                     import { CustomLogService } from './services/custom-log.service';
+                     @NgModule({
+                        providers: [ 
+                           // 1-1. 在模块中使用
+                           ClickCounterService,
+                           // 2-1. 使用对象类型：此时 key && value 都是 LogService，
+                           {
+                              provide: LogService,  
+                              useClass: LogSerivce
+                           },
+                           // 2-2. 此时 key && value 是不同的类
+                           {
+                              provide: LogService,  // Key: 被注入了 LogService 类的
+                              useClass: CustomLogService  // Value: 实际上使用的是 CustomLogService 的实例
+                           },
+                           // 3: 创建多个实例：一般constructor parameter 传进去的类都只会被创建一个实例，Angular 提供了一种方式，可以控制创建多个实例化对象
+                           {
+                              provide: LogService, 
+                              useFactory: customLogServiceFactory // 这是个 factory function，返回对象作为实例给 LogService 用
+                           },
+                           // 4: deps for useFactory:
+                           {
+                              provide: AuthenticationService, 
+                              useFactory: authServiceFactory 
+                              deps: [RoleService, LogService] // 是 AuthenticationService 需要的服务
+                           },
+                           // 5: provede 提供字符串，与 @Inject 结合使用
+                           { 
+                              provide: 'DATE_NOW',    // 字符串
+                              useFactory: dateFactory
+                           }
+                           // 6-1: 与 useFactory 很相似，都会先创建出实例化对象
+                           const logService = new CustomLogService();
+                           { 
+                              provide: LogService, 
+                              useValue: logService  // value 是实例化对象
+                           }
+                           // 6-2: 可以用来传递配置对象给组件或者服务，用来初始化或者配置。
+                           {
+                              LogService,
+                              {
+                                 provide: 'logger.config',
+                                 useValue: {
+                                    logLevel: 'info',
+                                    prefix: 'my-logger'
+                                 }
+                              }
+                           }
+                           // 7: 给组件取别名
+                           SafeAuthenticationService,  // 正常注册
+                           { 
+                              provide: AuthenticationService,  // 所有引用了 AuthenticationService 类的地方
+                              useExisting: SafeAuthenticationService // 其实使用的是 SafeAuthenticationService 的实例。而且允许我们使用的是 singleton 单例实例。这是与 useClass 的区别。useClass 产生的和注入的实例，是两个不同的实例，这不是理想状态。
+                           }
+
+                        ],
+                     })
+                     export class AppModule { }
+
+                     <!-- 分割线，下面functions是对上面配置用到的函数的补充 -->
+                     // 3-customLogServiceFactory
+                     export function customLogServiceFactory() {
+                        const service = new CustomLogService();
+                        return service;
+                     }
+                     // 4-AuthenticationService
+                     @Injectable({ providedIn: 'root' })
+                     export class AuthenticationService {
+                        constructor(private roles: RoleService, private log: LogService) {}
+                     }
+                     // 4-authServiceFactory
+                     export function authServiceFactory(roles: RoleService, log: LogService) {
+                        const service = new AuthenticationService(roles, log);
+                        // do some additional service setup
+                        return service;
+                     }
+                     // 5-dateFactory
+                     export function dateFactory() {
+                        return new Date();
+                     }
+                     // 6-2:为了方便类型管理，可以创建一个 TypeScript 接口来描述这个 setting object
+                     export interface LoggerConfig {
+                        logLevel?: string;
+                        prefix?: string;
+                     }
+
+                     <!-- 分割线：使用 -->
+                     // 1-2 在组件中使用：在某个 component 里设置的 provider, 就单独使用服务的一个 instance copy
+                     import { ClickCounterService } from '../click-counter.service';
+                     @Component({
+                        selector: 'app-component-b',
+                        providers: [ClickCounterService ]
+                     })
+                     export class ComponentBComponent implements OnInit {
+                        // ...
+                     }
+                     // 6-2：使用：此时任何 component/service/directive 一旦注入字符串‘logger.config',都可以获取到配置的 value。
+                     @Injectable({ providedIn: 'root' })
+                     export class LogService {
+                        constructor(
+                           @Inject('logger.config') config: LoggerConfig
+                        ) {
+                           console.log(config);
+                        }
+                        info(message: string) {
+                           console.log(`[info] ${message}`);
+                        }
+                     }
+
+                     
+
+
                   ```
 
             6. exportAs: 定义一个名字，用于在模板中把该指令赋值给一个变量
@@ -290,8 +413,62 @@
                2. <https://angular-book.dev/ch05-10-queries.html>
             8. jit:
             9. standalone:
-            10. hostDirectives:
-      2. @Component decorator:
+               1. 用处：表示一个 component/directive/pipe 是独立的。
+               2. 背景：以往我们想在一个组件A中引用另一个组件B时，必须依赖 @ngModule 并在 @ngModule-declarations array 里声明这个组件B，这就导致我们始终无法摆脱 ngModule. 有了 standalone 后，将组件A 和 组件B 都声明成独立组件，就可以在 @componentA-imports array 里直接引入B
+               3. 用法：
+                  1. 在对应的 component 的 decorator 里新增设置 `standalone: true`; 就可以将该组件标记为独立组件
+
+                     ```code
+                        @Component({
+                           standalone: true, // 本身标记为独立组件
+                           selector: 'photo-gallery',
+                           imports: [ImageGridComponent],  //ImageGridComponent 也是 standalone:true
+                           template: ` <image-grid [images]="imageList"></image-grid>`,
+                        })
+                        export class PhotoGalleryComponent {}
+                     
+                     ```
+
+                  2. 如果要使用的某个 component/directive/pipe 可能还没有被标记为独立的(那么就一定被某个现有的 ngModule 声明并导出着), 这种情况可以直接将这个 module 导入
+
+                     ```code
+                        @Component({
+                           standalone: true,
+                           selector: 'photo-gallery',
+                           imports: [MatButtonModule], // an existing module is imported directly into a standalone component
+                           template: `<button mat-button>Next Page</button>`,
+                        })
+                        export class PhotoGalleryComponent {}
+                     ```
+
+                  3. 也可以将独立组件像普通组件一样导入到 ngModule imports array 中
+                  4. `bootstrapApplication`: ❓❓❓ 通过使用独立组件作为程序的根组件， 一个 Angular 程序可以在没有任何 NgModule 的情况下被启动，通过一个 API: bootstrapApplication 完成。
+               4. 注意：???
+            10. hostDirectives:❓❓❓
+      2. @NgModule decorator:
+         1. 作用：标记一个模块
+         2. metadata:
+            1. bootstrap array:
+               1. 定义：数组用来定义一个项目的初始组件。 The bootstrap array of @NgModule devorator defines the component that is the starting point of the application. Those components will be loaded when the application once launched.
+               2. 注意：
+                  1. 每个应用至少应该有一个组件，Every application must bootstrap at lease one component, the root application component.
+                  2. bootstrap 只能用在根模块中,当我们创建其他模块时，都不再配置 bootstrap 数组了。Bootstrap array should only be used in root application module: AppModule. As we build other Angular modules, we won't use the bootstrap array.
+            2. declaration array:
+               1. 作用：定义属于本 module的 components/directives/pipes 的集合。The set of components, directives, and pipes (declarables) that belong to this module.
+               2. 注意：
+                  1. 每个模块、指令、管道，都必须属于一个也只能属于一个模块。Every component,directive, and pipe we create must belong to one and only one Angular module.
+                  2. 只能用来声明 component/directive/pipe，不能用来声明别的类。
+                  3. 默认情况下，声明的这三样东西是 private 私人的，只有属于同一个Module 里才能使用这三个。All declared components, directives, and pipes are private by default. They are only accessibe to other components, direcitives, and pipes declared in the same module.
+            3. imports array:
+               1. 作用：导入，声明哪些 modules 的 component/directive/pipe 可以在本模块中被使用。The set of NgModules whose exported declarables are available to templates in current module.
+               2. 注意：
+            4. exports array:
+               1. 作用：由当前 ngModule 声明的 component/directives/pipes 被导出后，其他 ngModule 只要导入了这个模块，其他 ngModule 下的任意 component 都可以使用这些 component/directives/pipes, 这些导出的类可以理解成该模块的公共api。 原文：The set of components, directives, and pipes declared in this NgModule that can be used in the template of any component that is part of an NgModule that imports this NgModule. Exported declarations are the module's public API.
+         3. Comparison:
+            1. declaration VS imports:
+               1. imports makes the exported declarations of other modules available in the current module.
+               2. declarations are to make directives (including components and pipes) from the current module available to other directives in the current module. Selectors of directives, components or pipes are only matched against the HTML if they are declared or imported.
+      3. @Component decorator:
          1. 定义：标记一个类是一个组件
          2. Component Metadata：可以有很多属性，至少应该传入 selector 和 template
             1. selector(required & Inherited from @Directive)
@@ -341,16 +518,85 @@
 
             ```
 
-      3. @Injectable decorator
-         1. 作用：将一个 class 标记成可注入的,将会参与 DI 依赖注入，可以被注入到例如 service/component/directives/pipes 等其他实体。而要注入的实例，就是由 Angular 创建的这些类的实例.通常都是以`单例模式`来创建，injects into other primitives on demand.?? 
+      4. @Injectable decorator
+         1. 作用：将一个 class 标记成可注入的,将会参与 DI 依赖注入，可以被注入到例如  services, components, directives or pipes 等其他实体。Angular 框架会将这些 @Injectable 的类，通过单例模式，创建出(可多个)实例，然后注入到需要的地方。
          2. 原文：We use a special @Injectable decorator here to mark the class and instruct Angular that the given class should participate in the dependency injection layer. All classes marked with @Injectable can get imported into other entities like services, components, directives or pipes. The Angular framework creates instances of those classes, usually in the form of "singletons", and injects into other primitives on demand.
          3. 用法：
 
             ``` code
-            
+               // 使这个类成为一个可注入服务
+               @Injectable({ providedIn: 'root' })
+               export class LogService {
+                  constructor() { }
+                  info(message: string) {
+                     console.log(`[info] ${message}`);
+                  }
+               }
+
+               // 使用这个可注入类
+               import { Component } from '@angular/core';
+               import { LogService } from './../services/log.service';
+               @Component({/*...*/})
+               export class Component1Component {
+                  // 通过 constructor parameters 来注入要使用的可注入实例,这里是个服务类。 这中间的步骤就由 Angular 框架负责了，它会去找到预期的类型 LogService, 实例化一个实例赋值给 logService
+                  constructor(logService: LogService) {
+                     logService.info('Component 1 created');
+                  }
+               }
+
+
             ```
 
-      4. @ViewChild:
+      5. @Inject decorator
+         1. 作用：@Inject用来指示 Angular 在运行时注入给定的parameter参数。The @Inject decorator instructs Angular that a given parameter must get injected at runtime.
+            1. 也可以用来获取通过“字符串”设置的Injectables 的对象的引用。You can also use it to get references to "injectables" using string-based keys.
+            2. 也可以用来指明自定义类。In this case, you are getting access to real CustomLogService class that is injected by Angular for all the LogService keys. If your custom implementation has extra methods and properties, not provided by the LogService type, you can use them from within the component now.
+         2. 用法：2种
+
+            ```code
+            @NgModule({
+               providers: [
+                  { 
+                     provide: 'DATE_NOW',    // 字符串
+                     useFactory: dateFactory
+                  }
+               ],
+            })
+            export class AppModule { }
+
+            // 1-dateFactory
+            export function dateFactory() {
+               return new Date();
+            }
+
+
+            // 1-使用字符串做key
+            @Component({...})
+            export class Component1Component {
+               constructor(
+                  logService: LogService, 
+                  @Inject('DATE_NOW') now: Date
+               ) {
+                  logService.info('Component 1 created');
+                  logService.info(now.toString());
+               }
+            }
+
+            // 2-使用自定义的非同名类：此时可以访问真正的 CustomLogService 类，该类由 Angular 为所有的 LogSerivce Key 注入。如果自定义实现有额外的方法和属性，而不是由 LogService 提供的，就可以在本组件中使用他们了
+            @Component({/*...*/})
+            export class Component1Component {
+               constructor(
+                  @Inject(LogService) logService: CustomLogService 
+               ) {
+                  // 名字是 logSerivce, 看着被注入的是 LogService 类，但实际是 CustomLogService 的实例
+                  logService.info('Component 1 created');
+               }
+            }
+
+
+            ```
+
+      6. @ViewChild:
          1. 定义：是一个属性装饰器，用来配置视图查询
          2. 作用: The change detector looks for the first element or the directive matching the selector in the view DOM. If the view DOM changes, and a new child matches the selector, the property is updated.
          3. 查询时机：视图查询是在调用ngAfterViewInit回调之前设置的。
@@ -367,41 +613,20 @@
             @ViewChild(selector, )
             ```
 
-      5. @ViewChildren
-      6. @ContentChild
-      7. @ContentChildren
-      8. @HostBinding ❓❓❓❓
+      7. @ViewChildren
+      8. @ContentChild
+      9. @ContentChildren
+      10. @HostBinding ❓❓❓
 
-### Dependency Injection 简称 DI
+### Dependency Injection (DI)
 
-   1. 定义：依赖性注入被用来为组件提供它们可以使用的服务。为了在Angular中把一个类定义为一个服务，我们使用了@Injectable()装饰器。它提供了元数据，允许Angular将其作为一个依赖关系注入到组件中。同样地，@Injectable()装饰器被用来表示一个组件或其他类（如另一个服务、一个管道或一个NgModule）有一个依赖关系。原文：Dependency injection is used to provide components with the services they can use. To define a class as a service in Angular, the @Injectable() decorator is used. It provides the metadata that allows Angular to inject it into a component as a dependency. Similarly, the @Injectable() decorator is used to indicate that a component or other class (such as another service, a pipe, or an NgModule) has a dependency.
-      1. 依赖项是指某个类执行其功能所需的服务或对象。依赖项注入（DI）是一种设计模式，在这种设计模式中，类会从外部源请求依赖项而不是创建它们。是面向对象编程中的一种设计原则，用来减少代码之间的耦合度
-      2. Injection 注入： 通过传参的方式，将依赖类对象从参数传入，而不是直接在类里调用依赖对象
-      3. 手动注入的缺点：当被依赖类发生变化，所有对依赖的实现和调用都需要变动，所以 Angular 提供了一个 DI 框架，自动完成这一套注入，
-   2. DI 框架
-      1. 4个核心概念：
-         1. Dependency: 组件要依赖的服务实例对象
-         2. Injection Token: 依赖的服务实例对象有很多，用 Token 做服务实例对象的标识，即通过 Token 来获取服务实例对象
-         3. Injector：注入器，负责创建和维护服务类的实例对象，并通过传参的方式，自动向组件中注入需要的服务实例对象
-         4. Provider:
-            1. 定义：服务提供者，是个对象，用来配置 Injector，指明要创建的服务实例对象所属的服务类+用来获取服务实例对象的Token
-            2. 文档链接：<https://angular.cn/guide/providers>
-            3. demo:
+   1. 定义：
+   2. 4个核心概念：
+      1. Dependency: 组件要依赖的服务实例对象
+      2. Injection Token: 依赖的服务实例对象有很多，用 Token 做服务实例对象的标识，即通过 Token 来获取服务实例对象
 
-               ``` code
-                  import { Injectable } from '@angular/core';
-
-                  @Injectable({
-                     providedIn: 'any', ❓❓❓
-                  })
-                  export class UserService {
-                  }
-
-               ```
-
-      2. InjectionToken ❓❓❓
-      3. Injectors 注入器：
-         1. 定义：负责创建服务类实例对象，并将服务类实例对象注入到需要的组件中
+      3. Injector 注入器：
+         1. 定义：负责创建服务类实例对象，并将服务类实例对象注入到需要的组件中. An injector for an application (created automatically during bootstrap) instantiates dependencies when needed, using a configured provider of the service or value.
          2. 用法：
 
             ```code
@@ -485,6 +710,108 @@
                }
             ]);
             ```
+
+      5. 当前层级 injector 没找到，就去上一层找 ❓❓❓
+      6. providedIn: 'any', ❓❓❓
+
+### 服务  Service
+
+1. 定义：用来放置和特定组件无关并希望能跨组件共享的数据或逻辑
+2. 好处：把组件和服务区分开，有助于提高模块性和复用性。通过把组件和视图有关的功能与其它类型的处理分离开，可以让组件类更加精简、高效
+3. 创建：
+   1. 命令：ng g serviceFolerName/serveName 创建后，通过 @Injectable()装饰器标识服务
+   2. 注意：
+      1. 在使用服务时，不要用 new 手动创建服务，需要由 Angular 内置的依赖注入系统创建和维护。服务是依赖需要而被注入到组件中的！！
+      2. Angular CLI 只管帮我们创建服务，不会自动放进 Provider 数组中
+   3. demo: /angular-demo/src/app/service/menu.service.ts
+4. 设置服务的 3 种作用域
+   1. 全局作用域：在根注入器中注册服务，所有模块使用同一服务实例对象.
+      1. 默认root：root表示默认注入到 AppModule 里，就是app.module.ts
+      2. 注意！！ 如果暂时不想定义任何区域，可以传入 null, 不能让 Injectable 里传入空对象,会报错。
+      3. provedIn 的参数选项：  `({ providedIn: Type<any> | "root" | "platform" | "any" | null; } & InjectableProvider) | undefined`
+
+         ```code
+         import { Injectable } from '@angular/core';
+         @Injectable({
+            // 1.全局作用域 默认 app.module.ts
+            providedIn: 'root', 
+            // providedIn: null
+         })
+         export class MenuService {}
+         ```
+
+   2. 模块级别：该 module 中的所有 components 使用同一服务实例对象。
+      1. 有两种语法都可以，第一种：在服务中用 providedIn 声明要在哪个 module 里生效
+
+         ```code
+         import { Injectable } from '@angular/core';
+         import { SharedModule } from '../shared/share.module';
+         @Injectable({
+            // 在服务中用 providedIn 声明要在哪个 module 里生效
+            providedIn: sharedModule, // 2.模块作用域
+         })
+         export class MenuService {}
+         ```
+
+      2. 两种语法都可以，第二种：在模块中用 providers 表示使用哪些服务
+
+         ```code
+         import {MenuService} from './menu.service'
+         @ngModule({
+            // 在模块中用 providers 表示使用哪些服务  
+            providers: [MenuService],
+         })
+         export class sharedModule{}
+         ```
+
+   3. 组件级别：该 component 组件及子组件中使用同一服务实例对象
+
+      ```code
+      // 在组件中
+      import {MenuService} from './menu.service'
+      @Component({
+         providers: [MenuService]
+      })
+      export class MenuIndexComponent implements OnInit {
+         constructor(
+            private menuServer: MenuService,
+         ) {}
+      }
+      ```
+
+5. 使用：
+   1. 在app.module.ts中手动import并放进 @Component的providers数组
+
+      ```code
+      @NgModule({
+         declarations: [...],
+         imports: [...],
+         // 存放服务 
+         providers: [ MenuService ],
+         bootstrap: [...],
+      })
+      export class AppModule {}
+      ```
+
+   2. 在目标模块中也需要手动import，然后作为入参传给类的constructor. 之后可以通过 this.serviceName 查询到. 如果没有还没有处理，就得到一个空对象，可以给该服务类添加属性
+      1. 多个服务时，依靠服务的类别来判断使用哪个服务
+      2. private 权限修饰符表示：
+         1. 修饰的该服务，不作为参数，而是当前类的属性使用，所以可以通过 this.menuService 来访问。这是 Typescript的知识点
+         2. 修饰的该服务，只能在组件类中使用，不能在组件模版中使用。如果使用public修饰的，才可以在模版中使用。
+
+         ``` code
+         constructor(
+            private anotherServer: AnotherService,
+            private menuServer: MenuService,
+         ) {}
+         ```
+
+      3. 总结：通过类构造函数里的private服务，就可以在当前业务类中，使用this.服务.*来获取操作数据的方法
+6. 设计模式：单例模式，所以当服务本身修改时，所有依赖注入到的组件内都会使用到新的修改
+
+   1. 缺点：只能在 parent-template 也就是 html 中调用 child, 在 parrent-component 组件中 has no access to the child.
+7. 通过 @ViewChild 获取元素: 能在 parent-component 中 获取对 child 的使用权限, inject the child component into the parent as a ViewChild.
+   1. 通过指定'#字符串'，得到第一个匹配的子类
 
 #### Service 服务
 
@@ -624,7 +951,7 @@
 1. 获取一个元素：利用 模版 #name
    1. 给模版对象设置一个模版引用变量 username，通过模版名称直接取得DOM ,从而可以获取事件对象的值
 
-      ```
+      ```code
       <input #username/>
       <button (click)="share(username.value)">分享</button>
       // share(val){// val即为input输入}
@@ -676,7 +1003,7 @@
 
    2. 用法：
 
-      ```
+      ```code
       <input [(ngModel)]="title">
       <p>{{title}}</p>
       ```
@@ -695,14 +1022,14 @@
       2. 在使用表单的模块中 import { NgForm } from '@angular/forms';
       3. 将普通的 DOM 表单转化成 ngForm 表单 #name="ngForm"
 
-         ```
+         ```code
          // 这里的 f 是自定义的名字
          <form #f="ngForm" (submit)="onSubmit(f)">
          ```
 
       4. 声明表单字段为 ngModel：标识该字段受 ngForm 表单管控
 
-         ```
+         ```code
          // 3
          <form #f="ngForm" (submit)="onSubmit(f)">
             // 4
@@ -713,7 +1040,7 @@
 
       5. 之后就可以获取表单字段值了 form.value 对象里包含所有字段值
 
-         ```
+         ```code
          onSubmit(form: NgForm){
             console.log('form',form.value)
             console.log('验证通过',form.valid)
@@ -723,7 +1050,7 @@
 
    3. 表单分组 ngModelGroup
 
-      ```
+      ```code
       <form #f="ngForm" (submit)="onSubmit(f)">
          <ng-container ngModelGroup="user">
             用户名：<input type="text" name="username" ngModel/>
@@ -746,7 +1073,7 @@
       3. 具体表单项验证：
          1. 获取表单项：使用 #name="ngModel"
 
-            ```
+            ```code
             // 这里的 #username 里，username 是自定义名
             用户名：<input type="text" name="username" ngModel #username="ngModel"/>
             <div *ngIf="username.touched"> 出现</div>
@@ -772,7 +1099,7 @@
       1. 在根模块中: import { ReactiveFormModule } from '@angular/forms',并在模块的 imports 中注入 ReactiveFormModule
       2. 在使用表单的模块中： import { FormControl, FormGroup } from '@angular/forms'，并且创建表单组对象
 
-         ```
+         ```code
          import { FormControl, FormGroup } from '@angular/forms'
          export class AppComponent
          ```
@@ -781,7 +1108,7 @@
          1. formGroup 绑定表单对象，该表单对象是个引用，所以要用方括号将 formGroup框起来
          2. formControlName 绑定表单项的名字，名字是string, 它不是一个实时变化的数据，所以不需要方括号框起来
 
-         ```
+         ```code
          // 使用 formGroup 跟 ts 类中定义的表单对象关联起来,需要[]
          <form [formGroup]="loginForm">
             // formControlName 绑定的是 string 类型的名字，不需要[]
@@ -796,7 +1123,7 @@
          2. 表单项是 FormControl 实例, new 初始化的入参是默认值
          3. 通过表单.value 获取表单数据
 
-         ```
+         ```code
          // 模型驱动表单
          loginForm: FormGroup = new FormGroup({
             // new 的时候可以传入默认值
@@ -815,7 +1142,7 @@
          1. 在 html 中：
             1. formGroupName：注意：表单绑定用`[formGroup]`绑定对象, 内部的组用 formGroupName 绑定字符串
 
-            ```
+            ```code
             <form [formGroup]="loginForm" (submit)="done()">
             // formGroupName 绑定名称
                <div formGroupName="fullName">
@@ -833,7 +1160,7 @@
                1. 通过数组：`表单.get(['parentName', 'childName'])` 传入表单组层级`数组`，可以获取对应的表单项
                2. 通过点运算符：`表单.get('parentName.hildName')` 传入表单组层级名称，注意这里不用数组了哦
 
-            ```
+            ```code
             loginForm: FormGroup = new FormGroup({
                fullName: new FormGroup({
                   firstName: new FormControl(),
@@ -860,7 +1187,7 @@
          3. html 中遍历 formArray: 实际上遍历的是 `formNameObj.controls`
          4. 表单数组中的表单，遍历的 formGroupName 的值 实际上是遍历`formNameObj.controls`时的 index
 
-            ```
+            ```code
             <div formArrayName="contacts">
                // 真正遍历的是 fromArray实例的controls 属性 
                // i 是变量而不是字符串，所以formGroupName 要用 [] 框起来
@@ -878,7 +1205,7 @@
          1. Angular 内置规则
             1. 创建规则：
 
-               ```
+               ```code
                import { FromControl, FormGroup，Validators } from '@angular/forms"
                myForm: FormGroup = new FormGroup({
                   name: new FormControl('默认值', [
@@ -891,7 +1218,7 @@
 
             2. 规则验证：
 
-               ```
+               ```code
                // 在 ts 中
                this.myform.valid //boolean 
                // 在 html 中
@@ -917,7 +1244,7 @@
 
 1. class：
 
-    ```
+    ```code
     // 都可以
     [class.big-btn] = "true" //单一类样式
     [class] = "'big-btn big-btn2'" 
@@ -928,7 +1255,7 @@
 
 2. style
 
-   ```
+   ```code
    [style.width] = "300px" //单一样式
    [style.width.px] = "300" // 也可以，但不如上边的常用
    [style] = "'width:300px, color:red'" 
@@ -937,14 +1264,14 @@
 
 3. ngClass 相当于绑定了一个class
 
-   ```
+   ```code
    // class="myClass"
    [ngClass] = "{'myClass': isActive}" // 在ts中定义 isActive:boolean = true
    ```
 
 4. ngStyle
 
-   ```
+   ```code
     [ngStyle] = "{'color': isActive ？'red' : 'blue'}" // 在ts中定义 isActive:boolean = true
    ```
 
@@ -956,7 +1283,7 @@
       1. `[ngSwitch]` 注意写法，不是带星的
          1. 注意：内部的选项是结构指令：*ngSwitchCase*ngSwitchDefault
 
-            ```
+            ```code
              <div [ngSwitch]="type">
                  <p *ngSwitchCase="1">1</p>
                  <p *ngSwitchCase="2">2</p>
@@ -966,7 +1293,7 @@
 
       2. `[hidden]`: 根据条件显示 DOM 节点的显隐，与 display:none 同理
 
-         ```
+         ```code
          <div [hidden]="1+1===2"></div>
          ```
 
@@ -977,7 +1304,7 @@
          1. 作用：根据条件渲染或者移除 DOM 节点
          2. 本质：相当于给html的标签设置一个`[ngIf]="true/false"`的属性
 
-            ```
+            ```code
              <div *ngFor="let name of [1, 2, 3, 4]">
                  <a [title]="'haha'" *ngIf="name % 2 === 0; else elseArea "> {{ name }} </a>
              </div>
@@ -998,7 +1325,7 @@
             6. let isLast = last  是否是最后一个
          3.
 
-            ```
+            ```code
             <div *ngFor="let name of names let i=index let isOdd=odd">
                   {{ name }}
                   {{i}}
@@ -1019,29 +1346,29 @@
    2. 定义：自定义指令以操作 DOM
    3. 创建：ng g d path/dName 也就是 ng generate directive path/dName，并且会被放进根模块的declaration中
 
-      ```
+      ``` code
       ng g d directives/hover
       ```
 
    4. 指令类：用 @Directive 装饰的类
 
-1. 定义：事件用括号包裹起来表示是一个事件语法
-2. 直接获取事件对象`$event`:
+      1. 定义：事件用括号包裹起来表示是一个事件语法
+      2. 直接获取事件对象`$event`:
 
-   ```
-   // 在change share函数体内都可以直接使用event
-   <input (input)="change($event)"/>
-   <button (click)="share($event)">分享</button>
-   ```
+         ``` code
+         // 在change share函数体内都可以直接使用$event
+         <input (input)="change($event)"/>
+         <button (click)="share($event)">分享</button>
+         ```
 
-3. 获取 DOM: 利用 模版 #name
-   1. 给模版对象设置一个模版引用变量 username，通过模版名称直接取得DOM ,从而可以获取事件对象的值
+      3. 获取 DOM: 利用 模版 #name
+      4. 给模版对象设置一个模版引用变量 username，通过模版名称直接取得DOM ,从而可以获取事件对象的值
 
-      ```
-      <input #username/>
-      <button (click)="share(username.value)">分享</button>
-      // share(val){// val即为input输入}
-      ```
+         ``` code
+            <input #username/>
+            <button (click)="share(username.value)">分享</button>
+            // share(val){// val即为input输入}
+         ```
 
 ### 管道 Pipe
 
@@ -1102,6 +1429,13 @@
       <div>{{  object | json }}</div> // 就不会直接打印出[Object object],而是展开的对象，在一行
       <div><pre>{{  object | json }}</pre></div> //再用 pre标签包裹，就会把对象在大括号处换行，格式清晰明了
 
+      // The KeyValue Pipe converts given Object or Map into an array of key-value pairs. 
+      <ul>
+         <li *ngFor="let item of objOrMap | keyvalue">
+            {{item.key}} ---> {{item.value}}
+         </li>
+      </ul>
+
       ```
 
 3. 自定义管道：
@@ -1125,7 +1459,7 @@
       1. 用途：检测输入属性的变化, respond when angular sets or resets data-bound input properties. 如果没有 input 就不会调用到这个钩子
       2. 入参：SimpleChanges 类实例：当前和上一次发生了变化的 input properties 会存储在对象中
 
-         ```
+         ``` code
          // in component
          @Input() hero!: Hero;
          @Input() power = '';
@@ -1189,7 +1523,7 @@
    1. 调用： ![生命周期调用顺序](../assets/angular_lifecycle.png)
 8. 阶段：
 
-   ```
+   ``` code
    // 挂载阶段
    constructor
    ngOnChanges
@@ -1211,17 +1545,14 @@
 2. 子2父：利用 @Output 父组件监听子组件的事件 eventEmitter
 3. 利用 setter 截听输入属性值的变化
    1. demo:
-
-         ```
-
-   3. Provider 提供者:
+   2. Provider 提供者:
       1. 定义：是注入器 Injector 的配置对象
       2. 访问依赖对象的标识 provide：
          1. 数据类型：既可以是对象比如 MailService 也可以是 "mail" 字符串。
          2. 意义：将实力对象和外部的引用建立松耦合关系，外部通过标识获取实例对象，只要标识保持不变，内部代码怎么变化都不会影响到外部。
          3. 用法：
 
-            ```
+            ``` code
             // resolveAndCreate 创建注入器
             const injector = ReflectiveInjector.resolveAndCreate([
                {
@@ -1236,7 +1567,7 @@
 
       3. useValue: 作为配置对象，也可以传递一个对象
 
-         ```
+         ``` code
          // resolveAndCreate 创建注入器
          const injector = ReflectiveInjector.resolveAndCreate([
             {
@@ -1252,102 +1583,9 @@
 
       4.
 
-### 服务
-
-1. 定义：用来放置和特定组件无关并希望能跨组件共享的数据或逻辑
-2. 好处：把组件和服务区分开，有助于提高模块性和复用性。通过把组件和视图有关的功能与其它类型的处理分离开，可以让组件类更加精简、高效
-3. 创建：
-   1. 命令：ng g serviceFolerName/serveName 创建后，通过 @Injectable()装饰器标识服务
-   2. 注意：在使用服务时，不要用 new 手动创建服务，需要由 Angular 内置的依赖注入系统创建和维护。服务是依赖需要而被注入到组件中的！！
-   3. demo: /angular-demo/src/app/service/menu.service.ts
-4. 设置服务的 3 种作用域
-   1. 全局作用域：在根注入器中注册服务，所有模块使用同一服务实例对象.
-      1. 默认root：root表示默认注入到 AppModule 里，就是app.module.ts
-      2. 注意！！ 如果暂时不想定义任何区域，可以传入 null, 不能让 Injectable 里传入空对象,会报错。
-      3. provedIn 的参数选项：  `({ providedIn: Type<any> | "root" | "platform" | "any" | null; } & InjectableProvider) | undefined`
-
-         ```
-         import { Injectable } from '@angular/core';
-         @Injectable({
-            // 1.全局作用域 默认 app.module.ts
-            providedIn: 'root', 
-            // providedIn: null
-         })
-         export class MenuService {}
-         ```
-
-   2. 模块级别：该 module 中的所有 components 使用同一服务实例对象。
-      1. 有两种语法都可以，第一种：在服务中用 providedIn 声明要在哪个 module 里生效
-
-         ```
-         import { Injectable } from '@angular/core';
-         import { SharedModule } from '../shared/share.module';
-         @Injectable({
-            // 在服务中用 providedIn 声明要在哪个 module 里生效
-            providedIn: sharedModule, // 2.模块作用域
-         })
-         export class MenuService {}
-         ```
-
-      2. 两种语法都可以，第二种：在模块中用 providers 表示使用哪些服务
-
-         ```
-         import {MenuService} from './menu.service'
-         @ngModule({
-            // 在模块中用 providers 表示使用哪些服务  
-            providers: [MenuService],
-         })
-         export class sharedModule{}
-         ```
-
-   3. 组件级别：该 component 组件及子组件中使用同一服务实例对象
-
-      ```
-      // 在组件中
-      import {MenuService} from './menu.service'
-      @Component({
-         providers: [MenuService]
-      })
-      export class MenuIndexComponent implements OnInit {
-         constructor(
-            private menuServer: MenuService,
-         ) {}
-      }
-      ```
-
-5. 使用：
-   1. 在app.module.ts中手动import并放进 @Component的providers数组
-
-      ```
-      @NgModule({
-         declarations: [...],
-         imports: [...],
-         // 存放服务 
-         providers: [ MenuService ],
-         bootstrap: [...],
-      })
-      export class AppModule {}
-      ```
-
-   2. 在目标模块中也需要手动import，然后作为入参传给类的constructor. 之后可以通过 this.serviceName 查询到. 如果没有还没有处理，就得到一个空对象，可以给该服务类添加属性
-      1. 多个服务时，依靠服务的类别来判断使用哪个服务
-      2. private 权限修饰符表示：
-         1. 修饰的该服务，不作为参数，而是当前类的属性使用，所以可以通过 this.menuService 来访问。这是 Typescript的知识点
-         2. 修饰的该服务，只能在组件类中使用，不能在组件模版中使用。如果使用public修饰的，才可以在模版中使用。
-
-         ```
-         constructor(
-            private anotherServer: AnotherService,
-            private menuServer: MenuService,
-         ) {}
-         ```
-
-      3. 总结：通过类构造函数里的private服务，就可以在当前业务类中，使用this.服务.*来获取操作数据的方法
-6. 设计模式：单例模式，所以当服务本身修改时，所有依赖注入到的组件内都会使用到新的修改
-
-   2. 缺点：只能在 parent-template 也就是 html 中调用 child, 在 parrent-component 组件中 has no access to the child.
-6. 通过 @ViewChild 获取元素: 能在 parent-component 中 获取对 child 的使用权限, inject the child component into the parent as a ViewChild.
-   1. 通过指定'#字符串'，得到第一个匹配的子类
+4. 利用 ngOnChanges() 截听输入属性值的变化
+5. 获得子组件实例：
+6. 服务
 
 ### 共享模块
 
@@ -1358,7 +1596,7 @@
       1. 在该共享模块下 创建组件：ng g c shared/components/Layout  demo 取名叫Layout
       2. 此时，在shared.module.ts里可以看到，在declaration里已经自动注入了 LayoutComponent
 
-         ```
+         ``` code
          @NgModule({
             declarations: [
                LayoutComponent
@@ -1378,7 +1616,7 @@
       1. 如果继续创建组件 ng g c shared/components/Print
       2. 此时，在shared.module.ts里可以看到,在 declarations 里已经自动添加了 printComponent, 但是在 exports 里没有自动添加，如果想导出，就自己手动添加，否则不导出是用不了的
 
-         ```
+         ``` code
          @NgModule({
             declarations: [
                LayoutComponent,
@@ -1402,20 +1640,11 @@
    1. SharedModule 已经被自动导入了根组件 app.module.ts 的 imports 中了, 注意这里自动导入的是分享模块SharedModule，而不是内部的 LayoutComponent 或者 PrintComponent，但是可以直接引用 分享模块中的 components
    2. 然后在想要使用的地方 直接引用标签就行了， `<app-layout></app-layout>`  `<app-print></app-print>`
 
-      ```
+      ``` code
       // Parent Component
       <app-child></app-child>
 
-### 组件交互
-
-1. 父2子：利用 @Input("变量名")
-2. 子2父：利用 @Output 父组件监听子组件的事件 eventEmitter
-3. 利用 setter 截听输入属性值的变化
-2. 利用 ngOnChanges() 截听输入属性值的变化
-4. 获得子组件实例：
 5. 服务
-
-7. 服务
 
 ### 路由
 
@@ -1424,7 +1653,7 @@
    1. RouterModule.forRoot([]): This establishes the routes for the root of our application 这就为我们的应用程序的根建立了路由。
    2. RouterModule.forChild([])
 
-   ```dash
+   ```code
       // app.module.ts
       @NgModule({
          imports: [
@@ -1610,14 +1839,15 @@
    4. 必须组合：它只能与其他选择器组合使用
    5. 参考链接：<https://tinytip.co/tips/angular-host-context/#:~:text=The%20Angular%20%3Ahost-context%20%28%29%20selector%20allows%20you%20to,of%20your%20component%20up%20to%20the%20document%20root>.
 
-### 内容投影 && 三种嵌入视图
+### Content Projectioin 内容投影 && 三种嵌入视图
 
 1. 定义：在组件标签之间的内容可以传递给组件中展示，这一过程就是投射
-2. 单插槽投影：ng-content
+2. 官网文档：(<https://angular.io/guide/content-projection>)
+3. 单插槽投影：ng-content
    1. 定义：创建一个组件，可以在其中投影一个组件
    2. slot：`<ng-contnet></ng-content`
    3. 但一插槽 且 没有select，会将所有内容都投影在一个 插槽中
-3. 多插槽投影：ng-content
+4. 多插槽投影：ng-content
    1. 定义：一个组件可以具有多个插槽。每个插槽可以指定一个CSS选择器，该选择器会决定将哪些内容放进该插槽。
    2. slot + class:
 
@@ -1655,7 +1885,7 @@
          </子组件>
          ```
 
-3. ng-container
+5. ng-container
    1. 定义：不包含外部的例如`<div></div>`，只想要内容，可以用 ng-container代替 div
    2. 用法：
 
@@ -1677,10 +1907,10 @@
    3. 优点：不会实例化真实 DOM
    4. 用处：
       1. 创建一个 View-container ，动态调整 ？？？
-4. ng-template
+6. ng-template
    1. 定义：
    2.
-5. comparison:
+7. comparison:
    1. ???
 
 ### View Encapsulation 视图封装
@@ -1714,7 +1944,7 @@
 
 <https://angular.cn/guide/elements>
 
-### 网络请求模块 HttpClientModule
+### 网络请求模块 HttpClient
 
 1. 用途：发送http请求，用于发送请求的方法都返回 Observable 对象
 2. 使用步骤：
@@ -1797,9 +2027,10 @@
 
 6. 响应内容
    1. 通过设置一个type, 可以取出返回内容
-   2. type HttpObserve = 'body' | 'response'
+   2. type HttpObserve = 'body' | 'response | text'
       1. body: 表示返回的response中的响应体
       2. response: 表示整个返回的内容 包含 body headers ok status type 等
+      3. text: 表示返回的是 text 类型的内容
    3. demo：
 
       ``` code
@@ -1811,10 +2042,46 @@
       .subscribe(console.log);
       ```
 
-7. 拦截器 ？？？
-   1. 定义：在全局范围内，捕获和修改由 HttpClientModule模块发出的 Http 请求和响应
-   2. <https://www.bilibili.com/video/BV1UP4y1J762/?spm_id_from=pageDriver>
-   3.
+7. Interceptor 拦截器
+   1. 定义：在全局范围内，捕获和修改由 HttpClientModule模块发出的 Http 请求和响应。如果没有拦截器，开发者需要为每一个 httpClient 方法实现一遍处理逻辑
+   2. 原理：
+      1. 双向拦截器链：Multiple interceptors form a forward-and-backward chain of request/response handlers. 多个拦截器形成了一个请求/响应处理程序的前向和后向链。
+      2. `interceprt()`: 一个 interceptor,就是实现接口 HttpInterceptor 的 intercept 方法. intercept 方法将一个请求转化成一个最终返回 http response 的 Observable. 从这个角度来说， 每个拦截器都有足够的能力自己处理整个request.
+      3. 传递给next:大多数拦截器在进入时检查请求，并将可能被改变的请求转发给下一个对象的handle()方法，这个对象实现了. Most interceptors inspect the request on the way in and forward the potentially altered request to the handle() method of the next object which implements the.
+
+            ``` code
+            import { Injectable } from '@angular/core';
+
+            import {
+               HttpEvent, HttpInterceptor, HttpHandler, HttpRequest
+            } from '@angular/common/http';
+
+            import { Observable } from 'rxjs';
+
+            /** Pass untouched request through to the next request handler. */
+            @Injectable()
+            export class NoopInterceptor implements HttpInterceptor {
+
+               intercept(req: HttpRequest<any>, next: HttpHandler):
+                  Observable<HttpEvent<any>> {
+                  return next.handle(req);
+               }
+            }
+
+            ```
+
+      4. next 对象：在`next.handle()`中，next 代表了拦截器链中的下一个拦截器。The next interceptor in the chain of interceptors.
+      5. 最后一个 next 拦截器：链中的最后一个拦截器是 HttpClient backend handler, 负责真正向服务端发送请求和接受请求
+      6. 拦截器的工作流：每一个拦截器通过调用 `next.handle()` 将请求传递给下一个拦截器。大部分拦截器都会这样做，最终流向后端处理拦截器。但其实，也可以不调用这个方法，就会使拦截器链短路，实现绕过这个链条，返回一个Observable和自己造的服务端响应的效果。
+   3. 拦截器的顺序：按照定义的顺序 发送时 A-B-C, 响应时 C-B-A. The last interceptor in the process is always the HttpBackend that handles communication with the server. !['HttpClient-interceptor-order'](../assets/HttpClient-interceptor-order.png)
+   4. Immutable HttpRequest and HttpResponse: 这两个都是 readonly instance. 原因是，在每次请求后，都有可能retry, 为了保证每次重试的上游 request Observable 是 original 的，就要保证在流动的过程中不能被更改。
+   5. 注意：
+      1. 所以在写拦截器时，非必要不修改经过的事件(request & response). 如果非要改变，使用 clone 方法克隆 url/body 等 用于传给 next.handle
+      2. 如果想清除 request body, 需要明确地设置`req.clone({ body: null})`, 如果不复写或者设置为 undefined, 都将被认为成‘不修改’
+      3.
+
+   6.
+
 8. Angular Proxy  ???
    1. <https://www.bilibili.com/video/BV1Qa41167H1/?spm_id_from=pageDriver>
 
@@ -1841,19 +2108,15 @@
 
 ### 是不是只有service 才能被 injectede? false! ❓❓❓
 
-### 当前层级 injector 没找到，就去上一层找
-
 ### hostListener 监听dom自己的事件发生
 
-### HostBinding
+### HostBinding ❓❓❓
 
 ### host 是什么
 
 ### 如何监听宿主
 
 ### ElementRef
-
-### @ngModule 是什么，干什么的
 
 ### CommonModule 是干嘛的
 
@@ -1862,8 +2125,6 @@
 ### 组件生命周期
 
 ### @HostBind 是啥
-
-### @NgModule 里的 bootstrap 数组是啥
 
 ### 视图封装 ViewEncapsulation ❓❓❓
 
@@ -1889,18 +2150,74 @@
    3. ViewEncapsulation.Emulated：Angular 会修改组件的 CSS 选择器，使它们只应用于组件的视图，不影响应用程序中的其他元素（模拟 Shadow DOM 行为）
 4. 代码：❓❓❓
 
-### Questions
-
-1. How to generate a new component outside the 'src/app' folder ?
-2. interface Hero{ id: number; name: string}. hero: Hero = {id: 1, name:'abc'}; 接口是分号，实现的对象是逗号 ？
-3. [(ngModel)] 双向绑定的原理是什么 ？
-4.
-
-### Injectable({ provideIn: 'root' }) ❓❓❓
-
 ### 性能优化
 
 参考链接：`https://app.pluralsight.com/guides/bundling-and-code-splitting-in-angular`
 
 1. Bundling Size
 2. Code Splitting
+
+### [(ngModel)] 双向绑定的原理是什么 ？
+
+### Angular project recommended structure 推荐的项目结构
+
+1. app 文件夹下的几大目录：参考链接：`https://zhuanlan.zhihu.com/p/63515048`
+   1. core：核心模块
+      1. 坚持在 core 目录下创建一个叫 CoreModule 的模块
+      2. 坚持把要共享给整个应用的单例服务放进核心模块
+      3. 可以把那些数量庞大、辅助性的、只用一次的类收集到核心模块，对外隐藏实现细节
+      4. 只会在根模块 AppModule 中被导入
+   2. feature:
+      1. 坚持为应用中每个明显的特性创建一个 ngModule
+      2. 坚持把特性模块放在与特性区同名的目录中
+      3. 特性区的名字应该能反映特性
+   3. routes：
+   4. shared: 共享模块
+      1. 坚持在共享文件夹中创建 sharedModule 的特性模块，考虑把有可能在整个应用中到处引用的模块命名为 sharedModule
+      2. 坚持在共享模块中声明那些可能被特性模块引用的可复用组件、指令和管道。Do declare components, directives, and pipes in a shared module when those items will be re-used and referenced by the components declared in other feature modules.
+      3. 避免在共享模块中指定应用级的单例服务提供者，如果是可以要得到多个服务单例也行，不过还是要小心。
+   5. service：服务模块
+      1. 在服务模块中处理数据交互或与数据相关的通用逻辑
+
+### 使用 Nx
+
+1. 创建 workspace: npx create-nx-workspace@latest
+2. 创建 component：npx nx g @nrwl/angular:component `${componentName}` --project=`${component-path}` --export
+3. 测试模块：npx nx test `${applicationName}`
+4. 运行本地：npx nx serve `${applicationName}`
+5. 打包模块：npx nx build `${applicationName}`
+6. 配置 pipeline: 链接 `https://nx.dev/angular-standalone-tutorial/4-task-pipelines#configuring-task-pipelines` ❓❓❓
+
+### Change Detection & Zone.js & NgZone
+
+1. Change Detection：
+   1. 定义：是Angular 检测应用状态是否发生改变的过程，以及是否有任何 DOM 需要更新。 在高层次上，Angular从上到下检查你的组件，寻找变化。Angular定期运行它的变化检测机制，以便将数据模型的变化反映在应用程序的视图中。变化检测可以通过手动或异步事件（例如，用户互动或XMLHttpRequest完成）来触发。
+   2. 注意：可能会引起减速，所以不能运行太频繁。
+2. Zone.js:
+   1. 定义：Zone.js是一种信号机制，Angular用它来检测应用程序的状态何时可能改变。它捕捉异步操作，如setTimeout、网络请求和事件监听器。Angular根据Zone.js的信号来安排变化检测。
+   2. 背景：在某些情况下，scheduled tasks 或 microtasks 不会对 data model 进行任何改变，这使得运行变化检测成为不必要的。常见的例子有：requestAnimationFrame、setTimeout或setInterval，以及一些由第三方库进行的任务或微任务调度。
+   3. 作用：Zone.js 用来识别这些情况，再决定是否执行变化检测
+   4. 情况：
+      1. 在Angular 外执行任务：例如 setTimeout, setInterval, requestAnimationFrame, or an event handler 产生的一系列调用，不需要变化检测，此时可以使用 NgZone.runOutsideAnguar 来实现
+3. NgZone:
+   1. 定义：是 Angular 集成 Zone.js 后内置的一个服务
+   2. 在 Angular 外执行
+
+      ```code
+      import { Component, NgZone, OnInit } from '@angular/core';
+      @Component(...)
+      class AppComponent implements OnInit {
+         constructor(private ngZone: NgZone) {}
+         ngOnInit() {
+            this.ngZone.runOutsideAngular(
+               // 这样，执行 pollForUpdates 函数后不会引起 change detection
+               () => setInterval(pollForUpdates),
+               500
+            );
+         }
+      }
+
+      ```
+
+4. 疑问：
+   1. 怎么判断应不应该检测变化呢，比如一个树状图，异步回调后要刷新某个节点，这样应该检测变化嘛，页面状态并么有改变？？
