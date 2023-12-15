@@ -1149,7 +1149,7 @@
                </ng-template>
             ```
 
-3. 自定义指令 ？？？
+3. 自定义指令 ❓❓❓
    1. <https://www.bilibili.com/video/BV1mQ4y1m7o6/?spm_id_from=pageDriver>
    2. 定义：自定义指令以操作 DOM
    3. 创建：ng g d path/dName 也就是 ng generate directive path/dName，并且会被放进根模块的declaration中
@@ -1620,7 +1620,7 @@
          ])
       ```
 
-### 特殊的选择器 ？？？
+### 特殊的选择器 ❓❓❓
 
 1. :host
    1. host 是宿主元素：每个组件里的selector对应的组件选择器匹配的元素，称为宿主元素，模版template内容会渲染到其中
@@ -1647,7 +1647,7 @@
    4. 必须组合：它只能与其他选择器组合使用
    5. 参考链接：<https://tinytip.co/tips/angular-host-context/#:~:text=The%20Angular%20%3Ahost-context%20%28%29%20selector%20allows%20you%20to,of%20your%20component%20up%20to%20the%20document%20root>.
 
-### ::ng-deep 是什么 ？？？
+### ::ng-deep 是什么 ❓❓❓
 
 ### Content Projectioin 内容投影 && 三种嵌入视图
 
@@ -1716,7 +1716,7 @@
 
    3. 优点：不会实例化真实 DOM
    4. 用处：
-      1. 创建一个 View-container ，动态调整 ？？？
+      1. 创建一个 View-container ，动态调整 ❓❓❓
 6. ng-template
    1. 定义：
    2.
@@ -1754,7 +1754,7 @@
 
 <https://angular.cn/guide/dynamic-component-loader>
 
-### Angular 元素 ？？？
+### Angular 元素 ❓❓❓
 
 <https://angular.cn/guide/elements>
 
@@ -2000,39 +2000,7 @@
 5. 打包模块：npx nx build `${applicationName}`
 6. 配置 pipeline: 链接 `https://nx.dev/angular-standalone-tutorial/4-task-pipelines#configuring-task-pipelines` ❓❓❓
 
-### Change Detection & Zone.js & NgZone
 
-1. Change Detection：
-   1. 定义：是Angular 检测应用状态是否发生改变的过程，以及是否有任何 DOM 需要更新。 在高层次上，Angular从上到下检查你的组件，寻找变化。Angular定期运行它的变化检测机制，以便将数据模型的变化反映在应用程序的视图中。变化检测可以通过手动或异步事件（例如，用户互动或XMLHttpRequest完成）来触发。
-   2. 注意：可能会引起减速，所以不能运行太频繁。
-2. Zone.js:
-   1. 定义：Zone.js是一种信号机制，Angular用它来检测应用程序的状态何时可能改变。它捕捉异步操作，如setTimeout、网络请求和事件监听器。Angular根据Zone.js的信号来安排变化检测。
-   2. 背景：在某些情况下，scheduled tasks 或 microtasks 不会对 data model 进行任何改变，这使得运行变化检测成为不必要的。常见的例子有：requestAnimationFrame、setTimeout或setInterval，以及一些由第三方库进行的任务或微任务调度。
-   3. 作用：Zone.js 用来识别这些情况，再决定是否执行变化检测
-   4. 情况：
-      1. 在Angular 外执行任务：例如 setTimeout, setInterval, requestAnimationFrame, or an event handler 产生的一系列调用，不需要变化检测，此时可以使用 NgZone.runOutsideAnguar 来实现
-3. NgZone:
-   1. 定义：是 Angular 集成 Zone.js 后内置的一个服务
-   2. 在 Angular 外执行
-
-      ```code
-      import { Component, NgZone, OnInit } from '@angular/core';
-      @Component(...)
-      class AppComponent implements OnInit {
-         constructor(private ngZone: NgZone) {}
-         ngOnInit() {
-            this.ngZone.runOutsideAngular(
-               // 这样，执行 pollForUpdates 函数后不会引起 change detection
-               () => setInterval(pollForUpdates),
-               500
-            );
-         }
-      }
-
-      ```
-
-4. 疑问：
-   1. 怎么判断应不应该检测变化呢，比如一个树状图，异步回调后要刷新某个节点，这样应该检测变化嘛，页面状态并么有改变？？
 
 ### Binding 绑定
 
@@ -2360,7 +2328,7 @@
 3. 注意：不允许同一个 DOM element 上同时有两个 directive. 因为无法确定两个指令的优先顺序。
 4. Directive composition API ❓❓❓
 
-### Dependency Injection / DI 依赖注入
+### Dependency Injection / DI 依赖注入 ❓❓❓
 
    1. 定义：
    2. 4个核心概念：
@@ -2455,3 +2423,37 @@
 
       5. 当前层级 injector 没找到，就去上一层找 ❓❓❓
       6. providedIn: 'any', ❓❓❓
+
+### Change Detection & Zone.js & NgZone
+
+1. Change Detection：
+   1. 定义：是Angular 检测应用状态是否发生改变的过程，以及是否有任何 DOM 需要更新。 在高层次上，Angular从上到下检查你的组件，寻找变化。Angular定期运行它的变化检测机制，以便将数据模型的变化反映在应用程序的视图中。变化检测可以通过手动或异步事件（例如，用户互动或XMLHttpRequest完成）来触发。
+   2. 注意：可能会引起减速，所以不能运行太频繁。
+2. Zone.js:
+   1. 定义：Zone.js是一种信号机制，Angular用它来检测应用程序的状态何时可能改变。它捕捉异步操作，如setTimeout、网络请求和事件监听器。Angular根据Zone.js的信号来安排变化检测。
+   2. 背景：在某些情况下，scheduled tasks 或 microtasks 不会对 data model 进行任何改变，这使得运行变化检测成为不必要的。常见的例子有：requestAnimationFrame、setTimeout或setInterval，以及一些由第三方库进行的任务或微任务调度。
+   3. 作用：Zone.js 用来识别这些情况，再决定是否执行变化检测
+   4. 情况：
+      1. 在Angular 外执行任务：例如 setTimeout, setInterval, requestAnimationFrame, or an event handler 产生的一系列调用，不需要变化检测，此时可以使用 NgZone.runOutsideAnguar 来实现
+3. NgZone:
+   1. 定义：是 Angular 集成 Zone.js 后内置的一个服务
+   2. 在 Angular 外执行
+
+      ```code
+      import { Component, NgZone, OnInit } from '@angular/core';
+      @Component(...)
+      class AppComponent implements OnInit {
+         constructor(private ngZone: NgZone) {}
+         ngOnInit() {
+            this.ngZone.runOutsideAngular(
+               // 这样，执行 pollForUpdates 函数后不会引起 change detection
+               () => setInterval(pollForUpdates),
+               500
+            );
+         }
+      }
+
+      ```
+
+4. 疑问：
+   1. 怎么判断应不应该检测变化呢，比如一个树状图，异步回调后要刷新某个节点，这样应该检测变化嘛，页面状态并么有改变？？
