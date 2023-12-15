@@ -131,102 +131,6 @@
       1. SharedModule 已经被自动导入了根组件 app.module.ts 的 imports 中了, 注意这里自动导入的是分享模块SharedModule，而不是内部的 LayoutComponent 或者 PrintComponent，但是可以直接引用 分享模块中的 components
       2. 然后在想要使用的地方 直接引用标签就行了， `<app-layout></app-layout>`  `<app-print></app-print>`
 
-### Directive 指令: Custom HTML syntax 本质就是一个自定义的 HTML 元素语法
-
-   1. 属性指令：
-      1. 定义：修改现有元素的外观或者行为，使用`[]`包裹
-      2. 分类
-         1. `[ngSwitch]` 注意写法，不是带星的
-            1. 注意：内部的选项是结构指令：*ngSwitchCase*ngSwitchDefault
-
-               ``` code
-                <div [ngSwitch]="type">
-                    <p *ngSwitchCase="1">1</p>
-                    <p *ngSwitchCase="2">2</p>
-                    <p *ngSwitchDefault>0</p>
-                </div>
-               ```
-
-         2. `[hidden]`: 根据条件显示 DOM 节点的显隐，与 display:none 同理
-
-            ``` code
-            <div [hidden]="1+1===2"></div>
-            ```
-
-   2. 结构指令
-      1. 定义：修改 DOM 节点从而修改布局，使用 * 作为指令前缀
-      2. 分类
-         1. *ngIf / else + 'ng-template #template'
-            1. 作用：根据条件渲染或者移除 DOM 节点
-            2. 本质：相当于给html的标签设置一个`[ngIf]="true/false"`的属性
-
-               ``` code
-                <div *ngFor="let name of [1, 2, 3, 4]">
-                    <a [title]="'haha'" *ngIf="name % 2 === 0; else elseArea "> {{ name }} </a>
-                </div>
-                // 这里是用一个模版引用 #elseArea
-                <ng-template #elseArea>
-                    <div>奇数</div>
-                </ng-template>
-               ```
-
-         2. *ngFor
-            1. 作用：遍历数据生成HTML结构
-            2. Angular提供的内部变量：
-               1. let item of list
-               2. let i = index  序号从0开始
-               3. let isEven = even  是否是偶数
-               4. let isOdd = odd  是否是奇数
-               5. let isFirst = first  是否是第一个
-               6. let isLast = last  是否是最后一个
-            3.
-
-               ``` code
-               <div *ngFor="let name of names let i=index let isOdd=odd">
-                     {{ name }}
-                     {{i}}
-                     {{isOdd}}
-                  </div>
-                  // 解析完相当于
-                  <ng-template ngFor let-name [ngForOf]="names" let-i="index" let-odd="odd">
-                     <div>
-                        {{ name }}
-                        {{i}}
-                        {{isOdd}}
-                     </div>
-                  </ng-template>
-               ```
-
-   3. 装饰器指令类/自定义指令：用 @Directive 装饰器装饰的类
-      1. 用途：指令类可以像属性指令一样附加到任何内置元素或者组件元素上
-      2. 写法：@Directive({selector: '[指令名称]'})
-      3. demo:
-
-         ``` code
-            let nextId = 1;
-            
-            @Directive({selector: '[appSpy]'})
-            export class SpyDirective implements OnInit, OnDestroy {
-               private id = nextId++;
-
-               constructor(private logger: LoggerService) { }
-
-               ngOnInit() {
-                  this.logger.log(`Spy #${this.id} onInit`);
-               }
-
-               ngOnDestroy() {
-                  this.logger.log(`Spy #${this.id} onDestroy`);
-               }
-            }
-
-            // Spy on any element to which it is applied.
-            // Usage: <div appSpy>...</div>
-            <p  appSpy ... >
-               {{...}}
-            </p>
-         ```
-
 ### Decorator 装饰器
 
    1. 定义：使用 @ 来开头的保留字段，具有对应的装饰作用，表示类有特殊的含义
@@ -618,102 +522,6 @@
       9. @ContentChildren
       10. @HostBinding ❓❓❓
 
-### Dependency Injection (DI)
-
-   1. 定义：
-   2. 4个核心概念：
-      1. Dependency: 组件要依赖的服务实例对象
-      2. Injection Token: 依赖的服务实例对象有很多，用 Token 做服务实例对象的标识，即通过 Token 来获取服务实例对象
-
-      3. Injector 注入器：
-         1. 定义：负责创建服务类实例对象，并将服务类实例对象注入到需要的组件中. An injector for an application (created automatically during bootstrap) instantiates dependencies when needed, using a configured provider of the service or value.
-         2. 用法：
-
-            ```code
-            // 创建注入器 注意：ReflectiveInjector 会带有中划线是因为此API未来将会被废弃
-            import { ReflectiveInjector } from '@angular/core'
-            // 服务类
-            class MailService {}
-            // 创建注入器并传入服务类
-            const injector = ReflectiveInjector.resolveAndCreate([MailService]);
-            // 获取注入器中的服务类的实例对象
-            const mailService = injector.get(MailService)
-            console.log("mailService", mailService);
-            
-            ```
-
-         3. 相同的注入器，返回的服务实例对象是单例模式，同一个注入器在创建服务实例后会对其进行缓存
-
-            ```code
-            const mailService1 = injector.get(MailService)
-            const mailService2 = injector.get(MailService)
-            console.log(mailService1 === mailService2); // true
-            ```
-
-         4. 不同的注入器，返回的是不同的服务实例对象
-
-            ```code
-            const injectorFirst = ReflectiveInjector.resolveAndCreate([MailService]);
-            const injectorSecond = ReflectiveInjector.resolveAndCreate([MailService]);
-            const firstService = injectorFirst.get(MailService)
-            const secondService = injectorSecond.get(MailService)
-            console.log(firstService === secondService); // false
-            ```
-
-         5. resolveAndCreateChild可以创建子注入器，服务实例对象的查找类似函数作用域链，当前级别可以找到就使用当前级别，当前级别找不到就去父级中查找
-
-            ``` code
-            // resolveAndCreate 创建注入器
-            const injector = ReflectiveInjector.resolveAndCreate([MailService]);
-            // resolveAndCreateChild 创建子注入器
-            // 数组里没传入服务 所以当前级别没有对应服务实例对象 
-            const childInjector = injector.resolveAndCreateChild([])
-            const fatherService = injector.get(MailService)
-            // 在 get的时候发现本层没有，就会向上查找
-            const sonService = childInjector.get(MailService)
-            console.log(fatherService === sonService); // true 最终查到的一个实例对象
-
-            ```
-
-      4. Provider 提供者:
-         1. 定义：是注入器 Injector 的配置对象
-         2. 访问依赖对象的标识 provide：
-            1. 数据类型：既可以是对象比如 MailService 也可以是 "mail" 字符串。
-            2. 意义：将实力对象和外部的引用建立松耦合关系，外部通过标识获取实例对象，只要标识保持不变，内部代码怎么变化都不会影响到外部。
-            3. 用法：
-
-               ``` code
-               // resolveAndCreate 创建注入器
-               const injector = ReflectiveInjector.resolveAndCreate([
-                  {
-                     // 注意：属性名是 provide 不是 provider
-                     // 这样写的时候，就不需要在 
-                     // provide: MailService,  // 用哪个标识去获取实例对象，也可以是字符串
-                     provide: “mail”,  // 用哪个标识去获取实例对象，也可以是字符串
-                     useClass: MailService //用那个类创建实例对象
-                  }
-               ]);
-               ```
-
-         3. useValue: 作为配置对象，也可以传递一个对象
-
-            ``` code
-            // resolveAndCreate 创建注入器
-            const injector = ReflectiveInjector.resolveAndCreate([
-               {
-                  provide: “Config”,  // 用哪个标识去获取实例对象，也可以是字符串
-                  // 使用 Object.freeze 使外部无法修改该对象
-                  useValue: Object.freeze({
-                     APIKEY: '12345',
-                     APISCRET: '500-400-300',
-                  })
-               }
-            ]);
-            ```
-
-      5. 当前层级 injector 没找到，就去上一层找 ❓❓❓
-      6. providedIn: 'any', ❓❓❓
-
 ### 服务  Service
 
 1. 定义：用来放置和特定组件无关并希望能跨组件共享的数据或逻辑
@@ -1014,8 +822,8 @@
 
 ### 表单
 
-1. 两种类型：模版驱动 && 模型驱动
-2. 模版驱动表单：FormsModule
+1. 两种类型：模版驱动 template-driven && 模型驱动 model-driven or reactive form
+2. 模版驱动表单：like ngModel, ngModelGroup, ngForm... from FormsModule
    1. 定义：表单的控制逻辑写在组件模版中，适合简单的表单类型
    2. 使用：
       1. 在根模块中：import {FormsModule } form '@angular/forms'，并在模块的 imports 中注入 FormsModule
@@ -1230,7 +1038,7 @@
             1. 参考链接：<https://www.bilibili.com/video/BV1tP4y1V7DX/?spm_id_from=pageDriver>
          3. 自定义异步表单验证器
             1. 参考链接：<https://www.bilibili.com/video/BV1GF411871e/?spm_id_from=pageDriver>
-   6. FormBuilder: 创建模型表单的快捷方式
+   6. FormBuilder: 创建模型表单的快捷方式,允许我们试用工厂模式来创建表单项和表单组
       1. 参考链接：<https://www.bilibili.com/video/BV1aU4y1T7hD/?spm_id_from=pageDriver>
    7. 复选表单：<https://www.bilibili.com/video/BV1Bi4y1o7Gp/?spm_id_from=pageDriver>
    8. 单选表单：<https://www.bilibili.com/video/BV1aY411s7tF/?spm_id_from=pageDriver>
@@ -1839,6 +1647,8 @@
    4. 必须组合：它只能与其他选择器组合使用
    5. 参考链接：<https://tinytip.co/tips/angular-host-context/#:~:text=The%20Angular%20%3Ahost-context%20%28%29%20selector%20allows%20you%20to,of%20your%20component%20up%20to%20the%20document%20root>.
 
+### ::ng-deep 是什么 ？？？
+
 ### Content Projectioin 内容投影 && 三种嵌入视图
 
 1. 定义：在组件标签之间的内容可以传递给组件中展示，这一过程就是投射
@@ -1936,7 +1746,11 @@
 6. 文档链接：<https://angular.cn/guide/view-encapsulation>
 7. 参考链接: <https://www.tektutorialshub.com/angular/angular-view-encapsulation/>
 
-### 动态组件 ？？？
+### 动态组件
+
+1. 定义：有些时候，需要展示的组件内容是运行时加载的，没有办法写静态组件，这时候就需要加载动态组件了
+2. 用法：`*ngComponentOutlet="componentInstance"`
+3. 例子：<https://stackblitz.com/run?file=src%2Fapp%2Fad-banner.component.ts,src%2Fapp%2Fad.service.ts>
 
 <https://angular.cn/guide/dynamic-component-loader>
 
@@ -2108,8 +1922,6 @@
 
 ### 是不是只有service 才能被 injectede? false! ❓❓❓
 
-### hostListener 监听dom自己的事件发生
-
 ### HostBinding ❓❓❓
 
 ### host 是什么
@@ -2221,3 +2033,425 @@
 
 4. 疑问：
    1. 怎么判断应不应该检测变化呢，比如一个树状图，异步回调后要刷新某个节点，这样应该检测变化嘛，页面状态并么有改变？？
+
+### Binding 绑定
+
+#### Property binding 属性绑定
+
+1. 定义：property binding 用来给 HTML elements 或者 directives 的 property 赋值。
+2. example: To bind the 'src' property of an img element to a component's property.
+
+   ``` code
+   // in template
+   <img [src]="itemImageUrl">
+
+   // in component
+   itemImageUrl = '../assets/phone.svg';
+
+   ```
+
+3. '[]' 的作用：能让 angular 去评估右手边的是动态表达式。如果没有这个方括号， angular将会把右边的表达式当成字符串并且直接将该字符串作为一个静态值进行赋值。
+
+#### Attribute binding
+
+1. 定义：用来直接给 attribute 赋值
+2. 用法：attr.属性名 用 [] 方括号 括起来，再用一个结果是 string 类型的表达式进行赋值
+3. example:
+
+   ``` code
+      <button [attr.aria-label]="name"> {{name}} </button>
+   ```
+
+4. 注意：如果这个 expression 的结果是 undefined 或者 null, 这个 attribute 会被移除
+
+#### Class and Style binding
+
+1. class binding:
+   1. 支持多个class: !['class-binding'](../assets/angular-class-binding.png)
+2. style binding:
+   1. 风格：
+      1. dash-case style: `<div [style.background-color]="expression"></div>`
+      2. camelCase style: `<div [style.backgroundColor]="expression"></div>`
+   2. 支持多个 styles, 有两种写法
+      1. A string list of styles such as `"width:*px; height: *px; ... "`
+      2. An object with style names as the keys and style values as the values such as `{ width: *px, height: *px, ...}`
+
+#### Event binding
+
+1. 应用：
+   1. 联合键组合可以用'.'来间隔：`<input (keydown.shift.t)="onKeydown($event)" />` 同时按下 shift 和 t
+2. 注意：根据电脑的操作系统不同，有一些内置的按键组合可能会覆盖自定义的按键组合
+
+#### Two-way binding 双向绑定
+
+1. 定义：双向绑定提供了一个组件间共享数据的方式：监听事件，然后同时地更新父母组件和孩子组件中的值
+2. 用法：
+   1. 用 `[()]` 包裹变量名，例如: `<app-demo [(name)]="nameValue"></app-demo>`
+      1. 用法的本质：是 property binding 和 event binding 的联合快捷写法。拆开写是这样：
+
+         ``` code
+         // AppParentComponent.ts
+         <app-demo [name]="nameValue" (nameChange)="nameValue=$event"></app-demo>
+
+         // AppDemoComponent.ts
+         @Input() name: string = '';
+         @Output() nameChange = new EventEmitter<string>();
+         ```
+
+      2. $event 是什么： ❓❓❓
+         1. 定义：$event 变量包含了 AppDemoComponent.nameChange 事件 的 data.
+         2. 
+   2. ngModel: `<input [(ngModel)]="size"/>`
+3. 要求：组件的 @Input 和 @Output 必须符合模式，即 @Output 的名字必须是 `${@Input name} + Change` 模式，例如 @Input 的名字是 name, @Output 名字必须是 nameChange.
+
+### Template 模板
+
+1. 定义：使用模板变量，可以把模板中这一处的数据，使用在模板中的另一处
+2. 用法：用一个 # 符号 声明一个模板变量
+3. example:
+
+   ``` code
+   <input #phone />
+   <button (click)="callPhone(phone.value)"></button>
+   ```
+
+4. Template variable 模板变量的用法
+   1. 大多数的例子中，模板变量都引用的是元素本身
+   2. 但当变量右侧指定了一个名字，那么这个变量将指向该 directive/component 所 exportAs 的 name。 ❓❓❓
+
+      ``` code
+      <form #itemForm="ngForm></form>
+      ```
+
+   3. Template variable scope：❓❓❓
+   4. Accessing in a nested template
+
+### Directive 指令: Custom HTML syntax 本质就是一个自定义的 HTML 元素语法
+
+1. 定义：指令是angular 中给 elements 添加额外行为的 class。本质是 Class, 添加在 elements 上.
+2. 分类：
+   1. Components: 组件就是一个跟 template 一起使用的 directive.
+   2. Attribute directives:
+      1. 定义：属性指令监听和改变 HTML elements/components/attributes/properties 的行为。
+      2. Build-in attribute directive:
+         1. NgClass: Add or remove CSS classes. From CommonModule
+
+            ```code  // Example：use ngClass with object
+               // In component
+               currentClasses: Record<string, boolean> = {};
+               setCurrentClasses() {
+                  this.currentClasses = {
+                     // Values are all Boolean type.
+                     saveable: this.canSave,
+                     modified: !this.isUnchanged,
+                     special: this.isSpecial,
+                  };
+               }
+               onClick(){
+                  this.setCurrentClasses();
+               }
+
+               // In template
+               <div [ngClass]="currentClasses">...</div>
+            ```
+
+         2. NgStyle: Add or remove HTML styles. From CommonModule
+
+            ```code  // Example：use ngStyle with object
+               // In component
+               currentStyles: Record<string, string> = {};
+               setCurrentStyles() {
+                  // CSS styles: set per current state of component properties
+                  this.currentStyles = {
+                     'font-style': this.canSave ? 'italic' : 'normal',
+                     'font-weight': !this.isUnchanged ? 'bold' : 'normal',
+                     'font-size': this.isSpecial ? '24px' : '12px',
+                  };
+               }
+               onClick(){
+                  this.setCurrentStyles();
+               }
+
+               // In template
+               <div [ngStyle]="currentStyles">...</div>
+            ```
+
+         3. NgModel: Add two-way data binding to HTML "form" element. From FormModule
+            1. 本质：NgModel 指令是对那些支持了 ControlValueAccessor 的 elements 生效的。Angular 默认对 HTML "form" elements 生效。其他 non-form 的元素想要使用 ng-model，需要开发者自己写一个 value accessor.
+            2. 注意：这里有个例外。如果在写组件时，遵守了双向绑定的
+            3. ControlValueAccessor: ❓❓❓
+            4. DefaultalueAccessor: ❓❓❓
+         4. ngNonBindable：可以阻止元素编译或者绑定子元素，例如 `<divngNonBindable>{{1 + 1}}</divngNonBindable>` 中的值不会展示为2， 而是原始的 1+1, 比如要展示一段代码片段，这个指令就很有用。
+         5. ngTemplateGuard_**: 
+            1. 定义：A type guard function narrows the expected type of an input expression to a subset of types that might be passed to the directive within the template at run time.
+            2. 用法：❓❓❓
+         6. ngTemplateContextGuard: 把值从 directive 中往 template 中传递，通过提供一个 static ngTemplateContextGuard function. ❓❓❓
+      3. Custom attribute directives 自定义属性指令
+         1. 创建一个指令：
+            1. CLI 命令: ng generate directive highlight 执行后生成 highlight.directive.ts
+            2. ElementRef: 是即将应用本 directive 的 DOM element 的引用，可以通过 ElementRef.nativeElement 获得直接访问宿主 DOM element 的权限.
+
+               ``` code
+                  import {Directive, ElementRef} from '@angular/core';
+                  @Directive({
+                     standalone: true,
+                     selector: '[appHighlight]', // CSS attribute selector
+                  })
+                  export class HighlightDirective {
+                     // Import ElementRef in constructor: inject a reference to the host DOM element
+                     constructor(private el: ElementRef) {
+                        this.el.nativeElement.style.backgroundColor = 'yellow';
+                     }
+                  }
+                  
+
+                  // 应用一个指令
+                  <div appHighlight></div>
+               ```
+
+         2. 用 @HostListener 指令监听用户事件:
+
+            ```code
+               @Directive({
+                  standalone: true,
+                  selector: '[appHighlight]',
+               })
+               export class HighlightDirective {
+                  constructor(private el: ElementRef) {}
+
+                  @HostListener('mouseenter') onMouseEnter() {
+                     this.highlight('yellow');
+                  }
+
+                  @HostListener('mouseleave') onMouseLeave() {
+                     this.highlight('');
+                  }
+
+                  private highlight(color: string) {
+                     this.el.nativeElement.style.backgroundColor = color;
+                  }
+               }
+
+               // 应用一个指令
+               <div appHighlight>鼠标移进变黄色，移除无色</div>
+            ```
+
+         3. 给指令传值
+
+            ```code
+               // In AppComponent.*
+               color = 'green';
+               <div [appHighlight]="color">Highlight me!</div>
+
+               // In HightlightDirective
+               @Directive({
+                  standalone: true,
+                  selector: '[appHighlight]', // CSS attribute selector
+               })
+               export class HighlightDirective {
+                  @Input() appHighlight: string = '';
+
+                  @HostListener('mouseenter') onMouseEnter() {
+                     this.highlight(this.appHighlight);
+                     ...
+                  }
+               }
+
+            ```
+
+   3. Structural directives:
+      1. 定义：用来修改 DOM elements layout, add or remove.
+      2. Built-in structural directives:
+         1. NgIf:
+            1. 支持 shorthand：*ngIf="name" 等同于 *ngIf="name as n", 在孩子节点中使用 n 变量
+         2. NgFor:
+            1. Angular提供的内部变量：
+               1. let item of list
+               2. let-i="idex" / let i = index / index as i  序号从0开始
+               3. let-isEven="even" / let isEven = even / even as isEven;  是否是偶数
+               4. let-isOdd="odd" / let isOdd = odd / odd as isOdd  是否是奇数
+               5. let-isFirst="first" / let isFirst = first / first as isFirst 是否是第一个
+               6. let-lsLast="last" / let isLast = last / last as isLast 是否是最后一个
+               7. trackBy property: 按照某个条件来调整列表，该条件变了，符合该条件的元素才会重新渲染.否则会全部重新渲染。
+
+               ```code
+                  <div *ngFor="let item of items;index as i; odd as isOdd; even as isEven; trackBy: trackByItems">
+                     ({{item.id}}) {{item.name}}
+                  </div>
+
+                  // 自动传入 Index, item
+                  trackByItems(index: number, item: Item): number {
+                     // 只有 id 变了的 items 才去 re-render
+                     return item.id;
+                  }
+               ```
+
+         3. NgSwitch:
+      3. Custom structural directives:
+         1. 命令行 ng generate directive unless
+         2. The UnlessDirective creates an embedded view from the Angular-generated `<ng-template>` and inserts that view in a view container adjacent to the directive's original `<p>` host element.TemplateRef helps you get to the `<ng-template>` contents and ViewContainerRef accesses the view container
+
+            ```code
+               import { Directive, Input, TemplateRef, ViewContainerRef } from '@angular/core';
+
+               @Directive({
+                  selector: '[appUnless]',
+               })
+               export class UnlessDirective {
+                  private hasView = false;
+
+                  @Input() set appUnless(condition: boolean) {
+                     if (!condition && !this.hasView) {
+                        this.viewContainer.createEmbeddedView(this.templateRef);
+                        this.hasView = true;
+                     } else {
+                        this.viewContainer.clear();
+                        this.hasView = false;
+                     }
+                  }
+                  constructor(
+                     private templateRef: TemplateRef<any>,
+                     private viewContainer: ViewContainerRef
+                  ) {}
+               }
+
+               // 应用
+               <button (click)="condition = !condition">切换 condition 条件</button>
+               <div *appUnless="condition">Test unless when false</div>
+               <div *appUnless="!condition">Test unless when true</div>
+            ```
+
+      4. 承载指令的元素
+         1. DOM elements
+         2. ng-template:
+            1. 实质：Angulartranslates the instruction into an ng-templat4e around the host element, then uses this template repeatedly to create a new set of elements and bindings for each item in the list.
+
+               ```code
+                  // 指令代码               
+                  <li *ngFor="let contact of contacts | async">
+                     <contact-card [contact]="contact"></contact-card>
+                  </li>
+
+                  // 本质上
+                  <ng-template ngFor let-i="index" let-c="count" let-contact [ngForOf]="contacts | async">
+                     <li>
+                        <contact-card [contact]="contact"></contact-card>
+                     </li>
+                  </ng-template>
+               ```
+
+            2. 现象：所有跟 ngFor 有关的东西，都转移到了 这个 ng-template 上
+            3. 注意：用 ng-template 包围，并不会真的创建一个 real DOM element. 这个元素里面的内容默认并不会渲染。所以如果用 ng-template 包围了一些元素，但没有使用 结构化指令，那这些元素并不会被渲染。
+         3. `<ng-container *ngIf='condition'>...</ng-container>`: 当没有元素适合承接指令时，就可以用 ng-container
+   4. 用法：Directive composition API ❓❓❓
+      1. 在template 中写：`<admin-menu menuBehavior></admin-menu>`
+      2. 在 decorator 中写，这种叫 host directives：与上面写法相似，但有不同
+
+         ```code
+            @Component({
+               standalone: true, // 能使用 host directives 的组件必须是 standalone: true
+               selector: 'admin-menu',
+               template: 'admin-menu.html',
+               hostDirectives: [MenuBehavior],
+            })
+            export class AdminMenu { }
+         ```
+
+3. 注意：不允许同一个 DOM element 上同时有两个 directive. 因为无法确定两个指令的优先顺序。
+4. Directive composition API ❓❓❓
+
+### Dependency Injection / DI 依赖注入
+
+   1. 定义：
+   2. 4个核心概念：
+      1. Dependency: 组件要依赖的服务实例对象
+      2. Injection Token: 依赖的服务实例对象有很多，用 Token 做服务实例对象的标识，即通过 Token 来获取服务实例对象
+
+      3. Injector 注入器：
+         1. 定义：负责创建服务类实例对象，并将服务类实例对象注入到需要的组件中. An injector for an application (created automatically during bootstrap) instantiates dependencies when needed, using a configured provider of the service or value.
+         2. 用法：
+
+            ```code
+            // 创建注入器 注意：ReflectiveInjector 会带有中划线是因为此API未来将会被废弃
+            import { ReflectiveInjector } from '@angular/core'
+            // 服务类
+            class MailService {}
+            // 创建注入器并传入服务类
+            const injector = ReflectiveInjector.resolveAndCreate([MailService]);
+            // 获取注入器中的服务类的实例对象
+            const mailService = injector.get(MailService)
+            console.log("mailService", mailService);
+            
+            ```
+
+         3. 相同的注入器，返回的服务实例对象是单例模式，同一个注入器在创建服务实例后会对其进行缓存
+
+            ```code
+            const mailService1 = injector.get(MailService)
+            const mailService2 = injector.get(MailService)
+            console.log(mailService1 === mailService2); // true
+            ```
+
+         4. 不同的注入器，返回的是不同的服务实例对象
+
+            ```code
+            const injectorFirst = ReflectiveInjector.resolveAndCreate([MailService]);
+            const injectorSecond = ReflectiveInjector.resolveAndCreate([MailService]);
+            const firstService = injectorFirst.get(MailService)
+            const secondService = injectorSecond.get(MailService)
+            console.log(firstService === secondService); // false
+            ```
+
+         5. resolveAndCreateChild可以创建子注入器，服务实例对象的查找类似函数作用域链，当前级别可以找到就使用当前级别，当前级别找不到就去父级中查找
+
+            ``` code
+            // resolveAndCreate 创建注入器
+            const injector = ReflectiveInjector.resolveAndCreate([MailService]);
+            // resolveAndCreateChild 创建子注入器
+            // 数组里没传入服务 所以当前级别没有对应服务实例对象 
+            const childInjector = injector.resolveAndCreateChild([])
+            const fatherService = injector.get(MailService)
+            // 在 get的时候发现本层没有，就会向上查找
+            const sonService = childInjector.get(MailService)
+            console.log(fatherService === sonService); // true 最终查到的一个实例对象
+
+            ```
+
+      4. Provider 提供者:
+         1. 定义：是注入器 Injector 的配置对象
+         2. 访问依赖对象的标识 provide：
+            1. 数据类型：既可以是对象比如 MailService 也可以是 "mail" 字符串。
+            2. 意义：将实力对象和外部的引用建立松耦合关系，外部通过标识获取实例对象，只要标识保持不变，内部代码怎么变化都不会影响到外部。
+            3. 用法：
+
+               ``` code
+               // resolveAndCreate 创建注入器
+               const injector = ReflectiveInjector.resolveAndCreate([
+                  {
+                     // 注意：属性名是 provide 不是 provider
+                     // 这样写的时候，就不需要在 
+                     // provide: MailService,  // 用哪个标识去获取实例对象，也可以是字符串
+                     provide: “mail”,  // 用哪个标识去获取实例对象，也可以是字符串
+                     useClass: MailService //用那个类创建实例对象
+                  }
+               ]);
+               ```
+
+         3. useValue: 作为配置对象，也可以传递一个对象
+
+            ``` code
+            // resolveAndCreate 创建注入器
+            const injector = ReflectiveInjector.resolveAndCreate([
+               {
+                  provide: “Config”,  // 用哪个标识去获取实例对象，也可以是字符串
+                  // 使用 Object.freeze 使外部无法修改该对象
+                  useValue: Object.freeze({
+                     APIKEY: '12345',
+                     APISCRET: '500-400-300',
+                  })
+               }
+            ]);
+            ```
+
+      5. 当前层级 injector 没找到，就去上一层找 ❓❓❓
+      6. providedIn: 'any', ❓❓❓
