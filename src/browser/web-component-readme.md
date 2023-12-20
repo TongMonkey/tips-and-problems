@@ -70,3 +70,8 @@
       1. 生效前提：跟上面一样，mode: open
       2. 2种用法：参考链接：<https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM#encapsulation_from_css>
       3. 
+
+### Custom elements 
+
+1. 定义：自定义元素
+2. 用法：<https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM#shadow_dom_and_custom_elements>

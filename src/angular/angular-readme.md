@@ -321,29 +321,31 @@
                2. 背景：以往我们想在一个组件A中引用另一个组件B时，必须依赖 @ngModule 并在 @ngModule-declarations array 里声明这个组件B，这就导致我们始终无法摆脱 ngModule. 有了 standalone 后，将组件A 和 组件B 都声明成独立组件，就可以在 @componentA-imports array 里直接引入B
                3. 用法：
                   1. 在对应的 component 的 decorator 里新增设置 `standalone: true`; 就可以将该组件标记为独立组件
+                  2. 将依赖导入 import the dependency components, services, directives, pipes, etc. 
+                     1. 这些依赖也应该是 standalone: true 的；
 
-                     ```code
-                        @Component({
-                           standalone: true, // 本身标记为独立组件
-                           selector: 'photo-gallery',
-                           imports: [ImageGridComponent],  //ImageGridComponent 也是 standalone:true
-                           template: ` <image-grid [images]="imageList"></image-grid>`,
-                        })
-                        export class PhotoGalleryComponent {}
-                     
-                     ```
+                        ```code
+                           @Component({
+                              standalone: true, // 1. 本身标记为独立组件
+                              selector: 'photo-gallery',
+                              imports: [ImageGridComponent],  // 2. ImageGridComponent 也是 standalone:true
+                              template: ` <image-grid [images]="imageList"></image-grid>`,
+                           })
+                           export class PhotoGalleryComponent {}
+                        
+                        ```
 
-                  2. 如果要使用的某个 component/directive/pipe 可能还没有被标记为独立的(那么就一定被某个现有的 ngModule 声明并导出着), 这种情况可以直接将这个 module 导入
+                     2. 如果依赖不是 standalone, 而是在 module 中注册的，可以直接将这个 module 导入进来
 
-                     ```code
-                        @Component({
-                           standalone: true,
-                           selector: 'photo-gallery',
-                           imports: [MatButtonModule], // an existing module is imported directly into a standalone component
-                           template: `<button mat-button>Next Page</button>`,
-                        })
-                        export class PhotoGalleryComponent {}
-                     ```
+                        ```code
+                           @Component({
+                              standalone: true,
+                              selector: 'photo-gallery',
+                              imports: [MatButtonModule], // an existing module is imported directly into a standalone component
+                              template: `<button mat-button>Next Page</button>`,
+                           })
+                           export class PhotoGalleryComponent {}
+                        ```
 
                   3. 也可以将独立组件像普通组件一样导入到 ngModule imports array 中
                   4. `bootstrapApplication`: ❓❓❓ 通过使用独立组件作为程序的根组件， 一个 Angular 程序可以在没有任何 NgModule 的情况下被启动，通过一个 API: bootstrapApplication 完成。
@@ -2334,6 +2336,38 @@
    2. 4个核心概念：
       1. Dependency: 组件要依赖的服务实例对象
       2. Injection Token: 依赖的服务实例对象有很多，用 Token 做服务实例对象的标识，即通过 Token 来获取服务实例对象
+         1. useClass
+         2. useExisting
+         3. useFactory
+            1. 定义：useFactory 可以指定一个函数，它的调用返回值将会作为依赖被注入
+            2. 用处：支持动态地取得并注入一些 app 运行后才能得到的数据，
+            3. 用法：
+
+               ```code
+                  // in hero.service.ts
+                  constructor(
+                     private logger: Logger,
+                     private isAuthorized: boolean
+                  ){}
+                  getHeroes() {
+                     const auth = this.isAuthorized ? 'authorized ' : 'unauthorized';
+                     this.logger.log(`Getting heroes for ${auth} user.`);
+                     return HEROES.filter(hero => this.isAuthorized || !hero.isSecret);
+                  }
+
+                  // in hero.service.provider.ts
+                  const heroServiceFactory = (logger: Logger, userService: UserService) => {    
+                     return new HeroService(logger, userService.user.isAuthorized);
+                  }
+
+                  export const heroServiceProvider = { 
+                     provide: HeroService,
+                     useFactory: heroServiceFactory,
+                     deps: [Logger, UserService]   // heroServiceFactory 方法的依赖放在这
+                  };
+               ```
+
+         4. useValue
 
       3. Injector 注入器：
          1. 定义：负责创建服务类实例对象，并将服务类实例对象注入到需要的组件中. An injector for an application (created automatically during bootstrap) instantiates dependencies when needed, using a configured provider of the service or value.
@@ -2421,39 +2455,124 @@
             ]);
             ```
 
-      5. 当前层级 injector 没找到，就去上一层找 ❓❓❓
-      6. providedIn: 'any', ❓❓❓
+   3. Inject Context 注入环境上下文 ❓❓❓
+      1. 
+      2. 查找路径：当前层级 injector 没找到，就去上一层找
+   4. 文档 Using an InjectionToken object 这一节 ❓❓❓
 
 ### Change Detection & Zone.js & NgZone
 
 1. Change Detection：
-   1. 定义：是Angular 检测应用状态是否发生改变的过程，以及是否有任何 DOM 需要更新。 在高层次上，Angular从上到下检查你的组件，寻找变化。Angular定期运行它的变化检测机制，以便将数据模型的变化反映在应用程序的视图中。变化检测可以通过手动或异步事件（例如，用户互动或XMLHttpRequest完成）来触发。
-   2. 注意：可能会引起减速，所以不能运行太频繁。
+   1. 定义：是Angular 检测应用状态是否发生改变的过程，以及是否有任何 DOM 需要更新。 在高层次上，Angular从上到下检查你的组件，寻找变化。Angular定期运行它的变化检测机制，以便将数据模型的变化反映在应用程序的视图中。变化检测可以通过手动或异步事件（例如，用户互动或XMLHttpRequest完成）来触发。它的职责主要有两个部分：1.detecting + 2.propagating changes from your application's data model to the user interface.
+   2. 变化检测策略
+      1. by default：默认是一个组件的变化，会引起它的所有孩子组件共同变化。
+      2. OnPush:
+         1. 用处：当我们确信应用的一部分并不会被状态的改变而影响时， 就可以用 OnPush 来跳过整个子树的更新检测。
+         2. 设置为 OnPush 后，也不是完全不会 change detection. 何时去 detect：只有在下面两种情况发生时才会去检测子树的变化
+            1. subtree root component 子树的根组件接收的 @Input 变量(无论在子组件中这个@Input variable 有没有与tameplate binding的)，与之前的变量，通过 '==' 比较之后只要 @Input variable 发生了变化，那么这个 root component 就会 change detection. 同时，这个子树根组件下面的 child component 子组件，如果设置了 OnPush, 除非这个 child component 的 @Input 变了，否则这个子组件是不会 change detect 的
+            2. angular 在‘子树根组件 或 它的任意孩子组件’中 在处理event (比如 event binding, @Outout binding, @HostListener 等), 无论这些组件是否应用了 OnPush 策略，那么都会触发 change detection in the entire component tree, 包括它的 ancestors 祖先组件 (及时祖先组件有 OnPush 也会 detect)。因为孩子组件是父母组件的一部分。
+      3. 示例：angular-demo\src\app\zone\granda\granda.component.ts
+      4. 对比：Granda - Parent - Child 三层组件, 每个组件显示一个随机数，每个组件 model 有一个定时器能更改这个数据，同时 template 中有 click event 可以更改数据。默认组件之间没加 @Input property。
+         1. granda & parent & child: by default: 三个组件的值，一直在变化。
+         2. granda: onPush，parent & child: by default:
+            1. 三个层级的值都不再变化。说明祖先组件中 onPush 会影响 自己&所有 by default 后代的 detection.
+            2. click on 任意 template: granda & parent & child 的值都发生变化。granda 变化是因为 event，parent & child 变化是因为 granda.
+         3. granda & parent: by default，child: onPush:
+            1. granda & parent 都能自动变化，child 不变
+            2. 此时给 child 增加一个 @Input, 从 parent 传进来。这时，strategy 设置不变，三个组件都开始变化。这是因为 child 的 @Input 变化，会自动触发 change detection.
+         4. granda & parent: onPush, child: by default。
+            1. 三个组件都不变化。
+            2. event on granda: 只有 granda 自己变化。 说明变化没有传递给 下层的 onPush components。
+            3. event on parent: 三个组件都变化。无论此时 parent 给不给 child 一个 Input, 三个组件都变化。因为 event 会让 parent 组件自动 detect, 并 propagate to grada, 而 child 由于是 by default， 所以也会受影响。
+            4. event on child：三个组件都变化。
+         5. granda & child: onPush, parent：by default。
+            1. 三个组件都不变化。此时无论 parent 有没有给 child 传递参数，child 都变化
+         6. granda & parent & child: onPush
+            1. event on granda: 只有 granda 自己变化。
+            2. event on parent: granda & parent 变化，child 不变化。
+            3. event on parent & 给 child 一个 Input 参数：三个都变化。
+            4. event on child: 三个都变化。
+         7. granda: by default, parent & child: onPush:
+            1. 只有 grada 自己变化，节奏跟随 setInterval 的间隔
+            2. event on granda: 只有 grada 自己变化，变化的节奏是 setInterval + event
+            3. event on parent: granda 一直在变(setInterval的节奏)，parent 也变(event的节奏)。
+            4. event on child: granda 一直在变(setInterval的节奏)，parent & child 也变(event的节奏)。
+            5. 此时增加传参 @Input： granda 传 parent 但 parent 没传 child, 那么 granda 的传参变化会影响 parent 但不会影响 child。
+      5. Edge cases:
+         1. 手动修改 OnPush 组件的 @Input 的输入属性时，并不会引起变化检测，可以在需要的地方，需要告诉 Angular 安排一次 change detection：
+
+            ```code
+               // parent 中：
+               <app-child #child></app-child>
+               @ViewChild('child') child: any;
+               setInterval(() => {
+               this.number = Math.random() * 100;
+                  this.child.parentNumber = Math.random(); // 手动赋值
+               }, 1000);
+
+               // child is onPush.
+               @Input() parentNumber: any = 0;
+               constructor(private cdf: ChangeDetectorRef){}
+               this.cdf.markForCheck(); // 加上这句后，child 组件的显示值才开始变化
+            ```
+
+         2. 当输入值的内存引用地址没有变，即使内容变化了，也不会引起 change detection, 这是预期行为， 因为对象比较的就是内存地址。所以在开发过程中，要注意对象的赋值问题。
+   3. 疑问：
+      1. markForCheck VS detectChanges 的区别是什么: 作用不同。detectChanges 是用来 checks the change detector and its children, 是干活儿的。 markForCheck 是用来 marks all ChangeDetectionStrategy ancestors as to be checked. 是来安排活儿的。
+      2. 这两个方法是怎么实现的(In code level): ❓❓❓
+   4. 注意：
+      1. change detection 可能会引起减速，所以不能运行太频繁。
 2. Zone.js:
-   1. 定义：Zone.js是一种信号机制，Angular用它来检测应用程序的状态何时可能改变。它捕捉异步操作，如setTimeout、网络请求和事件监听器。Angular根据Zone.js的信号来安排变化检测。
-   2. 背景：在某些情况下，scheduled tasks 或 microtasks 不会对 data model 进行任何改变，这使得运行变化检测成为不必要的。常见的例子有：requestAnimationFrame、setTimeout或setInterval，以及一些由第三方库进行的任务或微任务调度。
-   3. 作用：Zone.js 用来识别这些情况，再决定是否执行变化检测
-   4. 情况：
-      1. 在Angular 外执行任务：例如 setTimeout, setInterval, requestAnimationFrame, or an event handler 产生的一系列调用，不需要变化检测，此时可以使用 NgZone.runOutsideAnguar 来实现
+   1. Zone: A zone is an execution context that persists across async tasks. 是一种跨越异步任务而持续存在的上下文。在异步操作中，在下一个 loop 执行的函数可能会丢失当前的执行上下文的 this，zone 提供了一个新的 zone context 上下文取代 this，所有异步操作的全过程，这个 zone context 都存在，取名叫 zoneThis。 想获取这个 zone context, 调用 `Zone.current`
+   2. Zone.js定义：是一种信号机制，Angular用它来检测应用程序的状态何时可能改变。它捕捉异步操作，如setTimeout、网络请求和事件监听器。Angular根据Zone.js的信号来安排变化检测。
+   3. 背景：在某些情况下，安排的 tasks 或 microtasks 不会对 data model 进行任何改变，这使得运行变化检测成为不必要的。常见的例子有：requestAnimationFrame、setTimeout或setInterval，以及一些由第三方库进行的任务或微任务调度。
+   4. 作用：Zone.js 用来识别这些情况，再决定是否执行变化检测
 3. NgZone:
    1. 定义：是 Angular 集成 Zone.js 后内置的一个服务
-   2. 在 Angular 外执行
+   2. 用途：
+      1. 不检测变化：在Angular 外执行任务。例如 setTimeout, setInterval, requestAnimationFrame, or an event handler 产生的一系列调用，不需要变化检测，此时可以使用 NgZone.runOutsideAnguar 来实现
 
-      ```code
-      import { Component, NgZone, OnInit } from '@angular/core';
-      @Component(...)
-      class AppComponent implements OnInit {
-         constructor(private ngZone: NgZone) {}
-         ngOnInit() {
-            this.ngZone.runOutsideAngular(
-               // 这样，执行 pollForUpdates 函数后不会引起 change detection
-               () => setInterval(pollForUpdates),
-               500
-            );
-         }
-      }
+         ```code
+            import { Component, NgZone, OnInit } from '@angular/core';
+            @Component(...)
+            class AppComponent implements OnInit {
+               constructor(private ngZone: NgZone) {}
+               ngOnInit() {
+                  // 这样，执行 pollForUpdates 函数后不会引起 change detection
+                  this.ngZone.runOutsideAngular(
+                     () => setInterval(pollForUpdates),
+                     500
+                  );
+               }
+            }
+         ```
 
+      2. 检测变化：可以强制 trigger change detection
+
+         ```code
+            this.zone.run(() =>{
+               ...
+            })
+         ```
+
+   3. 可以检测到的异步操作：
+      1. component initialization 组件初始化。
+         1. For example, when bootstrapping an Angular application, Angular loads the bootstrap component and triggers the `ApplicationRef.tick()` to call change detection and View Rendering
+      2. event listener DOM 事件
+      3. 未完待续 ❓❓❓ <https://angular.io/guide/zone#detecting-changes-with-plain-javascript>
+   4. 禁止 Angular 使用 ngZone：不再会有任何 change detection
+
+      ``` code
+         // main.ts
+         platformBrowserDynamic().bootstrapModule(
+            AppModule,
+            { ngZone： 'noop' }
+         )
       ```
 
-4. 疑问：
+4. 源码：❓❓❓
+   1. NgZone 怎么做的，分为 2 个 steps: 
+      1. View Checking: Synchronization of the component view with the data model.
+      2. Re-Render process(optional): Automatically re-execute the View Checking when application state might change. 如果 ngZone: 'noop' 这一步就没有了
+5. 疑问：
    1. 怎么判断应不应该检测变化呢，比如一个树状图，异步回调后要刷新某个节点，这样应该检测变化嘛，页面状态并么有改变？？

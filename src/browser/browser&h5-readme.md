@@ -160,7 +160,8 @@ V8 是谷歌开源的 JavaScript 引擎，被用于 Chrome 和 Node.js 。程序
    1. GUI渲染线程：(有的文档里也叫它渲染进程的主线程)负责渲染浏览器界面，解析HTML，CSS，构建DOM树和RenderObject树，布局和绘制等，当界面需要重绘（Repaint/Redraw）或由于某种操作引发回流(reflow)时，该线程就会执行. 例如window.requestAnimationFrame就属于GUI线程，会在下一次重绘之前调用获取动画计算结果
    2. JS引擎线程：负责执行js脚本，渲染进程无论什么时候都会有一个且只有一个js引擎始终存在，现在大部分用的都是排版引擎 Blink 和 JavaScript 引擎 V8，同步的任务在这个线程中运行，维持一个执行栈，js引擎是单线程的，它一直等待着任务队列中任务的到来，一旦执行栈中的所有同步任务执行完毕（此时JS引擎空闲），就会读取事件线程中的任务队列，将可运行的异步任务添加到可执行栈中，开始执行
    3. 事件队列线程：这个线程管理一个任务队列，即事件循环EventLoop, 将来自其他线程的任务加入到事件队列中等待js引擎线程空闲时处理，(任务可能来自不同线程，例如setTimeout来自定时触发器线程、ajax异步请求来自网络请求线程)
-   4. 定时器线程：setInterval与setTimeout所在线程。 所以说浏览器定时计数器并不是由JavaScript引擎线程计数的,因为JavaScript引擎线程是单线程, 如果处于阻塞线程状态就会影响记计时的准确。另外规定要求setTimeout中低于4ms的时间间隔算为4ms。 这个时间间隔后，将事件推入任务队列，然后就等着js引擎空闲时执行了(如果js还是在忙，可能执行时间还会延后哦)
+   4. 定时器线程：setInterval与setTimeout所在线程。 所以说浏览器定时计数器并不是由JavaScript引擎线程计数的,因为JavaScript引擎线程是单线程, 如果处于阻塞线程状态就会影响记计时的准确。
+      1. 注意：规定要求setTimeout中低于4ms的时间间隔算为4ms。 注意这个时间不是回调函数将会被执行的间隔，而是这个时间间隔后，将事件推入任务队列，然后就等着js引擎空闲时执行了(如果js还是在忙，可能执行时间还会延后哦)。
    5. 异步网络请求线程：产生一个xhr连接后会新开一个网络请求线程，监控到xhr的readyState状态变化后，如果设置了处理状态的回调函数，异步线程将回调函数放进事件触发线程中的任务队列中，等待JS引擎线程执行。注意Chrome浏览器对同一域名的请求并发数限制为6
    6. Compositor合成线程：直接将GUI线程得到的LayerTree拿来执行，对图层分块给光栅线程做光栅化，GPU进程可以加速。做好了就给回GUI主线程了。它可以跟GUI主线程一起执行，这也是为什么说用GPU做动画等是优化方案了
    7. Raster光栅线程：用来将几何信息转换为屏幕上像素的线程
@@ -186,34 +187,34 @@ V8 是谷歌开源的 JavaScript 引擎，被用于 Chrome 和 Node.js 。程序
 参考链接：<https://baijiahao.baidu.com/s?id=1702088861129925384&wfr=spider&for=pc>
 
 1. 处于一个渲染进程中的事件队列线程，维护了一个栈，分为 宏任务 和微任务。
-2. 宏任务：
-   1. setTimeout
-   2. setInterval
-   3. messageChannel
+   1. 宏任务：
+      1. setTimeout
+      2. setInterval
+      3. messageChannel
 
-3. 微任务：
-   1. Promise (包含promise.then promise.catch promise.finally)
-   2. window.queueMicrotask 可以创建一个微任务
-   3. MutationObserver，监控dom节点变化、
+   2. 微任务：
+      1. Promise (包含promise.then promise.catch promise.finally)
+      2. window.queueMicrotask 可以创建一个微任务
+      3. MutationObserver，监控dom节点变化、
 
-      ```
-      // 创建一个微任务
-      const observer = new MutationObserver((mutationRecords, observer)=>{
-         console.log('mt1')
-      }))
-      observer.observe(document.body, { attributes: true })
-      ```
+         ``` code
+         // 创建一个微任务
+         const observer = new MutationObserver((mutationRecords, observer)=>{
+            console.log('mt1')
+         })
+         observer.observe(document.body, { attributes: true })
+         ```
 
-4. 特殊的任务队列：Animation callbacks 是由 requestAnimationFrame定义的回调，也是一个队列，不属于事件循环
-5. 优先级 同步任务 > 微任务 > 宏任务
-6. 浏览器执行机制：
+   3. 特殊的任务队列：Animation callbacks 是由 requestAnimationFrame定义的回调，也是一个队列，不属于事件循环
+2. 优先级 同步任务 > 微任务 > 宏任务
+3. 浏览器执行机制：
    1. 浏览器的事件循环，是在渲染进程中的；
    2. 执行一个宏任务，栈中没有就从事件队列中获取；
    3. 执行过程中如果遇到微任务，就添加到微任务的队列中；
    4. 当前这个宏任务执行完毕后，立即执行当前微任务队列的所有微任务；
    5. 当前宏任务执行完毕，GUI线程接管渲染； 其中这个GUI线程接管后，就执行 requestAnimationFrame ，这也是一帧的开始
    6. 渲染完毕后，JS线程继续接管，开始下一个宏任务；
-7. 事件循环与帧的关系：
+4. 事件循环与帧的关系：
    1. ![EventLoop与Frame](/src/assets/EventLoop与Frame.png)
    2. js引擎获得执行权：执行同步代码，从任务队列取出一个宏任务执行，然后执行当前所有微任务，微任务都执行完后才切换执行权。
    3. GUI线程获取执行权，开始新的一帧： requestAnimationFrame、页面布局、渲染，如果这一帧还有空闲时间就执行requestIdleCallback. 这一帧结束后，切换执行权
@@ -354,7 +355,7 @@ V8 是谷歌开源的 JavaScript 引擎，被用于 Chrome 和 Node.js 。程序
 5. JS 会 阻塞 后面的 DOM 解析和渲染  (所以js放在页面最后，别耽误html和css解析，减少白屏时间)
 6. 视频、图片、字体 等都不会阻塞渲染
 
-### Worder对象 进程中的独立后台线程
+### Worker对象 进程中的独立后台线程
 
 1. web Worker
    1. 定义：Web Worker 是一个独立的线程（独立的执行环境），这就意味着它可以完全和 UI 线程（主线程）并行的执行 js 代码，从而不会阻塞 UI，
