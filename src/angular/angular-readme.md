@@ -502,27 +502,146 @@
 
             ```
 
-      6. @ViewChild:
-         1. 定义：是一个属性装饰器，用来配置视图查询
-         2. 作用: The change detector looks for the first element or the directive matching the selector in the view DOM. If the view DOM changes, and a new child matches the selector, the property is updated.
-         3. 查询时机：视图查询是在调用ngAfterViewInit回调之前设置的。
-         4. 注意: 获取`第一个`匹配的元素或者指令，并且angular会通过detector自动监听更改
-         5. The following selectors are supported.
-            1. Any class with the @Component or @Directive decorator
-            2. A template reference variable as a string (e.g. query `<my-component #cmp></my-component>` with @ViewChild('cmp'))
-            3. Any provider defined in the child component tree of the current component (e.g. @ViewChild(SomeService) someService: SomeService)
-            4. Any provider defined through a string token (e.g. @ViewChild('someToken') someTokenVal: any)
-            5. A TemplateRef (e.g. query `<ng-template></ng-template>` with @ViewChild(TemplateRef) template;)
-         6. 用法：
+      6. Property decorator:
+         1. @ViewChild:
+            1. 定义：@ViewChild 是一种本地组件模板查询机制，无法查看其子组件的内部结构。获取 template view 的引用，注入到 component 中。@ViewChild is a local component template querying mechanism, that cannot see the internals of its child components.
+            2. 作用: 通过将引用直接注入组件类，我们可以轻松编写任何涉及模板多个元素的协调逻辑。By injecting references directly into our component class, we can easily write any coordination logic that involves multiple elements of the template.
+            3. 能获取到视图的范围：The @ViewChild decorator cannot see across component boundaries. 也就是说能获取的是组件的 local template，不能是元素里的子元素。The queries done using @ViewChild can only see elements inside the template of the component itself.
+            4. 何时注入的 ViewChild variable：
+               1. injected time: 视图变量不是在 component construction time 完成的，而是在 view initialization 完成后，把这个对 view 的 reference 注入到 component 中的
+               2. use time: ngAfterViewInit回调中可以开始使用 view 的 reference。
+               3. 注意：
+                  1. 有时候可能会在 ngOnInit 里能拿到 View 的 reference，但是我们不应该指望它，还是在 ngAfterViewInit 中是稳妥的，always.
+            5. 注意: 获取`第一个`匹配的元素或者指令，并且angular会通过detector自动监听更改
+            6. Metadata properties:
+               1. selector:
+                  1. The following 'selectors' are supported.
+                     1. Any class with the @Component or @Directive decorator
+                     2. A template reference variable as a string (e.g. query `<my-component #cmp></my-component>` with @ViewChild('cmp'))
+                     3. Any provider defined in the child component tree of the current component (e.g. @ViewChild(SomeService) someService: SomeService)
+                     4. Any provider defined through a string token (e.g. @ViewChild('someToken') someTokenVal: any)
+                     5. A TemplateRef (e.g. query `<ng-template></ng-template>` with @ViewChild(TemplateRef) template;)
+               2. read:
+                  1. 用处：
+                     1. TemplateRef, ElementRef, and ViewContainerRef
+                        1. 举例：取 component 对应的 DOM element，即 ElementRef
 
-            ``` code
-            @ViewChild(selector, )
-            ```
+                           ```code
+                           // template
+                           <color-sample #primaryColorSample ></color-sample>
 
-      7. @ViewChildren
-      8. @ContentChild
-      9. @ContentChildren
-      10. @HostBinding ❓❓❓
+                           // component 中：
+                           @ViewChild('primaryColorSample', {read: ElementRef}) sample: ElementRef; // 此时得到的变量类型是 ElementRef
+                           ngAfterViewInit(){
+                              console.log(this.sample.nativeElement);
+                           }
+                           ```
+
+                     2. Any class with the @Component or @Directive decorator
+                        1. 举例：取 component/DOM 上的某个 directive
+
+                           ```code
+                           // template: input 标签上应用了一个叫 colorPicker 的 directive。点击color-sample组件，调用起 colorPicker 的 dialog。
+                           <color-sample [color]="primary" #primaryColorSample (click)="primaryInput.openDialog()"></color-sample>
+                           <input matInput #primaryInput [(colorPicker)]="primary" [(ngModel)]="primary"/>
+
+                           // component:
+                           @ViewChild('primaryInput', {read: ColorPickerDirective}) colorPicker: ColorPickerDirective;
+                           openColorPicker() {
+                              this.colorPicker.openDialog(); 
+                           }
+                           ```
+
+                     3. Any provider defined on the injector of the component that is matched by the selector of this query
+                        1. 举例 ❓❓❓
+                     4. Any provider defined through a string token (e.g. {provide: 'token', useValue: 'val'})
+                        1. 举例 ❓❓❓
+               3. static: boolean
+            7. 参考链接：
+               1. <https://blog.angular-university.io/angular-viewchild/>
+
+         2. @ViewChildren
+            1. Metadata properties: selector / read / emitDistinctChangesOnly
+            2. 用法:
+
+               ``` code
+               @ViewChild(SomeComponent) someComponents: QueryList<SomeComponent>
+               ```
+
+         3. @ContentChild
+            1. 作用：用来查询 ng-content 标签中的内容
+            2. 用法：
+
+               ```code
+                  @Component({
+                     selector: 'alert',
+                     template: `
+                        <h1> Alert component </h1>
+                        <ng-content></ng-content>
+                     `,
+                  })
+                  export class AlertComponent {
+                     @ContentChild("insideNgContent") insideNgContent;
+
+                     ngAfterContentInit(){
+                        console.log(this.insideNgContent);
+                     }
+                  }
+
+                  @Component({
+                     selector: 'my-app',
+                     template: `
+                        <alert>
+                           <p #insideNgContent> Inside ng-content </p>
+                        </alert>
+                     `,
+                  })
+                  export class App {}
+               ```
+
+         4. @ContentChildren
+             1. 用法：
+
+                ```code
+                      @Component({
+                         selector: 'tab',
+                         template: `
+                            <p>{{title}}</p>
+                         `,
+                      })
+                      export class TabComponent {
+                         @Input() title;
+                      }
+
+                      @Component({
+                         selector: 'tabs',
+                         template: `
+                            <ng-content></ng-content> // 传进俩 tab 组件 作为 content
+                         `,
+                      })
+                      export class TabsComponent {
+                         @ContentChildren(TabComponent) tabs: QueryList<TabComponent>
+                      
+                         ngAfterContentInit() {
+                            this.tabs.forEach(tabInstance => console.log(tabInstance))
+                         }
+                      }
+
+                      @Component({
+                         selector: 'my-app',
+                         template: `
+                            <tabs>
+                               <tab title="One"></tab>
+                               <tab title="Two"></tab>
+                            </tabs>
+                         `,
+                      })
+                      export class App {}
+                   ```
+
+         5. 对比 @View*和 @Content*：
+            1. 区别：View*不包含在 ng-content 中的内容，Content* 只包含在 ng-content 中的内容。
+      7. @HostBinding ❓❓❓
 
 ### 服务  Service
 
@@ -2209,17 +2328,17 @@
          3. 给指令传值
 
             ```code
-               // In AppComponent.*
+               // In AppComponent which applies the highlight directive
                color = 'green';
                <div [appHighlight]="color">Highlight me!</div>
 
-               // In HightlightDirective
+               // In HighlightDirective
                @Directive({
                   standalone: true,
                   selector: '[appHighlight]', // CSS attribute selector
                })
                export class HighlightDirective {
-                  @Input() appHighlight: string = '';
+                  @Input() appHighlight: string = ''; // 接收入参 'color' variable
 
                   @HostListener('mouseenter') onMouseEnter() {
                      this.highlight(this.appHighlight);
@@ -2315,7 +2434,7 @@
          3. `<ng-container *ngIf='condition'>...</ng-container>`: 当没有元素适合承接指令时，就可以用 ng-container
    4. 用法：Directive composition API ❓❓❓
       1. 在template 中写：`<admin-menu menuBehavior></admin-menu>`
-      2. 在 decorator 中写，这种叫 host directives：与上面写法相似，但有不同
+      2. 在 decorator 中写，这种叫 host directives：与上面写法相似，但有不同 ❓❓❓
 
          ```code
             @Component({
@@ -2327,7 +2446,7 @@
             export class AdminMenu { }
          ```
 
-3. 注意：不允许同一个 DOM element 上同时有两个 directive. 因为无法确定两个指令的优先顺序。
+3. 注意：不允许同一个 DOM element 上同时有多个个 directive. 因为无法确定两个指令的优先顺序。It is not allowed to apply multiple directives to the same plain HTML element.
 4. Directive composition API ❓❓❓
 
 ### Dependency Injection / DI 依赖注入 ❓❓❓
