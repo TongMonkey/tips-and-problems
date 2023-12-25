@@ -1301,7 +1301,7 @@
 
 ### 管道 Pipe
 
-1. 管道：传输数据，支持链式管道，从左到右，逐层执行,
+1. 定义：Detect changes and update the display. 检测值的变化，更新显示内容。本质是一个管道用来 transform 传输数据，支持链式管道，从左到右，逐个执行。
 2. 自带的管道
    1. ![管道分类](../assets/Angular_Pipe.png)
       1. async pipe: 从一个异步单元中解锁一个值。
@@ -1368,11 +1368,78 @@
       ```
 
 3. 自定义管道：
-   1. 命令 ng g p pipeName
-   2. 示例：/angular-demo/src/app/pipes/custom-pipe-one.pipe.ts
-   3. 传参：管道默认有两个参数，第一个必选value，第二个可选数组
-      1. 入参的写法，就是在管道后面用冒号依次向后写 比如 `<p>{{ title | customPipeOne: 5:10:15 }}</p>` 那么在 customPipeOne 管道中的第二个参数就是[5,10,15]
-      2. 自定义入参：默认的入参是number数组格式，可以自定义修改
+   1. 用法：ng generate pipe pipeName 或者 ng g p pipeName ( 简写模式 ) 创建出来一个 带有 @Pipe decorator 的 class, 就是一个自定义 pipe，把它放进对应的 module-declarations 里，即可使用。
+   2. 文档：<https://angular.io/guide/pipes-custom-data-trans>
+   3. 分类：
+      1. Pure pipe: Detects pure change, 或者说，pure pipe is triggered by pure change.
+
+         ```code
+         // 示例 /angular-demo/src/app/pipes/custom-pipe-one.pipe.ts
+         @Pipe({
+            name: 'exponentialStrength'
+         })
+         export class ExponentialStrengthPipe implements PipeTransform {
+            // 这个入参 number 类型的 value 就是 pipe 的传参, 以及返回值, 这里是 number, 都可以自定义
+            transform(value: number, exponent = 1): number {
+               return Math.pow(value, exponent);
+            }
+         }
+         // 使用
+         <p>count: {{ 2 | exponentialStrength: 10 }}</p> // 传入 value = 2
+
+         // 源码：interface PipeTransform 
+         export interface PipeTransform {
+            transform(value: any, ...args: any[]): any; // 都是 any 类型，可以完全自定义任何想要的数据格式
+         }
+         ```
+
+      2. impure pipe: Detects impure change 或者说 impipe pipe is triggered by impure change. 比如用来展示 Observable 的 AsyncPipe 就是一个 impure pipe. 源码位置：angular\packages\common\src\pipes\async_pipe.ts
+
+         ```code
+         @Pipe({
+            standalone: true,
+            name: 'flyingHeroesImpure',
+            pure: false  // 标记为一个 impure pipe
+         })
+         ```
+
+      注意：这个 impure or pure 指的是，会触发这个 pipe 的 change 是不是 pure 的，pipe function 本身应该 pure的纯函数。
+4. 原理：
+   1. pipe 依靠 change detection 检测变化。angular change detection 检测到值 pure change 纯变化了，就会触发 pure pipe execution; 检测到 impure change, 就会触发 impure pipe execution.
+   2. pure change: A pure change is either a change to a primitive input value or a changed object reference. 即 原始类型 或者 引用类型的引用地址 发生的变化叫纯变化。
+      1. 为什么通常只检测纯变化，而不去对比应用类型比如一个对象的属性的变化：因为对比纯变化要比 perfoming a ‘deep check’ for differences within objects 快得多。这样 angular 就能最快地知道是跳过执行 pipe 还是 更新 view.
+   3. impure change: 非纯变化，就是在 composite object 引用类型的值变化时，比如一个数组里多了一个元素，这种变化就是 impure change.
+      1. 什么时候触发 impure pipe execution: 在每次 change detection 比如 keystroke or mouse movement 值发生了变化，都会触发 impure pipe. Angular executes an impure pipe every time it detects a change with every keystroke or mouse movement.
+   4. 每一处使用了 pipe, 相当于一个 binding, 都会获得一个管道实例。Each binding gets ites own pipe instance.
+5. 对比
+   1. pipe VS function：在 template 中使用 pipe 好于直接使用 function，pipe 默认是个纯函数 pure function, 只有输入值发生纯变化 pure change 时 ，才会重新运行管道。而 function 会在每一次的 user interaction event 发生时都被触发，所以如果在控制台打印出来，会发现 function 被疯狂调用，而 pipe 只会在数据变化的时候调用一次。
+   2. pure pipe performance VS impure pipe performance: 有时候 impure pipe 可能会很有用，但是一个 long-running 长期执行的 impure Pipe 会极大地让程序变慢。
+6. 应用：
+   1. caching http request 缓存请求路径和返回数据
+
+      ```code
+      import { HttpClient } from '@angular/common/http';
+      import { Pipe, PipeTransform } from '@angular/core';
+
+      @Pipe({
+         standalone: true,
+         name: 'fetch',
+         pure: false,
+      })
+      export class FetchJsonPipe implements PipeTransform {
+         private cachedData: any = null;
+         private cachedUrl = '';
+         constructor(private http: HttpClient) { }
+         transform(url: string): any {
+            if (url !== this.cachedUrl) {
+               this.cachedData = null;
+               this.cachedUrl = url;
+               this.http.get(url).subscribe(result => this.cachedData = result);
+            }
+            return this.cachedData;
+         }
+      }
+      ```
 
 ### 生命周期
 
@@ -2583,13 +2650,25 @@
 
 1. Change Detection：
    1. 定义：是Angular 检测应用状态是否发生改变的过程，以及是否有任何 DOM 需要更新。 在高层次上，Angular从上到下检查你的组件，寻找变化。Angular定期运行它的变化检测机制，以便将数据模型的变化反映在应用程序的视图中。变化检测可以通过手动或异步事件（例如，用户互动或XMLHttpRequest完成）来触发。它的职责主要有两个部分：1.detecting + 2.propagating changes from your application's data model to the user interface.
-   2. 变化检测策略
+   2. update HTML 时机：
+      1. Component initialization: when bootstrapping an Angular application, Angular loads the bootstrap component and triggers the `ApplicationRef.tick()`` to call change detection and View Rendering.
+      2. Event listener:The DOM event listener can update the data in an Angular component and also trigger change detection
+      3. HTTP Data Request.
+      4. MacroTasks
+      5. MicroTasks
+      6. `WebSocket.onmessage()`
+      7. `Canvas.toBlob()`
+   3. change detection 时机：上面这些场景，只要数据可能会变，都会触发 angular runs change detection.
+      1. 在 component initialization 中，angular 显示地调用一次检擦
+      2. 其他时候，都是委托在一个 zone 中取检测变化
+   4. 变化检测策略
       1. by default：默认是一个组件的变化，会引起它的所有孩子组件共同变化。
       2. OnPush:
          1. 用处：当我们确信应用的一部分并不会被状态的改变而影响时， 就可以用 OnPush 来跳过整个子树的更新检测。
-         2. 设置为 OnPush 后，也不是完全不会 change detection. 何时去 detect：只有在下面两种情况发生时才会去检测子树的变化
-            1. subtree root component 子树的根组件接收的 @Input 变量(无论在子组件中这个@Input variable 有没有与tameplate binding的)，与之前的变量，通过 '==' 比较之后只要 @Input variable 发生了变化，那么这个 root component 就会 change detection. 同时，这个子树根组件下面的 child component 子组件，如果设置了 OnPush, 除非这个 child component 的 @Input 变了，否则这个子组件是不会 change detect 的
-            2. angular 在‘子树根组件 或 它的任意孩子组件’中 在处理event (比如 event binding, @Outout binding, @HostListener 等), 无论这些组件是否应用了 OnPush 策略，那么都会触发 change detection in the entire component tree, 包括它的 ancestors 祖先组件 (及时祖先组件有 OnPush 也会 detect)。因为孩子组件是父母组件的一部分。
+         2. 设置为 OnPush 后，也不是完全不会 change detection. 何时去 detect：只有在显下面三种情况发生时才会去检测子树的变化
+            1. 显示调用
+            2. subtree root component 子树的根组件接收的 @Input 变量(无论在子组件中这个@Input variable 有没有与tameplate binding的)，与之前的变量，通过 '==' 比较之后只要 @Input variable 发生了变化，那么这个 root component 就会 change detection. 同时，这个子树根组件下面的 child component 子组件，如果设置了 OnPush, 除非这个 child component 的 @Input 变了，否则这个子组件是不会 change detect 的
+            3. angular 在‘子树根组件 或 它的任意孩子组件’中 在处理event (比如 event binding, @Outout binding, @HostListener 等), 无论这些组件是否应用了 OnPush 策略，那么都会触发 change detection in the entire component tree, 包括它的 ancestors 祖先组件 (及时祖先组件有 OnPush 也会 detect)。因为孩子组件是父母组件的一部分。
       3. 示例：angular-demo\src\app\zone\granda\granda.component.ts
       4. 对比：Granda - Parent - Child 三层组件, 每个组件显示一个随机数，每个组件 model 有一个定时器能更改这个数据，同时 template 中有 click event 可以更改数据。默认组件之间没加 @Input property。
          1. granda & parent & child: by default: 三个组件的值，一直在变化。
@@ -2636,20 +2715,87 @@
             ```
 
          2. 当输入值的内存引用地址没有变，即使内容变化了，也不会引起 change detection, 这是预期行为， 因为对象比较的就是内存地址。所以在开发过程中，要注意对象的赋值问题。
-   3. 疑问：
+   5. 疑问：
       1. markForCheck VS detectChanges 的区别是什么: 作用不同。detectChanges 是用来 checks the change detector and its children, 是干活儿的。 markForCheck 是用来 marks all ChangeDetectionStrategy ancestors as to be checked. 是来安排活儿的。
       2. 这两个方法是怎么实现的(In code level): ❓❓❓
-   4. 注意：
+   6. 注意：
       1. change detection 可能会引起减速，所以不能运行太频繁。
 2. Zone.js:
-   1. Zone: A zone is an execution context that persists across async tasks. 是一种跨越异步任务而持续存在的上下文。在异步操作中，在下一个 loop 执行的函数可能会丢失当前的执行上下文的 this，zone 提供了一个新的 zone context 上下文取代 this，所有异步操作的全过程，这个 zone context 都存在，取名叫 zoneThis。 想获取这个 zone context, 调用 `Zone.current`
-   2. Zone.js定义：是一种信号机制，Angular用它来检测应用程序的状态何时可能改变。它捕捉异步操作，如setTimeout、网络请求和事件监听器。Angular根据Zone.js的信号来安排变化检测。
-   3. 背景：在某些情况下，安排的 tasks 或 microtasks 不会对 data model 进行任何改变，这使得运行变化检测成为不必要的。常见的例子有：requestAnimationFrame、setTimeout或setInterval，以及一些由第三方库进行的任务或微任务调度。
-   4. 作用：Zone.js 用来识别这些情况，再决定是否执行变化检测
+   1. 背景：在某些情况下，安排的 tasks 或 microtasks 不会对 data model 进行任何改变，这使得运行变化检测成为不必要的。常见的例子有：requestAnimationFrame、setTimeout或setInterval，以及一些由第三方库进行的任务或微任务调度。
+   2. Zone.js：
+      1. 定义：是一种信号机制，Angular用它来检测应用程序的状态何时可能改变。它捕捉异步操作，如setTimeout、网络请求和事件监听器。Angular 借助 Zone.js 用来识别这些情况，检测可能发生变化的地方，并自动运行 change detection.
+      2. 原理：Zone.js 可以创建在异步操作中持续存在的上下文，并为异步操作提供生命周期钩子。Zone.js can create contexts that persist across asynchronous operations as well as provide lifecycle hooks for asynchronous operations.
+   3. Zone execution context：A zone is an execution context that persists across async tasks. 是一种跨越异步任务而持续存在的上下文。在异步操作中，在下一个 loop 执行的函数可能会丢失当前的执行上下文的 this，zone 提供了一个新的 zone context 上下文取代 this，想获取这个 zone context, 调用 `Zone.current`。
+   4. Zone lifecycle hooks: 有了这些钩子函数，Zone 就能观察所有的同步或异步操作的状态
+      1. onScheduleTask: 当调度新的异步任务时会触发本函数。Triggers when a new asynchronous task is scheduled, such as when you call `setTimeout()`.
+      2. onInvokeTask: 当异步任务即将运行时触发，例如`setTimeout(callback)` 中 callback 即将运行时会触发本函数。Triggers when an asynchronous task is about to run, such as when the callback of setTimeout() is about to run.
+      3. onHasTask: 当区域内某类任务的状态从稳定变为不稳定或从不稳定变为稳定时触发。状态为 "稳定 "表示区内没有任务，而 "不稳定 "表示区内计划了新任务。Triggers when the status of one kind of task inside a zone changes from stable to unstable or from unstable to stable. A status of "stable" means there are no tasks inside the zone, while "unstable" means a new task is scheduled in the zone.
+      4. onInvoke: 当同步函数要在 Zone 内运行时触发。Triggers when a synchronous function is going to run in the zone.
+   5. 示例：
+
+      ```code
+      const zone = Zone.current.fork({
+         name: 'zone',
+         onScheduleTask: function(delegate, curr, target, task) {
+            console.log('new task is scheduled:', task.type, task.source);
+            return delegate.scheduleTask(target, task);
+         },
+         onInvokeTask: function(delegate, curr, target, task, applyThis, applyArgs) {
+            console.log('task will be invoked:', task.type, task.source);
+            return delegate.invokeTask(target, task, applyThis, applyArgs);
+         },
+         onHasTask: function(delegate, curr, target, hasTaskState) {
+            console.log('task state changed in the zone:', hasTaskState);
+            return delegate.hasTask(target, hasTaskState);
+         },
+         onInvoke: function(delegate, curr, target, callback, applyThis, applyArgs) {
+            console.log('the callback will be invoked:', callback);
+            return delegate.invoke(target, callback, applyThis, applyArgs);
+         }
+      });
+      zone.run(() => {
+         setTimeout(() => {
+            console.log('timeout callback is invoked.');
+         });
+      });
+      ```
+
+   6. 原理：Zone.js 库能实现这些功能是通过 Monkey Patching 拦截所有的 异步APIs. ❓❓❓ 
+      1. Monkey Patching: 
+         1. 定义：是一种在不更改源码的情况下，在函数运行时，能够新增或修改函数默认行为的技术。Monkey patching is a technique to add or alter the default behavior of a function at runtime without changing the source code.
+         2. 示例：
+
+            ```code
+            // 在 控制台 编码
+            const originalConsoleLog = console.log;
+            console.log = function (...args) {
+               originalConsoleLog(...args);
+
+               // custom logics
+               console.warn('This method was monkey-patched.');
+               const appChildComponent = ng.getComponent(document.getElementsByTagName('app-child')[0]); // 
+               appChildComponent.cdr.detectChanges(); // 需要当前加载的组件里注入了 cdr: ChangeDetectorRef
+            }
+
+            // 在控制台执行 console.log('try to console.log') 得到：
+            -try to console.log
+            -This method was monkey-patched.
+            ```
+
 3. NgZone:
-   1. 定义：是 Angular 集成 Zone.js 后内置的一个服务
+   1. 定义：既然 Zone.js 可以监控 同步+异步 操作， Angular 额外提供了一个 service 取名叫 NgZone. 这个 NgZone service 会 create a zone named angular , 当满足下面两个条件，会自动触发 change detection.
+      1. When a sync or async function is executed 
+      2. When there is no microTask schedule ❓❓❓ 为啥必须是没有微任务的时候才能 change detection?
    2. 用途：
-      1. 不检测变化：在Angular 外执行任务。例如 setTimeout, setInterval, requestAnimationFrame, or an event handler 产生的一系列调用，不需要变化检测，此时可以使用 NgZone.runOutsideAnguar 来实现
+      1. 检测变化：比如某些第三方库没有被 Zone 处理，也需要监控值的改变，就可以用 zone.run 方法使其运行在 Angular zone 上下文中，更新检测也会被正确地触发。
+
+         ```code
+            this.ngZone.run(() =>{
+               ...
+            })
+         ```
+
+      2. 不检测变化：在Angular 外执行任务。例如 setTimeout, setInterval, requestAnimationFrame, or an event handler 产生的一系列调用，不需要变化检测，此时可以使用 NgZone.runOutsideAnguar 来实现
 
          ```code
             import { Component, NgZone, OnInit } from '@angular/core';
@@ -2666,32 +2812,64 @@
             }
          ```
 
-      2. 检测变化：可以强制 trigger change detection
+   3. Some best practices:
+      1. Disabling some asynchronous API monkey patching for better performance. For example, disabling the requestAnimationFrame() monkey patch, so the callback of `requestAnimationFrame()` does not trigger change detection. This is useful if, in your application, the callback of the `requestAnimationFrame()` does not update any data.
+      2. Specify that certain DOM events do not run inside the Angular zone. For example, to prevent a mousemove or scroll event to trigger change detection.
+         1. 用法都在 angular/packages/zone.js/MODULE.md 中有写。把这些写在一个文件中，在 polyfills.ts 中，插入到 import zone.js 语句之前
+
+            ```code
+            // zone-flags.ts
+            (window as any).__Zone_disable_requestAnimationFrame = true;
+            (window as any).__zone_symbol__UNPATCHED_EVENTS = ['scroll', 'mousemove'];
+            
+            // polyfill.ts
+            import `./zone-flags`;
+            import 'zone.js';  // Included with Angular CLI.
+            ```
+
+      3. 但有些时候，不想完全取消对某个事件的监听，也不想一直被 event 触发，可以重写一些这个元素的某个事件（示例只为展示思路）。
 
          ```code
-            this.zone.run(() =>{
-               ...
-            })
+         // template
+         <div (click)="paint()">
+            <div
+               style="width: 100%; height: 500px"
+               [ngStyle]="style"
+               (click)="repaint()"
+            ></div>
+         </div>
+
+         // component
+         constructor(
+            private ngZone: NgZone,
+            private renderer: Renderer2,
+            private element: ElementRef
+         ) {}
+         ngAfterViewInit(): void {
+            this.ngZone.runOutsideAngular(() => {
+               this.renderer.listen(
+                  this.element.nativeElement,
+                  'click',
+                  this.repaint.bind(this)
+               );
+            });
+         }
          ```
 
-   3. 可以检测到的异步操作：
-      1. component initialization 组件初始化。
-         1. For example, when bootstrapping an Angular application, Angular loads the bootstrap component and triggers the `ApplicationRef.tick()` to call change detection and View Rendering
-      2. event listener DOM 事件
-      3. 未完待续 ❓❓❓ <https://angular.io/guide/zone#detecting-changes-with-plain-javascript>
    4. 禁止 Angular 使用 ngZone：不再会有任何 change detection
 
       ``` code
-         // main.ts
-         platformBrowserDynamic().bootstrapModule(
-            AppModule,
-            { ngZone： 'noop' }
-         )
+      // 1. remove the zone.js import from the plyfills.ts
+      // 2. set noop to the configuration in main.ts
+      platformBrowserDynamic().bootstrapModule(
+         AppModule,
+         { ngZone： 'noop' }
+      )
       ```
 
-4. 源码：❓❓❓
-   1. NgZone 怎么做的，分为 2 个 steps: 
-      1. View Checking: Synchronization of the component view with the data model.
-      2. Re-Render process(optional): Automatically re-execute the View Checking when application state might change. 如果 ngZone: 'noop' 这一步就没有了
-5. 疑问：
-   1. 怎么判断应不应该检测变化呢，比如一个树状图，异步回调后要刷新某个节点，这样应该检测变化嘛，页面状态并么有改变？？
+   5. 源码：❓❓❓
+      1. NgZone 怎么做的，分为 2 个 steps: 
+         1. View Checking: Synchronization of the component view with the data model.
+         2. Re-Render process(optional): Automatically re-execute the View Checking when application state might change. 如果 ngZone: 'noop' 这一步就没有了
+   6. 疑问：
+      1. 怎么判断应不应该检测变化呢，比如一个树状图，异步回调后要刷新某个节点，这样应该检测变化嘛，页面状态并么有改变？？

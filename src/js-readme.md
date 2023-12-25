@@ -3053,3 +3053,14 @@ function run(func) {
     ```
     'B' === '\u0042'; //true
     ```
+
+### CSS 选择器
+
+1. document.querySelector(selector):
+   1. 作用：查找 document 中所有子节点中符合条件的第一个 element.
+   2. 遍历策略：depth-first 深度优先遍历
+2. element.querySelector(selector):
+   1. 作用：以这个 element 为 baseElement 查找所有子节点中符合条件的第一个 element
+   2. 遍历策略：
+      1. 与指定选择器组匹配的 baseElement 的第一个后代元素。匹配时会考虑元素的整个层次结构，包括 baseElement 及其后代元素集之外的元素；换句话说，选择器首先应用于整个文档，而不是 baseElement，以生成潜在元素的初始列表。然后，会对生成的元素进行检查，看它们是否是 baseElement 的后代。querySelector() 方法将返回剩余元素中第一个匹配的元素。
+      2. 原文：The first descendant element of baseElement which matches the specified group of selectors. The entire hierarchy of elements is considered when matching, including those outside the set of elements including baseElement and its descendants; in other words, selectors is first applied to the whole document, not the baseElement, to generate an initial list of potential elements. The resulting elements are then examined to see if they are descendants of baseElement. The first match of those remaining elements is returned by the querySelector() method.
