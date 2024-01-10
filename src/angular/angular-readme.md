@@ -87,7 +87,7 @@
          1. 在该共享模块下 创建组件：ng g c shared/components/Layout  demo 取名叫Layout
          2. 此时，在shared.module.ts里可以看到，在declaration里已经自动注入了 LayoutComponent
 
-            ``` code
+            ``` c
             @NgModule({
                declarations: [
                   LayoutComponent
@@ -107,7 +107,7 @@
          1. 如果继续创建组件 ng g c shared/components/Print
          2. 此时，在shared.module.ts里可以看到,在 declarations 里已经自动添加了 printComponent, 但是在 exports 里没有自动添加，如果想导出，就自己手动添加，否则不导出是用不了的
 
-            ``` code
+            ``` c
             @NgModule({
                declarations: [
                   LayoutComponent,
@@ -145,7 +145,7 @@
                1. 作用：列举某个指令的一组可供数据绑定的输入属性。原文：Is used to mark a class property that binds to incoming data
                2. 用法：
 
-                  ``` code
+                  ``` c
                      import { Input } from '@angular/core';
                      @Component({ ... })
                      export class HeaderComponent {
@@ -166,7 +166,7 @@
                1. 作用：创建一组可供事件绑定的输出属性
                2. 用法：❓❓❓
 
-                  ```code
+                  ``` c
                      https://angular-book.dev/ch05-07-output-events.html
 
                   ```
@@ -193,7 +193,7 @@
                   7. provide && alias && useExisting 创建别名
                4. 用法：
 
-                  ``` code
+                  ``` c
                      // 在整个 Module 里设置的 provider, 下面所有的 components 都共用这些服务
                      import { ClickCounterService } from './click-counter.service';
                      import { LogService } from './services/log.service';
@@ -324,7 +324,7 @@
                   2. 将依赖导入 import the dependency components, services, directives, pipes, etc. 
                      1. 这些依赖也应该是 standalone: true 的；
 
-                        ```code
+                        ``` c
                            @Component({
                               standalone: true, // 1. 本身标记为独立组件
                               selector: 'photo-gallery',
@@ -337,7 +337,7 @@
 
                      2. 如果依赖不是 standalone, 而是在 module 中注册的，可以直接将这个 module 导入进来
 
-                        ```code
+                        ``` c
                            @Component({
                               standalone: true,
                               selector: 'photo-gallery',
@@ -402,7 +402,7 @@
             23. hostDirectives(Inherited from @Directive):
          3. 用法：
 
-            ``` code
+            ``` c
                // 1. 定义 Component
                import { Component } from '@angular/core';
                @Component({
@@ -429,7 +429,7 @@
          2. 原文：We use a special @Injectable decorator here to mark the class and instruct Angular that the given class should participate in the dependency injection layer. All classes marked with @Injectable can get imported into other entities like services, components, directives or pipes. The Angular framework creates instances of those classes, usually in the form of "singletons", and injects into other primitives on demand.
          3. 用法：
 
-            ``` code
+            ``` c
                // 使这个类成为一个可注入服务
                @Injectable({ providedIn: 'root' })
                export class LogService {
@@ -459,7 +459,7 @@
             2. 也可以用来指明自定义类。In this case, you are getting access to real CustomLogService class that is injected by Angular for all the LogService keys. If your custom implementation has extra methods and properties, not provided by the LogService type, you can use them from within the component now.
          2. 用法：2种
 
-            ```code
+            ``` c
             @NgModule({
                providers: [
                   { 
@@ -526,7 +526,7 @@
                      1. TemplateRef, ElementRef, and ViewContainerRef
                         1. 举例：取 component 对应的 DOM element，即 ElementRef
 
-                           ```code
+                           ``` c
                            // template
                            <color-sample #primaryColorSample ></color-sample>
 
@@ -540,7 +540,7 @@
                      2. Any class with the @Component or @Directive decorator
                         1. 举例：取 component/DOM 上的某个 directive
 
-                           ```code
+                           ``` c
                            // template: input 标签上应用了一个叫 colorPicker 的 directive。点击color-sample组件，调用起 colorPicker 的 dialog。
                            <color-sample [color]="primary" #primaryColorSample (click)="primaryInput.openDialog()"></color-sample>
                            <input matInput #primaryInput [(colorPicker)]="primary" [(ngModel)]="primary"/>
@@ -564,7 +564,7 @@
             1. Metadata properties: selector / read / emitDistinctChangesOnly
             2. 用法:
 
-               ``` code
+               ``` c
                @ViewChild(SomeComponent) someComponents: QueryList<SomeComponent>
                ```
 
@@ -572,7 +572,7 @@
             1. 作用：用来查询 ng-content 标签中的内容
             2. 用法：
 
-               ```code
+               ``` c
                   @Component({
                      selector: 'alert',
                      template: `
@@ -602,7 +602,7 @@
          4. @ContentChildren
              1. 用法：
 
-                ```code
+                ``` c
                       @Component({
                          selector: 'tab',
                          template: `
@@ -659,7 +659,7 @@
       2. 注意！！ 如果暂时不想定义任何区域，可以传入 null, 不能让 Injectable 里传入空对象,会报错。
       3. provedIn 的参数选项：  `({ providedIn: Type<any> | "root" | "platform" | "any" | null; } & InjectableProvider) | undefined`
 
-         ```code
+         ``` c
          import { Injectable } from '@angular/core';
          @Injectable({
             // 1.全局作用域 默认 app.module.ts
@@ -672,7 +672,7 @@
    2. 模块级别：该 module 中的所有 components 使用同一服务实例对象。
       1. 有两种语法都可以，第一种：在服务中用 providedIn 声明要在哪个 module 里生效
 
-         ```code
+         ``` c
          import { Injectable } from '@angular/core';
          import { SharedModule } from '../shared/share.module';
          @Injectable({
@@ -684,7 +684,7 @@
 
       2. 两种语法都可以，第二种：在模块中用 providers 表示使用哪些服务
 
-         ```code
+         ``` c
          import {MenuService} from './menu.service'
          @ngModule({
             // 在模块中用 providers 表示使用哪些服务  
@@ -695,7 +695,7 @@
 
    3. 组件级别：该 component 组件及子组件中使用同一服务实例对象
 
-      ```code
+      ``` c
       // 在组件中
       import {MenuService} from './menu.service'
       @Component({
@@ -711,7 +711,7 @@
 5. 使用：
    1. 在app.module.ts中手动import并放进 @Component的providers数组
 
-      ```code
+      ``` c
       @NgModule({
          declarations: [...],
          imports: [...],
@@ -728,7 +728,7 @@
          1. 修饰的该服务，不作为参数，而是当前类的属性使用，所以可以通过 this.menuService 来访问。这是 Typescript的知识点
          2. 修饰的该服务，只能在组件类中使用，不能在组件模版中使用。如果使用public修饰的，才可以在模版中使用。
 
-         ``` code
+         ``` c
          constructor(
             private anotherServer: AnotherService,
             private menuServer: MenuService,
@@ -759,7 +759,7 @@
          2. 注意！！ 如果暂时不想定义任何区域，可以传入 null, 不能让 Injectable 里传入空对象,会报错。
          3. provedIn 的参数选项：  `({ providedIn: Type<any> | "root" | "platform" | "any" | null; } & InjectableProvider) | undefined`
 
-            ``` code
+            ``` c
                import { Injectable } from '@angular/core';
                @Injectable({
                   // 1.全局作用域 默认 app.module.ts
@@ -772,7 +772,7 @@
       2. 模块级别：该 module 中的所有 components 使用同一服务实例对象。
          1. 有两种语法都可以，第一种：在服务中用 providedIn 声明要在哪个 module 里生效
 
-            ``` code
+            ``` c
             import { Injectable } from '@angular/core';
             import { SharedModule } from '../shared/share.module';
             @Injectable({
@@ -784,7 +784,7 @@
 
          2. 两种语法都可以，第二种：在模块中用 providers 表示使用哪些服务
 
-            ``` code
+            ``` c
             import {MenuService} from './menu.service'
             @ngModule({
                // 在模块中用 providers 表示使用哪些服务  
@@ -795,7 +795,7 @@
 
       3. 组件级别：该 component 组件及子组件中使用同一服务实例对象
 
-            ``` code
+            ``` c
             // 在组件中
             import {MenuService} from './menu.service'
             @Component({
@@ -811,7 +811,7 @@
    6. 使用：
       1. 在app.module.ts中手动import并放进 @Component的providers数组
 
-         ``` code
+         ``` c
          @NgModule({
             declarations: [...],
             imports: [...],
@@ -829,7 +829,7 @@
             1. 修饰的该服务，不作为参数，而是当前类的属性使用，所以可以通过 this.menuService 来访问。这是 Typescript的知识点
             2. 修饰的该服务，只能在组件类中使用，不能在组件模版中使用。如果使用public修饰的，才可以在模版中使用。
 
-            ``` code
+            ``` c
             constructor(
                private anotherServer: AnotherService,
                private menuServer: MenuService,
@@ -861,7 +861,7 @@
 
 ### 类里各个部分装饰器
 
-1. @Input
+1. @Input ❓❓❓
 2. @ViewChild
    1. 定义：一个属性装饰器，用于配置一个视图查询。变更检测器会在视图DOM中查找能匹配该选择器的第一个元素或者指令。如果视图DOM更新，该属性装饰器匹配了新的子节点，该属性也会被更新。
    2. 视图查询的配置时机：在调用 GgAfterViewInit 之前
@@ -880,7 +880,7 @@
 1. 获取一个元素：利用 模版 #name
    1. 给模版对象设置一个模版引用变量 username，通过模版名称直接取得DOM ,从而可以获取事件对象的值
 
-      ```code
+      ``` c
       <input #username/>
       <button (click)="share(username.value)">分享</button>
       // share(val){// val即为input输入}
@@ -888,7 +888,7 @@
 
 2. 获取一个元素：利用 @ViewChild + #name 模版引用
 
-   ``` code
+   ``` c
    <p #username></p>
    class AnotherComponent implements AfterViewInit {
       @ViewChild("username") nickname: ElementRef<HTMLParagraphElement> | undefined
@@ -900,7 +900,7 @@
 
 3. 获取一组元素：利用 @ViewChildren
 
-   ``` code
+   ``` c
    <ul>
       <li #items></li>
       <li #items></li>
@@ -921,7 +921,7 @@
 2. 语法：`[(ngModule)]="组件类中属性"`
    1. 使用ngModel:
 
-      ``` code
+      ``` c
       // 先在根模块中导入FormsModule依赖：
       import { FormsModule } from '@angular/forms';
       // 并在imports中导入FormsModule以供所有组件使用
@@ -932,7 +932,7 @@
 
    2. 用法：
 
-      ```code
+      ``` c
       <input [(ngModel)]="title">
       <p>{{title}}</p>
       ```
@@ -951,14 +951,14 @@
       2. 在使用表单的模块中 import { NgForm } from '@angular/forms';
       3. 将普通的 DOM 表单转化成 ngForm 表单 #name="ngForm"
 
-         ```code
+         ``` c
          // 这里的 f 是自定义的名字
          <form #f="ngForm" (submit)="onSubmit(f)">
          ```
 
       4. 声明表单字段为 ngModel：标识该字段受 ngForm 表单管控
 
-         ```code
+         ``` c
          // 3
          <form #f="ngForm" (submit)="onSubmit(f)">
             // 4
@@ -969,7 +969,7 @@
 
       5. 之后就可以获取表单字段值了 form.value 对象里包含所有字段值
 
-         ```code
+         ``` c
          onSubmit(form: NgForm){
             console.log('form',form.value)
             console.log('验证通过',form.valid)
@@ -979,7 +979,7 @@
 
    3. 表单分组 ngModelGroup
 
-      ```code
+      ``` c
       <form #f="ngForm" (submit)="onSubmit(f)">
          <ng-container ngModelGroup="user">
             用户名：<input type="text" name="username" ngModel/>
@@ -1002,7 +1002,7 @@
       3. 具体表单项验证：
          1. 获取表单项：使用 #name="ngModel"
 
-            ```code
+            ``` c
             // 这里的 #username 里，username 是自定义名
             用户名：<input type="text" name="username" ngModel #username="ngModel"/>
             <div *ngIf="username.touched"> 出现</div>
@@ -1028,7 +1028,7 @@
       1. 在根模块中: import { ReactiveFormModule } from '@angular/forms',并在模块的 imports 中注入 ReactiveFormModule
       2. 在使用表单的模块中： import { FormControl, FormGroup } from '@angular/forms'，并且创建表单组对象
 
-         ```code
+         ``` c
          import { FormControl, FormGroup } from '@angular/forms'
          export class AppComponent
          ```
@@ -1037,7 +1037,7 @@
          1. formGroup 绑定表单对象，该表单对象是个引用，所以要用方括号将 formGroup框起来
          2. formControlName 绑定表单项的名字，名字是string, 它不是一个实时变化的数据，所以不需要方括号框起来
 
-         ```code
+         ``` c
          // 使用 formGroup 跟 ts 类中定义的表单对象关联起来,需要[]
          <form [formGroup]="loginForm">
             // formControlName 绑定的是 string 类型的名字，不需要[]
@@ -1052,7 +1052,7 @@
          2. 表单项是 FormControl 实例, new 初始化的入参是默认值
          3. 通过表单.value 获取表单数据
 
-         ```code
+         ``` c
          // 模型驱动表单
          loginForm: FormGroup = new FormGroup({
             // new 的时候可以传入默认值
@@ -1071,7 +1071,7 @@
          1. 在 html 中：
             1. formGroupName：注意：表单绑定用`[formGroup]`绑定对象, 内部的组用 formGroupName 绑定字符串
 
-            ```code
+            ``` c
             <form [formGroup]="loginForm" (submit)="done()">
             // formGroupName 绑定名称
                <div formGroupName="fullName">
@@ -1089,7 +1089,7 @@
                1. 通过数组：`表单.get(['parentName', 'childName'])` 传入表单组层级`数组`，可以获取对应的表单项
                2. 通过点运算符：`表单.get('parentName.hildName')` 传入表单组层级名称，注意这里不用数组了哦
 
-            ```code
+            ``` c
             loginForm: FormGroup = new FormGroup({
                fullName: new FormGroup({
                   firstName: new FormControl(),
@@ -1116,7 +1116,7 @@
          3. html 中遍历 formArray: 实际上遍历的是 `formNameObj.controls`
          4. 表单数组中的表单，遍历的 formGroupName 的值 实际上是遍历`formNameObj.controls`时的 index
 
-            ```code
+            ``` c
             <div formArrayName="contacts">
                // 真正遍历的是 fromArray实例的controls 属性 
                // i 是变量而不是字符串，所以formGroupName 要用 [] 框起来
@@ -1134,7 +1134,7 @@
          1. Angular 内置规则
             1. 创建规则：
 
-               ```code
+               ``` c
                import { FromControl, FormGroup，Validators } from '@angular/forms"
                myForm: FormGroup = new FormGroup({
                   name: new FormControl('默认值', [
@@ -1147,7 +1147,7 @@
 
             2. 规则验证：
 
-               ```code
+               ``` c
                // 在 ts 中
                this.myform.valid //boolean 
                // 在 html 中
@@ -1173,7 +1173,7 @@
 
 1. class：
 
-    ```code
+    ``` c
     // 都可以
     [class.big-btn] = "true" //单一类样式
     [class] = "'big-btn big-btn2'" 
@@ -1184,7 +1184,7 @@
 
 2. style
 
-   ```code
+   ``` c
    [style.width] = "300px" //单一样式
    [style.width.px] = "300" // 也可以，但不如上边的常用
    [style] = "'width:300px, color:red'" 
@@ -1193,14 +1193,14 @@
 
 3. ngClass 相当于绑定了一个class
 
-   ```code
+   ``` c
    // class="myClass"
    [ngClass] = "{'myClass': isActive}" // 在ts中定义 isActive:boolean = true
    ```
 
 4. ngStyle
 
-   ```code
+   ``` c
     [ngStyle] = "{'color': isActive ？'red' : 'blue'}" // 在ts中定义 isActive:boolean = true
    ```
 
@@ -1212,7 +1212,7 @@
       1. `[ngSwitch]` 注意写法，不是带星的
          1. 注意：内部的选项是结构指令：*ngSwitchCase*ngSwitchDefault
 
-            ```code
+            ``` c
              <div [ngSwitch]="type">
                  <p *ngSwitchCase="1">1</p>
                  <p *ngSwitchCase="2">2</p>
@@ -1222,7 +1222,7 @@
 
       2. `[hidden]`: 根据条件显示 DOM 节点的显隐，与 display:none 同理
 
-         ```code
+         ``` c
          <div [hidden]="1+1===2"></div>
          ```
 
@@ -1233,7 +1233,7 @@
          1. 作用：根据条件渲染或者移除 DOM 节点
          2. 本质：相当于给html的标签设置一个`[ngIf]="true/false"`的属性
 
-            ```code
+            ``` c
              <div *ngFor="let name of [1, 2, 3, 4]">
                  <a [title]="'haha'" *ngIf="name % 2 === 0; else elseArea "> {{ name }} </a>
              </div>
@@ -1254,7 +1254,7 @@
             6. let isLast = last  是否是最后一个
          3.
 
-            ```code
+            ``` c
             <div *ngFor="let name of names let i=index let isOdd=odd">
                   {{ name }}
                   {{i}}
@@ -1275,7 +1275,7 @@
    2. 定义：自定义指令以操作 DOM
    3. 创建：ng g d path/dName 也就是 ng generate directive path/dName，并且会被放进根模块的declaration中
 
-      ``` code
+      ``` c
       ng g d directives/hover
       ```
 
@@ -1284,7 +1284,7 @@
       1. 定义：事件用括号包裹起来表示是一个事件语法
       2. 直接获取事件对象`$event`:
 
-         ``` code
+         ``` c
          // 在change share函数体内都可以直接使用$event
          <input (input)="change($event)"/>
          <button (click)="share($event)">分享</button>
@@ -1293,7 +1293,7 @@
       3. 获取 DOM: 利用 模版 #name
       4. 给模版对象设置一个模版引用变量 username，通过模版名称直接取得DOM ,从而可以获取事件对象的值
 
-         ``` code
+         ``` c
             <input #username/>
             <button (click)="share(username.value)">分享</button>
             // share(val){// val即为input输入}
@@ -1373,7 +1373,7 @@
    3. 分类：
       1. Pure pipe: Detects pure change, 或者说，pure pipe is triggered by pure change.
 
-         ```code
+         ``` c
          // 示例 /angular-demo/src/app/pipes/custom-pipe-one.pipe.ts
          @Pipe({
             name: 'exponentialStrength'
@@ -1395,7 +1395,7 @@
 
       2. impure pipe: Detects impure change 或者说 impipe pipe is triggered by impure change. 比如用来展示 Observable 的 AsyncPipe 就是一个 impure pipe. 源码位置：angular\packages\common\src\pipes\async_pipe.ts
 
-         ```code
+         ``` c
          @Pipe({
             standalone: true,
             name: 'flyingHeroesImpure',
@@ -1417,7 +1417,7 @@
 6. 应用：
    1. caching http request 缓存请求路径和返回数据
 
-      ```code
+      ``` c
       import { HttpClient } from '@angular/common/http';
       import { Pipe, PipeTransform } from '@angular/core';
 
@@ -1455,7 +1455,7 @@
       1. 用途：检测输入属性的变化, respond when angular sets or resets data-bound input properties. 如果没有 input 就不会调用到这个钩子
       2. 入参：SimpleChanges 类实例：当前和上一次发生了变化的 input properties 会存储在对象中
 
-         ``` code
+         ``` c
          // in component
          @Input() hero!: Hero;
          @Input() power = '';
@@ -1519,7 +1519,7 @@
    1. 调用： ![生命周期调用顺序](../assets/angular_lifecycle.png)
 8. 阶段：
 
-   ``` code
+   ``` c
    // 挂载阶段
    constructor
    ngOnChanges
@@ -1548,7 +1548,7 @@
          2. 意义：将实力对象和外部的引用建立松耦合关系，外部通过标识获取实例对象，只要标识保持不变，内部代码怎么变化都不会影响到外部。
          3. 用法：
 
-            ``` code
+            ``` c
             // resolveAndCreate 创建注入器
             const injector = ReflectiveInjector.resolveAndCreate([
                {
@@ -1563,7 +1563,7 @@
 
       3. useValue: 作为配置对象，也可以传递一个对象
 
-         ``` code
+         ``` c
          // resolveAndCreate 创建注入器
          const injector = ReflectiveInjector.resolveAndCreate([
             {
@@ -1592,7 +1592,7 @@
       1. 在该共享模块下 创建组件：ng g c shared/components/Layout  demo 取名叫Layout
       2. 此时，在shared.module.ts里可以看到，在declaration里已经自动注入了 LayoutComponent
 
-         ``` code
+         ``` c
          @NgModule({
             declarations: [
                LayoutComponent
@@ -1612,7 +1612,7 @@
       1. 如果继续创建组件 ng g c shared/components/Print
       2. 此时，在shared.module.ts里可以看到,在 declarations 里已经自动添加了 printComponent, 但是在 exports 里没有自动添加，如果想导出，就自己手动添加，否则不导出是用不了的
 
-         ``` code
+         ``` c
          @NgModule({
             declarations: [
                LayoutComponent,
@@ -1636,7 +1636,7 @@
    1. SharedModule 已经被自动导入了根组件 app.module.ts 的 imports 中了, 注意这里自动导入的是分享模块SharedModule，而不是内部的 LayoutComponent 或者 PrintComponent，但是可以直接引用 分享模块中的 components
    2. 然后在想要使用的地方 直接引用标签就行了， `<app-layout></app-layout>`  `<app-print></app-print>`
 
-      ``` code
+      ``` c
       // Parent Component
       <app-child></app-child>
 
@@ -1649,7 +1649,7 @@
    1. RouterModule.forRoot([]): This establishes the routes for the root of our application 这就为我们的应用程序的根建立了路由。
    2. RouterModule.forChild([])
 
-   ```code
+   ``` c
       // app.module.ts
       @NgModule({
          imports: [
@@ -1849,7 +1849,7 @@
    1. 定义：一个组件可以具有多个插槽。每个插槽可以指定一个CSS选择器，该选择器会决定将哪些内容放进该插槽。
    2. slot + class:
 
-      ``` code
+      ``` c
       <app-menu-detail>
          <div class="a">a</div>
          <div class="b">b</div>
@@ -1862,7 +1862,7 @@
 
    3. slot + select：定义了select属性的插槽是专门给定义了对应属性的内容投影的。其余没有select选项的内容默认都放到其他不带select属性的插槽中
 
-      ``` code
+      ``` c
       // 插槽
       组件内部: `
          <h2>Multi-slot content projection</h2>
@@ -1887,7 +1887,7 @@
    1. 定义：不包含外部的例如`<div></div>`，只想要内容，可以用 ng-container代替 div
    2. 用法：
 
-      ``` code
+      ``` c
       <app-menu-detail>
          <ng-container class="a">a</ng-container>
          <div class="b">b</div>
@@ -1923,7 +1923,7 @@
    3. None：When you use this, the styles defined in one component affects the elements of the other components.
 5. 用法：
 
-   ``` code
+   ``` c
       @Component({
          template: `<p>Using Emulator</p>`,
          styles: ['p { color:red}'],
@@ -1951,7 +1951,7 @@
 1. 用途：发送http请求，用于发送请求的方法都返回 Observable 对象
 2. 使用步骤：
 
-   ``` code
+   ``` c
    // 1. 在项目根配置导入 HttpClientModule 模块 并放置在 @ngModule-imports里
    //  app.module.ts 中
    import { httpClientModule } from '@angular/common/http';
@@ -1993,7 +1993,7 @@
       3. encoder: 指定入参的编码形式
    3. demo：
 
-      ``` code
+      ``` c
       constructor(
          private http: HttpClient 
       ) {}
@@ -2016,7 +2016,7 @@
    1. 在HttpHeader类实例对象下面有各种操作请求头的方法
    2. demo:
 
-      ``` code
+      ``` c
       let headers = new HttpHeaders({
          test: 'hello'
       })
@@ -2035,7 +2035,7 @@
       3. text: 表示返回的是 text 类型的内容
    3. demo：
 
-      ``` code
+      ``` c
       // 不需要引入什么，就直接用 observe属性指定type就行
       this.http
       .get('https://jsonplaceholder.typicode.com/users',{
@@ -2051,7 +2051,7 @@
       2. `interceprt()`: 一个 interceptor,就是实现接口 HttpInterceptor 的 intercept 方法. intercept 方法将一个请求转化成一个最终返回 http response 的 Observable. 从这个角度来说， 每个拦截器都有足够的能力自己处理整个request.
       3. 传递给next:大多数拦截器在进入时检查请求，并将可能被改变的请求转发给下一个对象的handle()方法，这个对象实现了. Most interceptors inspect the request on the way in and forward the potentially altered request to the handle() method of the next object which implements the.
 
-            ``` code
+            ``` c
             import { Injectable } from '@angular/core';
 
             import {
@@ -2133,7 +2133,7 @@
 3. 视图包装的三种模式
    1. ViewEncapsulation.None： 不应用任何形式的视图封装
 
-      ``` code
+      ``` c
       @Component({
          selector: 'app-no-encapsulation',
          template: `
@@ -2197,7 +2197,7 @@
 1. 定义：property binding 用来给 HTML elements 或者 directives 的 property 赋值。
 2. example: To bind the 'src' property of an img element to a component's property.
 
-   ``` code
+   ``` c
    // in template
    <img [src]="itemImageUrl">
 
@@ -2214,7 +2214,7 @@
 2. 用法：attr.属性名 用 [] 方括号 括起来，再用一个结果是 string 类型的表达式进行赋值
 3. example:
 
-   ``` code
+   ``` c
       <button [attr.aria-label]="name"> {{name}} </button>
    ```
 
@@ -2245,7 +2245,7 @@
    1. 用 `[()]` 包裹变量名，例如: `<app-demo [(name)]="nameValue"></app-demo>`
       1. 用法的本质：是 property binding 和 event binding 的联合快捷写法。拆开写是这样：
 
-         ``` code
+         ``` c
          // AppParentComponent.ts
          <app-demo [name]="nameValue" (nameChange)="nameValue=$event"></app-demo>
 
@@ -2266,7 +2266,7 @@
 2. 用法：用一个 # 符号 声明一个模板变量
 3. example:
 
-   ``` code
+   ``` c
    <input #phone />
    <button (click)="callPhone(phone.value)"></button>
    ```
@@ -2275,7 +2275,7 @@
    1. 大多数的例子中，模板变量都引用的是元素本身
    2. 但当变量右侧指定了一个名字，那么这个变量将指向该 directive/component 所 exportAs 的 name。 ❓❓❓
 
-      ``` code
+      ``` c
       <form #itemForm="ngForm></form>
       ```
 
@@ -2292,7 +2292,7 @@
       2. Build-in attribute directive:
          1. NgClass: Add or remove CSS classes. From CommonModule
 
-            ```code  // Example：use ngClass with object
+            ``` c  // Example：use ngClass with object
                // In component
                currentClasses: Record<string, boolean> = {};
                setCurrentClasses() {
@@ -2313,7 +2313,7 @@
 
          2. NgStyle: Add or remove HTML styles. From CommonModule
 
-            ```code  // Example：use ngStyle with object
+            ``` c  // Example：use ngStyle with object
                // In component
                currentStyles: Record<string, string> = {};
                setCurrentStyles() {
@@ -2347,7 +2347,7 @@
             1. CLI 命令: ng generate directive highlight 执行后生成 highlight.directive.ts
             2. ElementRef: 是即将应用本 directive 的 DOM element 的引用，可以通过 ElementRef.nativeElement 获得直接访问宿主 DOM element 的权限.
 
-               ``` code
+               ``` c
                   import {Directive, ElementRef} from '@angular/core';
                   @Directive({
                      standalone: true,
@@ -2367,7 +2367,7 @@
 
          2. 用 @HostListener 指令监听用户事件:
 
-            ```code
+            ``` c
                @Directive({
                   standalone: true,
                   selector: '[appHighlight]',
@@ -2394,7 +2394,7 @@
 
          3. 给指令传值
 
-            ```code
+            ``` c
                // In AppComponent which applies the highlight directive
                color = 'green';
                <div [appHighlight]="color">Highlight me!</div>
@@ -2430,7 +2430,7 @@
                6. let-lsLast="last" / let isLast = last / last as isLast 是否是最后一个
                7. trackBy property: 按照某个条件来调整列表，该条件变了，符合该条件的元素才会重新渲染.否则会全部重新渲染。
 
-               ```code
+               ``` c
                   <div *ngFor="let item of items;index as i; odd as isOdd; even as isEven; trackBy: trackByItems">
                      ({{item.id}}) {{item.name}}
                   </div>
@@ -2447,7 +2447,7 @@
          1. 命令行 ng generate directive unless
          2. The UnlessDirective creates an embedded view from the Angular-generated `<ng-template>` and inserts that view in a view container adjacent to the directive's original `<p>` host element.TemplateRef helps you get to the `<ng-template>` contents and ViewContainerRef accesses the view container
 
-            ```code
+            ``` c
                import { Directive, Input, TemplateRef, ViewContainerRef } from '@angular/core';
 
                @Directive({
@@ -2482,7 +2482,7 @@
          2. ng-template:
             1. 实质：Angulartranslates the instruction into an ng-templat4e around the host element, then uses this template repeatedly to create a new set of elements and bindings for each item in the list.
 
-               ```code
+               ``` c
                   // 指令代码               
                   <li *ngFor="let contact of contacts | async">
                      <contact-card [contact]="contact"></contact-card>
@@ -2503,7 +2503,7 @@
       1. 在template 中写：`<admin-menu menuBehavior></admin-menu>`
       2. 在 decorator 中写，这种叫 host directives：与上面写法相似，但有不同 ❓❓❓
 
-         ```code
+         ``` c
             @Component({
                standalone: true, // 能使用 host directives 的组件必须是 standalone: true
                selector: 'admin-menu',
@@ -2529,7 +2529,7 @@
             2. 用处：支持动态地取得并注入一些 app 运行后才能得到的数据，
             3. 用法：
 
-               ```code
+               ``` c
                   // in hero.service.ts
                   constructor(
                      private logger: Logger,
@@ -2559,7 +2559,7 @@
          1. 定义：负责创建服务类实例对象，并将服务类实例对象注入到需要的组件中. An injector for an application (created automatically during bootstrap) instantiates dependencies when needed, using a configured provider of the service or value.
          2. 用法：
 
-            ```code
+            ``` c
             // 创建注入器 注意：ReflectiveInjector 会带有中划线是因为此API未来将会被废弃
             import { ReflectiveInjector } from '@angular/core'
             // 服务类
@@ -2574,7 +2574,7 @@
 
          3. 相同的注入器，返回的服务实例对象是单例模式，同一个注入器在创建服务实例后会对其进行缓存
 
-            ```code
+            ``` c
             const mailService1 = injector.get(MailService)
             const mailService2 = injector.get(MailService)
             console.log(mailService1 === mailService2); // true
@@ -2582,7 +2582,7 @@
 
          4. 不同的注入器，返回的是不同的服务实例对象
 
-            ```code
+            ``` c
             const injectorFirst = ReflectiveInjector.resolveAndCreate([MailService]);
             const injectorSecond = ReflectiveInjector.resolveAndCreate([MailService]);
             const firstService = injectorFirst.get(MailService)
@@ -2592,7 +2592,7 @@
 
          5. resolveAndCreateChild可以创建子注入器，服务实例对象的查找类似函数作用域链，当前级别可以找到就使用当前级别，当前级别找不到就去父级中查找
 
-            ``` code
+            ``` c
             // resolveAndCreate 创建注入器
             const injector = ReflectiveInjector.resolveAndCreate([MailService]);
             // resolveAndCreateChild 创建子注入器
@@ -2612,7 +2612,7 @@
             2. 意义：将实力对象和外部的引用建立松耦合关系，外部通过标识获取实例对象，只要标识保持不变，内部代码怎么变化都不会影响到外部。
             3. 用法：
 
-               ``` code
+               ``` c
                // resolveAndCreate 创建注入器
                const injector = ReflectiveInjector.resolveAndCreate([
                   {
@@ -2627,7 +2627,7 @@
 
          3. useValue: 作为配置对象，也可以传递一个对象
 
-            ``` code
+            ``` c
             // resolveAndCreate 创建注入器
             const injector = ReflectiveInjector.resolveAndCreate([
                {
@@ -2649,26 +2649,33 @@
 ### Change Detection & Zone.js & NgZone
 
 1. Change Detection：
-   1. 定义：是Angular 检测应用状态是否发生改变的过程，以及是否有任何 DOM 需要更新。 在高层次上，Angular从上到下检查你的组件，寻找变化。Angular定期运行它的变化检测机制，以便将数据模型的变化反映在应用程序的视图中。变化检测可以通过手动或异步事件（例如，用户互动或XMLHttpRequest完成）来触发。它的职责主要有两个部分：1.detecting + 2.propagating changes from your application's data model to the user interface.
-   2. update HTML 时机：
+   1. 定义：是Angular 检测应用状态是否发生改变的过程，以及是否有任何 DOM 需要更新, 需要就 update HTML。 在高层次上，Angular从上到下检查你的组件，寻找变化。Angular定期运行它的变化检测机制，以便将数据模型的变化反映在应用程序的视图中。变化检测可以通过手动或异步事件（例如，用户互动或XMLHttpRequest完成）来触发。它的职责主要有两个部分：1.detecting + 2.propagating changes from your application's data model to the user interface.
+   2. When to trigger Change Detectioni:
       1. Component initialization: when bootstrapping an Angular application, Angular loads the bootstrap component and triggers the `ApplicationRef.tick()`` to call change detection and View Rendering.
-      2. Event listener:The DOM event listener can update the data in an Angular component and also trigger change detection
-      3. HTTP Data Request.
-      4. MacroTasks
-      5. MicroTasks
+      2. Event listener: All browser events like click, mouseover, keyup etc.
+      3. HTTP Request.
+      4. MacroTasks: like setTimout, setInterval, requestAnimationFrame
+      5. MicroTasks：Promise, Observable
       6. `WebSocket.onmessage()`
       7. `Canvas.toBlob()`
    3. change detection 时机：上面这些场景，只要数据可能会变，都会触发 angular runs change detection.
       1. 在 component initialization 中，angular 显示地调用一次检擦
       2. 其他时候，都是委托在一个 zone 中取检测变化
-   4. 变化检测策略
-      1. by default：默认是一个组件的变化，会引起它的所有孩子组件共同变化。
+   4. detector: 每一个 component 都有自己的 detector. 所以 angular 是一颗 component-tree, 自然也有一棵对应的 detector-tree.
+   5. Strategies 变化检测策略
+      1. by default：
+         1. 用处：默认是一个组件的变化，会引起它的所有孩子组件共同变化。这里的孩子组件，是指有传参关系的父子组件。 如果 parent 组件 template 中使用了 child 组件，但是并没有传递任何属性，那 parent 属性的变化能引起 re-render, 但是 child 里没有重渲染。
       2. OnPush:
          1. 用处：当我们确信应用的一部分并不会被状态的改变而影响时， 就可以用 OnPush 来跳过整个子树的更新检测。
          2. 设置为 OnPush 后，也不是完全不会 change detection. 何时去 detect：只有在显下面三种情况发生时才会去检测子树的变化
-            1. 显示调用
-            2. subtree root component 子树的根组件接收的 @Input 变量(无论在子组件中这个@Input variable 有没有与tameplate binding的)，与之前的变量，通过 '==' 比较之后只要 @Input variable 发生了变化，那么这个 root component 就会 change detection. 同时，这个子树根组件下面的 child component 子组件，如果设置了 OnPush, 除非这个 child component 的 @Input 变了，否则这个子组件是不会 change detect 的
-            3. angular 在‘子树根组件 或 它的任意孩子组件’中 在处理event (比如 event binding, @Outout binding, @HostListener 等), 无论这些组件是否应用了 OnPush 策略，那么都会触发 change detection in the entire component tree, 包括它的 ancestors 祖先组件 (及时祖先组件有 OnPush 也会 detect)。因为孩子组件是父母组件的一部分。
+            1. 手动调用：cdf: ChangeDetectorRef
+               1. cdf.markForCheck
+               2. cdf.detectChanges
+            2. @Input 改变
+               1. subtree root component 子树的根组件接收的 @Input 变量(无论在子组件中这个@Input variable 有没有与tameplate binding的)，与之前的变量，通过 '==' 比较之后只要 @Input variable 发生了变化，那么这个 root component 就会 change detection. 同时，这个子树根组件下面的 child component 子组件，如果设置了 OnPush, 除非这个 child component 的 @Input 变了，否则这个子组件是不会 change detect 的
+               2. template 的 async pipe 订阅的 Observable 值变化也会引起 change detection
+            3. Events：
+               1. angular 在‘子树根组件 或 它的任意孩子组件’中 在处理event (比如 event binding, @Outout binding, @HostListener 等), 无论这些组件是否应用了 OnPush 策略，那么都会触发 change detection in the entire component tree, 包括它的 ancestors 祖先组件 (及时祖先组件有 OnPush 也会 detect)。因为孩子组件是父母组件的一部分。
       3. 示例：angular-demo\src\app\zone\granda\granda.component.ts
       4. 对比：Granda - Parent - Child 三层组件, 每个组件显示一个随机数，每个组件 model 有一个定时器能更改这个数据，同时 template 中有 click event 可以更改数据。默认组件之间没加 @Input property。
          1. granda & parent & child: by default: 三个组件的值，一直在变化。
@@ -2699,7 +2706,7 @@
       5. Edge cases:
          1. 手动修改 OnPush 组件的 @Input 的输入属性时，并不会引起变化检测，可以在需要的地方，需要告诉 Angular 安排一次 change detection：
 
-            ```code
+            ``` c
                // parent 中：
                <app-child #child></app-child>
                @ViewChild('child') child: any;
@@ -2715,25 +2722,79 @@
             ```
 
          2. 当输入值的内存引用地址没有变，即使内容变化了，也不会引起 change detection, 这是预期行为， 因为对象比较的就是内存地址。所以在开发过程中，要注意对象的赋值问题。
-   5. 疑问：
+      6. Change Detection & Pipe vs function: ❓❓❓
+   6. 疑问：
       1. markForCheck VS detectChanges 的区别是什么: 作用不同。detectChanges 是用来 checks the change detector and its children, 是干活儿的。 markForCheck 是用来 marks all ChangeDetectionStrategy ancestors as to be checked. 是来安排活儿的。
-      2. 这两个方法是怎么实现的(In code level): ❓❓❓
-   6. 注意：
+   7. 注意：
       1. change detection 可能会引起减速，所以不能运行太频繁。
+   8. Source code:
+      1. Dirty flag: default strategy 将所有的 component 标注为 dirty, 而 onPush strategy 只在 certain conditions 某些情况发生时才标注 dirty flag.
 2. Zone.js:
-   1. 背景：在某些情况下，安排的 tasks 或 microtasks 不会对 data model 进行任何改变，这使得运行变化检测成为不必要的。常见的例子有：requestAnimationFrame、setTimeout或setInterval，以及一些由第三方库进行的任务或微任务调度。
-   2. Zone.js：
-      1. 定义：是一种信号机制，Angular用它来检测应用程序的状态何时可能改变。它捕捉异步操作，如setTimeout、网络请求和事件监听器。Angular 借助 Zone.js 用来识别这些情况，检测可能发生变化的地方，并自动运行 change detection.
-      2. 原理：Zone.js 可以创建在异步操作中持续存在的上下文，并为异步操作提供生命周期钩子。Zone.js can create contexts that persist across asynchronous operations as well as provide lifecycle hooks for asynchronous operations.
-   3. Zone execution context：A zone is an execution context that persists across async tasks. 是一种跨越异步任务而持续存在的上下文。在异步操作中，在下一个 loop 执行的函数可能会丢失当前的执行上下文的 this，zone 提供了一个新的 zone context 上下文取代 this，想获取这个 zone context, 调用 `Zone.current`。
-   4. Zone lifecycle hooks: 有了这些钩子函数，Zone 就能观察所有的同步或异步操作的状态
-      1. onScheduleTask: 当调度新的异步任务时会触发本函数。Triggers when a new asynchronous task is scheduled, such as when you call `setTimeout()`.
-      2. onInvokeTask: 当异步任务即将运行时触发，例如`setTimeout(callback)` 中 callback 即将运行时会触发本函数。Triggers when an asynchronous task is about to run, such as when the callback of setTimeout() is about to run.
-      3. onHasTask: 当区域内某类任务的状态从稳定变为不稳定或从不稳定变为稳定时触发。状态为 "稳定 "表示区内没有任务，而 "不稳定 "表示区内计划了新任务。Triggers when the status of one kind of task inside a zone changes from stable to unstable or from unstable to stable. A status of "stable" means there are no tasks inside the zone, while "unstable" means a new task is scheduled in the zone.
-      4. onInvoke: 当同步函数要在 Zone 内运行时触发。Triggers when a synchronous function is going to run in the zone.
+   1. 定义：Zone is a mechanism for intercepting and keeping track of asynchronous work. Zone 是一种拦截和跟踪异步工作的机制。
+   2. A zone: A zone is a global object with is configured with rules about how to intercept and keep track of the asynchronous callbacks.
+   3. Zone 的职责：
+      1. Intercept asynchronous task scheduling 拦截异步任务调度
+      2. Wrap callbacks for error-handling and zone tracking across async operations. 在异步操作中，为错误处理和区域追踪包裹一层 callback.
+      3. Provide a way to attach data to zones
+      4. Provide a context specific last frame error handling. 提供特定于上下文的最后一帧错误处理
+      5. (Intercept blocking methods)
+   4. 原理：
+      1. Zone 本身不做什么，反而依赖其他代码去 route to the existing platform API.
+      2. 区域库随附的代码会对浏览器的所有异步 API 进行修补，并通过区域进行重定向以进行拦截。The zone library ships with code which monkey patches all of the browsers's asynchronous API and redirects them through the zone for interception.
+      3. 在最简单的形式中，区域允许拦截异步操作的调度和调用，并在异步任务之前和之后执行附加代码。拦截规则通过 ZoneConfig 进行配置。 In its simplest form a zone allows one to intercept the scheduling and calling of asynchronous operations, and execute additional code before as well as after the asynchronous task. The rules of interception are configured using ZoneConfig.
+      4. 系统中可能有许多不同的区域实例，但在任何给定时间内，只有一个区域处于活动状态，可以使用 Zone#current.There can be many different zone instances in a system, but only one zone is active at any given time which can be retrieved using Zone#current.
+      5. Zone.js 可以创建在异步操作中持续存在的上下文，并为异步操作提供生命周期钩子。Zone.js can create contexts that persist across asynchronous operations as well as provide lifecycle hooks for asynchronous operations.
+      6. Zone execution context：
+         1. A zone is an execution context that persists across async tasks. 是一种跨越异步任务而持续存在的上下文。在异步操作中，在下一个 loop 执行的函数可能会丢失当前的执行上下文的 this，zone 提供了一个新的 zone context 上下文取代 this，想获取这个 zone context, 调用 `Zone.current`。
+         2. Callback Wrapping: 
+            1. 为了实现 zone execution context persists across async tasks, 当未来某个通过 async API 而执行的工作也能获得这个 context，必须 capture and restore the current zone 必须捕获和存储当前的 zone context.
+            2. 示例：b 运行在 BGC zone 中，此时设置了一个 setTimeout, 为了能让 callback C 也能使用相同的 context, zone 会做两件事
+               1. Capture the current zone.
+               2. Wrap the 'WrapCallback' in code which will restore the current zone 'BGC' once the wrapCallback executes.
+
+               ``` c
+               const zoneBC = Zone.current.fork({name: 'BGC'});
+               function c() {
+                  console.log(Zone.current.name);  // BGC
+               }
+               function b() {
+                  console.log(Zone.current.name);  // BGC
+                  setTimeout(c, 2000);  // Wrap the 'WrapCallback' in code which will restore the current zone 'BGC' once the wrapCallback executes.
+               }
+               function a() {
+                  console.log(Zone.current.name);  // <root>
+                  zoneBC.run(b);
+               }
+
+               a();
+
+               ```
+
+            3. 注意：setTimeout 这种 task, callback wrapping 跟 scheduling 是同时发生的。其他的有些 task, callback wrapping 和 scheduling 可能是分开的。
+      7. Scheduling tasks: 3 kinds
+         1. MicroTask: non-cancelable witch is guaranteed to run exactly once and immediately.
+         2. MacroTask: Typically cancelable with is guaranteed to execute at least once after some well-understood delay. Typically these methods include:  setTimeout, setImmediate, setInterval, requestAnimationFrame, and all browser specific variants. 这些方法通常包括  setTimeout"、"setImmediate"、"setInterval"、"requestAnimationFrame "以及所有浏览器特定的变体。
+         3. EventTask: represent a request to create a listener on an event. Unlike the other task events they may never be executed, but typically execute more than once. There is no queue of events, rather their callbacks are unpredictable both in order and time. EventTask 表示在事件上创建监听器的请求。与其他任务事件不同，它们可能永远不会被执行，但通常会执行不止一次。事件没有队列，它们的回调在顺序和时间上都是不可预测的。Used for listening on some future event. This may execute zero or more times with an unknown delay.
+      8. Zone lifecycle hooks: 有了这些钩子函数，Zone 就能观察所有的同步或异步操作的状态
+         1. onScheduleTask: 当调度新的异步任务时会触发本函数。Triggers when a new asynchronous task is scheduled, such as when you call `setTimeout()`.
+         2. onInvokeTask: 当异步任务即将运行时触发，例如`setTimeout(callback)` 中 callback 即将运行时会触发本函数。Triggers when an asynchronous task is about to run, such as when the callback of setTimeout() is about to run.
+         3. onHasTask: 当区域内某类任务的状态从稳定变为不稳定或从不稳定变为稳定时触发。状态为 "稳定 "表示区内没有任务，而 "不稳定 "表示区内计划了新任务。Triggers when the status of one kind of task inside a zone changes from stable to unstable or from unstable to stable. A status of "stable" means there are no tasks inside the zone, while "unstable" means a new task is scheduled in the zone.
+         4. onInvoke: 当同步函数要在 Zone 内运行时触发。Triggers when a synchronous function is going to run in the zone.
+      9. Composability 组合性：
+         1. Root Zone: 在浏览器运行的一开始，就是运行在一个 special root zone 中。这个 root zone 被配置得就跟 platform (比如 browder as platform)一样，使任何 non-zone-aware 感知不到 zone 的现存代码都能按照预期的方式运行。
+         2. chilren zones: All zones are children of the root zone. 所有的 zones 都是 root zone 的 children.
+         3. fork : 通过 `parent.fork()` 会创建一个 child zone, 挂在该 parent zone 下面。 
+         4. Composability: 也就是说，zone 是具有继承关系的。官方习惯把这种关系叫做 zone 的可组合性。
+         5. child zone 的能力：
+            1. 可以把拦截器委托给上级 zone，并且选择性地添加自己的 hooks, 这些 hooks 可以在 wrapCallback 执行 之前 or 之后 执行。Delegate the interception to a parent zone, and optionally add before and after wrapCallback hooks. 
+            2. 可以自行处理请求，不委托授权给 parent zone. Process the request itself without delegation. 
+            3. child 委托给 parent 是怎么实现的: 每个 child zone 都保存了其 parent zone 的对象；每个 parent zone 也能监听到 child zone 的事件。
+            4. 为什么 parent zone 能监听到 child zone 的事件：通过 monkey patch, 在初始化的时候对相关 APIs 做了改动，将普通的浏览器异步方法，封装成 zone.js 的异步方法。同时，由于这些任务中定义了很多钩子函数，导致 zone.js 中可以完全监控这些异步任务的整个生命周期。
+         6. 好处：各自 zone 中保持其要关注的点 clean.
+         7. 由于 zone 的这种特性，使得 zone 经常被用于异步任务的追踪和调试中。
    5. 示例：
 
-      ```code
+      ``` c
       const zone = Zone.current.fork({
          name: 'zone',
          onScheduleTask: function(delegate, curr, target, task) {
@@ -2760,36 +2821,152 @@
       });
       ```
 
-   6. 原理：Zone.js 库能实现这些功能是通过 Monkey Patching 拦截所有的 异步APIs. ❓❓❓ 
-      1. Monkey Patching: 
-         1. 定义：是一种在不更改源码的情况下，在函数运行时，能够新增或修改函数默认行为的技术。Monkey patching is a technique to add or alter the default behavior of a function at runtime without changing the source code.
-         2. 示例：
+   6. Monkey Patching:Zone.js 库能实现这些功能是通过 Monkey Patching 拦截所有的 异步APIs.
+      1. 定义：是一种在不更改源码的情况下，在函数运行时，能够新增或修改函数默认行为的技术。Monkey patching is a technique to add or alter the default behavior of a function at runtime without changing the source code.
+      2. 示例：
 
-            ```code
-            // 在 控制台 编码
-            const originalConsoleLog = console.log;
-            console.log = function (...args) {
-               originalConsoleLog(...args);
+         ``` c
+         // 在 控制台 编码
+         const originalConsoleLog = console.log;
+         console.log = function (...args) {
+            originalConsoleLog(...args);
 
-               // custom logics
-               console.warn('This method was monkey-patched.');
-               const appChildComponent = ng.getComponent(document.getElementsByTagName('app-child')[0]); // 
-               appChildComponent.cdr.detectChanges(); // 需要当前加载的组件里注入了 cdr: ChangeDetectorRef
-            }
+            // custom logics
+            console.warn('This method was monkey-patched.');
+            const appChildComponent = ng.getComponent(document.getElementsByTagName('app-child')[0]); // 
+            appChildComponent.cdr.detectChanges(); // 需要当前加载的组件里注入了 cdr: ChangeDetectorRef
+         }
 
-            // 在控制台执行 console.log('try to console.log') 得到：
-            -try to console.log
-            -This method was monkey-patched.
+         // 在控制台执行 console.log('try to console.log') 得到：
+         -try to console.log
+         -This method was monkey-patched.
+         ```
+
+   7. 源码：zone.js/lib/zone.js
+      1. interface Zone:
+
+         ``` c
+         parent: Zone | null;  // parent zone
+         name: string; // zone name
+         get(key: string): any;  // 获取跟 key 关联的任意类型的 value，如果当前 zone 中没有该 key, 这个请求将会被委托到 parent zone.
+         getZoneWith(key: string): Zone | null; // 向 parent zone 递归地寻找直到找到 a Zone which defines a 'key'
+         fork(zoneSpec: ZoneSpec): Zone; // returns a new child zone follows the ZoneSpec which is a set of rules.
+         wrap： // wrap a 'callback' function in a new function which restore teh current zone. The wrapped function will properly forward 'this' and 'arguments' to the 'callback' Returns the 'wrappedCallback'.
+         run： // Invoke a function in given zone: switch to new zone, save and restore the 'Zone.current' and perform the actural execution of the callback in this new zone. Optionally performans error handling. 
+         runGuarded: // run & catch any exceptions. 所有错误都会被抛出给 Zone.HandleError (源码中没找到这个 方法 ❓❓❓)
+         runTask： // Execute the Task by restoring the [Zone.currentTask] in the Task's zone.
+         scheduleTask: // Schedule an existing Task.
+         ```
+
+      2. interface ZoneType:
+
+         ``` c
+         current: Zone; // returns the current Zone. 唯一更改当前 zone 的方式是运行 newzone.run(), 将在 run 方法执行期间更改 current zone.
+         currentTask: Task | null;  // return The task associated with the current execution
+         root: Zone;  // Return the root zone.
+         assertZonePatched(): void; // 确认 Zone 已被正确地 patched。特别是 Promise 能感知 Zone ❓
+         ```
+
+      3. interface ZoneSpec: Provides a way to configure the interception of zone events. 对于 Zone 来说，就是一系列需要 follow 的 rules.
+
+         ``` c
+         name: string;  // Zone name
+         properties?: {[key: string]: any}; // A set of properties to be associated with Zone. Use [Zone.get] to retrieve them.
+         onFork: 参数都是怎么运行的 ❓❓❓ // 监听 fork 被调用的拦截器。 When the zone is being forked, this request is forwarded to this method for interception.
+         onIntercept: // 监听 the wrapping of the callback, 设置一个 hook before the function is wrapped.
+         onInvoke: // 监听 callback 被 Invoke, 设置一个 hook 钩子函数 before the function is invoked.
+         onInvokeTask:  ❓❓❓ 跟 onInvoke 的区别是啥 ？
+         onScheduleTask: // 监听 task scheduling
+         onCancelTask: // 监听 task 的 取消
+         onHasTask: // 发出通知，当 task queue empty status change 时
+         ```
+
+      4. interface ZoneDelegate: ❓❓❓
+         1. A delegate when intercepting zone operations. 拦截 zone 操作时的委托对象。
+         2. 有 Zone, 为什么还要 ZoneDelegate: 因为一个 child zone 不能只是简单的调用 parent zone 中的方法而不影响 zone 的绑定( 会自动创建一个 callback which is bound to the parent zone).
+         3. ZoneDelegate 要做啥：
+            1. Intercept the callback before it is bould to any zone.
+            2. Pass the targetZone (the zone which recieved the original request) to the delegate.
+         4. ZoneDelegate 与 Zone 里的方法一样，只是比 targetzone (接收原始请求的那个 zone) 在函数签名中多了几个额外的参数 extra targetZone argument in the method signature. 由于只有某些方法语义和参数不同，为了防止混淆，重命名以区分：
+
+            ``` c
+            // Renamed functioins: intercept、run
+
+            intercept: // 允许 wrap the callback，以便在前后运行附加代码，但不会将回调与区域关联。 Zone.wrap 方法委托为 intercept. 将会 wrap the callback so that the additional code can be run before and after but without associate the callback with the zone. 
+            run： // Zone.invoke 委托为 run。 但不会做 error handling or zone management (switch & save & restore).
             ```
 
+         5. Not every method is usually overwritten in the child zone, for this reason the ZoneDelegate stores the closest zone which overwrites this behavior along with the closest ZoneSpec. ❓❓❓
+
+            ``` c
+            zone: Zone;
+            fork:
+            intercept:
+            invoke:
+            handleError:
+            scheduleTask:
+            invokeTask:
+            cancelTask:
+            hasTask:
+            ```
+
+      5. type TaskType = 'microTask'|'macroTask'|'eventTask';
+
+            ``` c
+            MicroTask: MicroTask queue //微任务队列
+            MacroTask: MacroTask queue //宏任务队列
+            EventTask: EventTask set //事件任务集处于 MacroTask 队列的尾部。is a set of tasks which can at any time be inserted to the end of the Macrotask queue. This happens when the event fires.
+            ```
+
+      6. type TaskState = 'notScheduled'|'scheduling'|'scheduled'|'running'|'canceling'|'unknown';
+
+            ``` c
+            notScheduled 
+            scheduling
+            scheduled
+            running
+            canceling
+            unknown
+            ```
+
+      7. interface TaskData：
+
+         ``` c
+         isPeriodic?: boolean;
+         delay?: number;
+         handleId?: number;
+         ```
+
+      8. interface Task:
+
+         ``` c
+         readonly zone: Zone. // 用来在 invoke callback 时使用的 zone, 这个 zone 是在 task creation 时被捕获的。
+         type: TaskType;
+         state: TaskState;
+         invode: // 这个方法会在 虚拟机进入到 Task 中被使用到。这个方法将会进一步委托给 Zone.runTask 和 callback.
+         callback: //真正要被执行的函数
+         data: TaskData; // 传给 scheduleFn 用的 task options 可选项 (但在源码中看到 scheduleFn 的入参只有一个 Task ❓)
+         scheduleFn?:(task: Task) => void;  // 默认要被 schedule 的 task. 可能会被 Zone 用拦截器 执行该task + 其他的逻辑
+         cancelFn?:(task: Task) => void; // 取消一个 task。 并非所有的 task 都是 cancelable, 所以这个方法时 Optional.
+         runCount: number; // task 被执行的次数。 被 canceled 时为 -1.
+         cancelScheduleRequest: // 取消 scheduling request. 这个方法会被 ZoneSpec.onScheduleTask 触发从而取消当前的 current scheduling interception. 一旦 task 被取消，有两种选择，要么废弃，要么可以调用 Zone.scheduleTask 重新在另一个 Zone 中被 re-scheduled.
+         ```
+
+      9. MicroTask extends Task; MacroTask extends Task; EventTask extends Task;
+      10. const zone: ZoneType;
+
+      ``` c
+      
+      ```
+
 3. NgZone:
-   1. 定义：既然 Zone.js 可以监控 同步+异步 操作， Angular 额外提供了一个 service 取名叫 NgZone. 这个 NgZone service 会 create a zone named angular , 当满足下面两个条件，会自动触发 change detection.
+   1. 定义：既然 Zone.js 可以监控 同步+异步 操作， Angular 额外提供了一个 service 取名叫 NgZone. 这个 NgZone service 会 create a zone named angular , 当满足下面两个条件，会自动触发 change detection.是一种信号机制，Angular用它来检测应用程序的状态何时可能改变。它捕捉异步操作，如setTimeout、网络请求和事件监听器。Angular 借助 Zone.js 用来识别这些情况，检测可能发生变化的地方，并自动运行 change detection.
       1. When a sync or async function is executed 
       2. When there is no microTask schedule ❓❓❓ 为啥必须是没有微任务的时候才能 change detection?
    2. 用途：
       1. 检测变化：比如某些第三方库没有被 Zone 处理，也需要监控值的改变，就可以用 zone.run 方法使其运行在 Angular zone 上下文中，更新检测也会被正确地触发。
 
-         ```code
+         ``` c
             this.ngZone.run(() =>{
                ...
             })
@@ -2797,7 +2974,7 @@
 
       2. 不检测变化：在Angular 外执行任务。例如 setTimeout, setInterval, requestAnimationFrame, or an event handler 产生的一系列调用，不需要变化检测，此时可以使用 NgZone.runOutsideAnguar 来实现
 
-         ```code
+         ``` c
             import { Component, NgZone, OnInit } from '@angular/core';
             @Component(...)
             class AppComponent implements OnInit {
@@ -2817,7 +2994,7 @@
       2. Specify that certain DOM events do not run inside the Angular zone. For example, to prevent a mousemove or scroll event to trigger change detection.
          1. 用法都在 angular/packages/zone.js/MODULE.md 中有写。把这些写在一个文件中，在 polyfills.ts 中，插入到 import zone.js 语句之前
 
-            ```code
+            ``` c
             // zone-flags.ts
             (window as any).__Zone_disable_requestAnimationFrame = true;
             (window as any).__zone_symbol__UNPATCHED_EVENTS = ['scroll', 'mousemove'];
@@ -2829,7 +3006,7 @@
 
       3. 但有些时候，不想完全取消对某个事件的监听，也不想一直被 event 触发，可以重写一些这个元素的某个事件（示例只为展示思路）。
 
-         ```code
+         ``` c
          // template
          <div (click)="paint()">
             <div
@@ -2858,7 +3035,7 @@
 
    4. 禁止 Angular 使用 ngZone：不再会有任何 change detection
 
-      ``` code
+      ``` c
       // 1. remove the zone.js import from the plyfills.ts
       // 2. set noop to the configuration in main.ts
       platformBrowserDynamic().bootstrapModule(

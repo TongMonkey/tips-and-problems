@@ -23,6 +23,36 @@
 
 ### Observable
 
+1. 定义：
+2. Observable & Event Loop:
+   1. Observable is MicroTask. Similar to Promise,
+   2. 也是用 microtask queue 来实现的
+3. 实验：
+
+   ``` c
+      import { from } from 'rxjs';
+      console.log('Start');
+      Promise.resolve('From Promise')
+         .then(val => {
+            console.log(val);
+         });
+      from(Promise.resolve('From Observable'))
+         .subscribe(val => {
+            console.log(val);
+         });
+      setTimeout(() => {
+         console.log('Timeout Callback');
+      }, 0);
+      console.log('End');
+
+      // output
+      Start
+      End
+      From Promise
+      From Observable
+      Timeout Callback
+   ```
+
 ### Observer
 
 ### operator
@@ -38,7 +68,7 @@
       1. 作用：
       2. code理解：
 
-         ``` code
+         ``` c
             const observable = new Observable((proxyObserver) => {
                proxyObserver.next(1);
                proxyObserver.next(2);
@@ -226,7 +256,7 @@
 14. catchError 捕捉错误的操作符。
     1. 入参：一个函数
 
-        ``` code
+        ``` c
         of([100]).pipe(
          tap( n => console.log(n)),
          catchError(this.handleError)

@@ -6,7 +6,7 @@
 
 1. clear after each
 
-   ``` code
+   ``` c
     afterEach(() => {
       jest.clearAllMocks();
     });
@@ -16,7 +16,7 @@
 
 1. checkbox:
 
-    ``` code
+    ``` c
         // js:
         this.field.enable();
         this.field.disable();

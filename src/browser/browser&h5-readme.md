@@ -197,7 +197,7 @@ V8 是谷歌开源的 JavaScript 引擎，被用于 Chrome 和 Node.js 。程序
       2. window.queueMicrotask 可以创建一个微任务
       3. MutationObserver，监控dom节点变化、
 
-         ``` code
+         ``` c
          // 创建一个微任务
          const observer = new MutationObserver((mutationRecords, observer)=>{
             console.log('mt1')

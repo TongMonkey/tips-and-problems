@@ -34,7 +34,7 @@
    2. 原理：
       1. 公式：
 
-         ``` code
+         ``` c
 
             // see how many extra pixels we need to show all rows
             const additionalPixelsNeeded = combinedRowHeight - maxDivHeight;

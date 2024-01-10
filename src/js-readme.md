@@ -1,7 +1,6 @@
 ## Javascript
 
-参考面经
-`https://mp.weixin.qq.com/s/o9v3q88Ga8shNh1RyZRetQ`
+### 参考面经: `https://mp.weixin.qq.com/s/o9v3q88Ga8shNh1RyZRetQ`
 
 ### 用 es5 实现 const
 
@@ -31,47 +30,47 @@
    4. 原始类型 VS 原始类型包装类 VS 包装类构造函数 VS 转型函数
       1. 基础类型能调用方法的本质：后台自动创建对应包装类实例、调用方法后删除实例
 
-        ``` code
-        let str = 'abc';
-        typeof str; // ‘string'
-        let s = str.substring(2); // 基础类型值调用方法
-        // 当js引擎发现要读取一个原始类型值的方法，实际上做了这些：
-        let str = new String('abc'); //自动用该原始类型对应的包装类创建一个实例 该实例只存在于执行代码的瞬间，之后立刻就被销毁掉了
-        typeof str; // 'object'
-        let s = str.substring(3); //调用实例上的指定方法
-        str = null; //销毁包装类实例
-        ```
+          ``` c
+            let str = 'abc';
+            typeof str; // ‘string'
+            let s = str.substring(2); // 基础类型值调用方法
+            // 当js引擎发现要读取一个原始类型值的方法，实际上做了这些：
+            let str = new String('abc'); //自动用该原始类型对应的包装类创建一个实例 该实例只存在于执行代码的瞬间，之后立刻就被销毁掉了
+            typeof str; // 'object'
+            let s = str.substring(3); //调用实例上的指定方法
+            str = null; //销毁包装类实例
+          ```
 
       2. 包装类 VS 引用类型 生成实例
 
-      ``` code
-      // 包装类型产生的实例只存在于执行代码的瞬间，之后立刻就被销毁掉了
-      let str = 'abc';
-      str.age = 1;  // 给基本类型添加属性，先自动创建一个包装类对象，添加属性后销毁
-      typeof str // 'string' 此时包装类对象已经销毁
+          ``` c
+            // 包装类型产生的实例只存在于执行代码的瞬间，之后立刻就被销毁掉了
+            let str = 'abc';
+            str.age = 1;  // 给基本类型添加属性，先自动创建一个包装类对象，添加属性后销毁
+            typeof str // 'string' 此时包装类对象已经销毁
 
-      // 显示调用包装类
-      let str = new String('abc');
-      typeof str; // 'object'
+            // 显示调用包装类
+            let str = new String('abc');
+            typeof str; // 'object'
 
-      // 引用类型生成的实例 会一直保存在内存中，直到函数调用栈弹出，执行上下文被销毁
-      let str = new Object('abc'); // Object构造函数会根据传入值的类型返回相应基本包装类型的实例
-      str instanceof String; // true
-      typeof str; // 'object'
-      ```
+            // 引用类型生成的实例 会一直保存在内存中，直到函数调用栈弹出，执行上下文被销毁
+            let str = new Object('abc'); // Object构造函数会根据传入值的类型返回相应基本包装类型的实例
+            str instanceof String; // true
+            typeof str; // 'object'
+          ```
 
       3. 转型函数 VS new构造函数
 
-      ``` code
-      // 转型函数
-      let str = String(123); // "123"
-      typeof str // 'string'
-      str instanceof String; // false
-        // new 实例
-        let str = new String(123); "123"
-        typeof str // 'object'
-        str instanceof String; // true
-      ```
+          ``` c
+          // 转型函数
+          let str = String(123); // "123"
+          typeof str // 'string'
+          str instanceof String; // false
+            // new 实例
+            let str = new String(123); "123"
+            typeof str // 'object'
+            str instanceof String; // true
+          ```
 
       4. 建议：不要显示第调用包装类生成对象，容易让人分不清在处理原始基本类型还是引用类型的值
    5. 判断是Number类型
@@ -86,7 +85,7 @@
          2. 重点：只有本身是NaN的才会返回true
       4. 易错点： 混淆 isNaN 与 Number.isNaN
 
-        ``` code
+        ``` c
         isNaN(NaN);                  // true 本身和强制转化后的NaN都会判断为true
         isNaN('hello world');        // true 
         Number.isNaN(NaN);           // true  只有本身是NaN的才会返回true
@@ -107,7 +106,7 @@
    2. 判断原型及派生原型的方法：4种  
       1. 示例代码：
 
-          ``` code
+          ``` c
             class A{};
             class B extends A{}; 
             class C extends B{}; 
@@ -140,7 +139,7 @@
          2. 注意：descriptor里的属性如果没有手动设置为true,默认为false
          3. 缺点：不能监听数组的下标变化，怎么解决:可以用Proxy
 
-            ``` code
+            ``` c
             var Obj = {}
             Object.defineProperty(Obj, 'a', {
                 get: function () {
@@ -176,7 +175,7 @@
       2. Object.defineProperties(target, descriptorObject);
          1. 注意：descriptor里的属性如果没有手动设置为true,默认为false
 
-          ``` code
+          ``` c
           var obj = {};
           Object.defineProperties(obj, {
             'property1': {
@@ -205,7 +204,7 @@
 2. 对象 arguments //直接用 包含函数执行时实际收到的所有参数的类数组对象
 3. arguments.callee // 是函数参数对象的属性，是指向拥有arguments的函数自身, 这样可以解藕对函数名的依赖
 
-   ``` code
+   ``` c
    funtion a(){ 
      arguments.callee == a;  //true 
     }
@@ -213,7 +212,7 @@
 
 4. 函数.caller // 是函数对象的属性，指向调用当前函数的函数, 用来追踪函数的调用链。在严格模式下禁用，因为会暴露源码。如果在顶层window中调用，会返回null
 
-   ``` code
+   ``` c
    function b(){ 
      console.log(b.caller); //打印调用当前函数的函数体
    } 
@@ -231,7 +230,7 @@
       1. new绑定：new构造函数创建对象的时候，有四步：1创建新对象、2给新对象绑定prototype、3给新对象绑定到函数调用的this上、4如果函数没返回对象就自动返回新对象。这个第3步中，就会把生成的实例绑定到this上
          1. 注意：当new调用构造函数时，发现构造函数是个硬绑定函数，就会使用新创建的this替换硬绑定的this
 
-            ``` code
+            ``` c
             function foo(something){
               this.a = something;
             }
@@ -252,7 +251,7 @@
    3. => 箭头函数中this: 定义函数时所处的环境上下文对象被箭头函数捕获作为自己的this,由声明位置决定，跟被谁调用的没关系
    4. 求输出
 
-      ``` code
+      ``` c
       var obj = {
         name: 'abc',
         // fn函数的this就是所处的外部环境window 但window中没有name属性
@@ -790,7 +789,7 @@ plus(1)(2) // 输出 4
       3. 解决一个await出现reject会影响后续的问题：方法1:将await语句都放在try...catch块中 方法2:将await后面的各个Promise都设置catch方法。
    4. 优化：如果await后面的一步操作不存在继发关系，最好让他们同时触发
 
-      ```
+      ``` c
       // 方法一：
       let [foo,bar] = await Promise.all(getFoo(), getBar());
       // 方法二： 
@@ -806,7 +805,7 @@ plus(1)(2) // 输出 4
    1. 是Generator函数的语法糖。将Generator函数和自动执行器包装在一个函数里
 5. 求输出
 
-   ```
+   ``` c
     function HaveResolvePromise(){
         return new Promise((resolve, reject) => {
             setTimeout(() => {
@@ -1283,7 +1282,7 @@ plus(1)(2) // 输出 4
    2. .finally()返回一个promise对象
    3. 实现一个finally函数
 
-   ```
+   ``` c
     Promise.prototype.finally = function (callback) {
       let P = this.constructor;
       return this.then(
@@ -1300,51 +1299,47 @@ plus(1)(2) // 输出 4
 1. 实现：Node/src/custom_promise/promise.js
 2. 如何串行执行多个promise
 
-   ```
-   
-   ```
+### 求输出
 
-3. 求输出
+  ``` c
+    async function async1() {
+      console.log("async1 start");
+      await async2();
+      console.log("async1 end");
+    }
+    async function async2() {
+      console.log("async2");
+    }
+    console.log("script start");
+    setTimeout(() => {
+      console.log("setTimeout");
+    }, 0);
+    async1();
+    new Promise((resolve) => {
+      console.log("promise1");
+      resolve();
+    }).then(() => {
+      console.log("promise2");
+    });
+    console.log("script end");
+  ```
 
-```
-async function async1() {
-  console.log("async1 start");
-  await async2();
-  console.log("async1 end");
-}
-async function async2() {
-  console.log("async2");
-}
-console.log("script start");
-setTimeout(() => {
-  console.log("setTimeout");
-}, 0);
-async1();
-new Promise((resolve) => {
-  console.log("promise1");
-  resolve();
-}).then(() => {
-  console.log("promise2");
-});
-console.log("script end");
-```
+### 输出
 
-1. 求输出
-
-```
-const promise1 = Promise.resolve("First");
-const promise2 = Promise.resolve("Second");
-const promise3 = Promise.reject("Third");
-const promise4 = Promise.resolve("Fourth");
-const runPromises = async () => {
-  const res1 = await Promise.all([promise1, promise2]);
-  const res2 = await Promise.all([promise3, promise4]);
-  return [res1, res2];
-};
-runPromises()
-  .then((res) => console.log(res))
-  .catch((err) => console.log(err));
-```
+  ``` c
+  const promise1 = Promise.resolve("First");
+  const promise2 = Promise.resolve("Second");
+  const promise3 = Promise.reject("Third");
+  const promise4 = Promise.resolve("Fourth");
+  const runPromises = async () => {
+    const res1 = await Promise.all([promise1, promise2]);
+    const res2 = await Promise.all([promise3, promise4]);
+    return [res1, res2];
+  };
+  runPromises()
+    .then((res) => console.log(res))
+    .catch((err) => console.log(err));
+  ```
 
 ### 判断数组有几种方式
 
@@ -2235,43 +2230,41 @@ function myTypeof(obj) {
 
 ### Class 类
 
-1. 定义：Es6的类完全可以看做构造函数的另一种写法，但类不能变量提升。类相当于实例的原型。
+1. 定义：Es6的类完全可以看做 constructor 构造函数的另一种写法，但类不能变量提升。类相当于实例的原型。
 
-   ```
-   class B{};
+   ``` c
+   class B{}; // typeof B === 'function' 为 true. Class 本质就是函数
    let b = new B();
-   b.constrctor === B.prototype.constructor;
-   typeof B; // 'function' //类就是函数
-   B === B.prototype.constructor; //true // 类本身就指向构造函数
+   b.constrctor === B; //true 类本身就指向构造函数
    B.prototype.constructor === B; //true prototype对象的constructor属性直接指向类本身
    ```
 
 2. 对比ES6的Class与ES5的构造函数写法
    1. es5: 除了构造函数内定义的方法，其他需要手动绑定到*。prototype上
 
-    ```
-    function Point(x, y) {
-      this.x = x;
-      this.y = y;
-    }
-    Point.prototype.toString = function () {
-      return '(' + this.x + ', ' + this.y + ')';
-    };
-    var p = new Point(1, 2);
-    ```
-
-    2. es6: 所有定义在类里的方法，都是定义在类的prototype属性上，按照es5的理解,都在构造函数的prototype对象上 所以一个Es6类的实例能使用类的方法，就相当于在es5中一个构造函数的实例能使用其原型上的方法
-
-    ```
-    class Point{
-      constructor(){}
-      toString(){}
-    }
-    ```
-
-3. 类及类的方法声明
-
+      ``` c
+        function Point(x, y) {
+          this.x = x;
+          this.y = y;
+        }
+        Point.prototype.toString = function () {
+          return '(' + this.x + ', ' + this.y + ')';
+        };
+        var p = new Point(1, 2);
       ```
+
+   2. es6: 所有定义在类里的方法，都是定义在类的prototype属性上，按照es5的理解,都在构造函数的prototype对象上 所以一个Es6类的实例能使用类的方法，就相当于在es5中一个构造函数的实例能使用其原型上的方法
+
+      ``` c
+      class Point{
+        constructor(){}
+        toString(){}
+      }
+      ```
+
+   3. 类及类的方法声明
+
+      ``` c
       let propName = 'valueOf'; //先声明后使用 否则会报unexpected identifier
       class Point {
         // constructor是个默认函数，如果没有手动开发，则会自动创建一个空的构造函数constrctor(){} 在打印出来后看得到，源码中看不到
@@ -2294,204 +2287,221 @@ function myTypeof(obj) {
       Object.getOwnPropertyNames(Point.prototype); // ["constructor","toString","valueOf"]
       ```
 
-     1. 类的表达式定义法
+   4. 类的表达式定义法
 
+       ``` c
+       // 这个类的名字是Me，但是Me只在 Class 的内部可用，指代当前类。在 Class 外部，这个类只能用MyClass引用
+       const MyClass = class Me {
+         getClassName() {
+           return Me.name;   // 此时 new MyClass().getClassName(); 调用得到结果：”Me“
+         } 
+       };
+       // 如果内部没有用到Me,也可以忽略命名
+       const MyClass = class { /*...*/ };
+         // 可以写成一个立即执行函数
+         let person = new class {
+         constructor(name) {
+           this.name = name;
+         }
+
+         sayName() {
+           console.log(this.name);
+         }
+       }('张三');
+       person.sayName(); // "张三"
+       ```
+
+   5. 对比
+      1. 类可以看做是构造函数的另一种写法，验证一下：
+
+         ``` c
+           class Point { }
+           typeof Point; //"function"
+           Point === Point.prototype.constructor; //true
+         ```
+
+      2. 类不存在函数提升、Es5的普通函数声明可以
+      3. 类里默认就是严格模式
+3. 类的方法：
+   1. 给一个类添加方法，可以添加到类的原型对象上
+
+      ``` c
+        Object.assign(Point.prototype, {
+          toString(){}, //也没用function 声明
+        })
       ```
-      // 这个类的名字是Me，但是Me只在 Class 的内部可用，指代当前类。在 Class 外部，这个类只能用MyClass引用
-      const MyClass = class Me {
-        getClassName() {
-          return Me.name;   // 此时 new MyClass().getClassName(); 调用得到结果：”Me“
-        } 
-      };
-      // 如果内部没有用到Me,也可以忽略命名
-      const MyClass = class { /* ... */ };
-        // 可以写成一个立即执行函数
-        let person = new class {
-        constructor(name) {
-          this.name = name;
-        }
 
-        sayName() {
-          console.log(this.name);
-        }
-      }('张三');
-      person.sayName(); // "张三"
+    2. ES6中类的内部的方法，都是不可枚举的。注意：这个特性跟ES5中表现不一样
+
+      ``` c
+      // es6
+      class Point{}
+      Object.getOwnPropertyNames(Point.prototype); // ["constructor","toString"]
+      Object.keys(Point.prototype); //[] 查不出
+      // es5
+      function Person(){}
+      Person.prototype.toString = function(){};
+      Object.getOwnPropertyNames(Point.prototype); // ["constructor","toString"]
+      Object.keys(Person.prototype); //["toString"] 查得出
       ```
 
-     2. 对比
-        1. 类可以看做是构造函数的另一种写法，验证一下：
-
-        ```
-        class Point { }
-        typeof Point; //"function"
-        Point === Point.prototype.constructor; //true
-        ```
-
-        2. 类不存在函数提升、Es5的普通函数声明可以
-        3. 类里默认就是严格模式
-4. 类的方法：
-   1. 给一个类添加方法，可以添加到类的原型对象上，
-
-    ```
-      Object.assign(Point.prototype, {
-        toString(){}, //也没用function 声明
-      })
-    ```
-
-    1. ES6中类的内部的方法，都是不可枚举的。注意：这个特性跟ES5中表现不一样
-
-    ```
-    // es6
-    class Point{}
-    Object.getOwnPropertyNames(Point.prototype); // ["constructor","toString"]
-    Object.keys(Point.prototype); //[] 查不出
-    // es5
-    function Person(){}
-    Person.prototype.toString = function(){};
-    Object.getOwnPropertyNames(Point.prototype); // ["constructor","toString"]
-    Object.keys(Person.prototype); //["toString"] 查得出
-    ```
-
-5. 类的调用：必须用new调用，直接调用会报错，这也是跟es5的构造函数的区别
-6. get / set  
+4. 类的调用：必须用new调用，直接调用会报错，这也是跟es5的构造函数的区别
+5. get / set  
    1. 是对某个属性 取值/赋值的函数，拦截该属性的 存取行为。
    2. 设置在属性的Descriptor对象上，
    3. 用Object.getOwnPropertyDescriptors 方法查看
-7. 类中的this
+6. 类中的this
    1. 类的方法内部如果含有this，它默认指向类的实例
 
-    ```
-    class Logger {
-      constructor(name="init"){
-        this.name = name;
-      }
-      printName(name = 'there') {
-        console.log(this.name);
-      }
-    }
-    const logger = new Logger();
-    logger.printName(); // Hello init
-    ```
+       ``` c
+       class Logger {
+         constructor(name="init"){
+           this.name = name;
+         }
+         printName(name = 'there') {
+           console.log(this.name);
+         }
+       }
+       const logger = new Logger();
+       logger.printName(); // Hello init
+       ```
 
    2. 本来this是指向实例，但如果单独将类的方法导出，在外部环境调用，类的方法的this是该方法运行时的环境；而类内部是严格模式，顶层运行环境为undefined
 
-    ```
-    class Logger {
-      constructor(name="init"){
-        this.name = name;
+      ``` c
+      class Logger {
+        constructor(name="init"){
+          this.name = name;
+        }
+        printName(name) {
+          console.log(this.print);
+        }
+        print(text) {
+          console.log(text);
+        }
       }
-      printName(name) {
-        console.log(this.print);
-      }
-      print(text) {
-        console.log(text);
-      }
-    }
-    const logger = new Logger();
-    const { printName } = logger;
-    printName(); // TypeError: Cannot read property 'print' of undefined
-    ```
+      const logger = new Logger();
+      const { printName } = logger;
+      printName(); // TypeError: Cannot read property 'print' of undefined
+      ```
 
    3. 解决上述第2点，导出方法中this指向顶层undefined的问题：
 
-    ```
-      // 1. 在构造方法中绑定this
-      class Logger {
-        constructor() {
-          this.printName = this.printName.bind(this); // 由于.bind函数后返回一个新函数，在执行构造函数时，this就是实例对象，所以新函数就绑定了this实例
-        }
-        printName(name = 'there') {
-          console.log(`Hello ${name}`);
-        }
-      }
-      // 2. 使用箭头函数
-      class Obj {
-        constructor() {
-          this.getThis = () => this; // 箭头函数内部的this总是指向定义时所在的对象 箭头函数位于构造函数内部，它的定义生效的时候，是在构造函数执行的时候 这时，箭头函数所在的运行环境，肯定是实例对象，所以this会总是指向实例对象。
-        }
-      }
-      const myObj = new Obj();
-      myObj.getThis() === myObj
-      // 3. 利用Proxy代理 在get方法里面，绑定this
-      function selfish (target) {
-        const handler = {
-          get (target, key) {
-            target[key] = target[key].bind(target);
-            return target
+      ``` c
+        // 1. 在构造方法中绑定this
+        class Logger {
+          constructor() {
+            this.printName = this.printName.bind(this); // 由于.bind函数后返回一个新函数，在执行构造函数时，this就是实例对象，所以新函数就绑定了this实例
           }
-        };
-        const proxy = new Proxy(target, handler);
-        return proxy;
-      }
-      const logger = selfish(new Logger());
-    ```
+          printName(name = 'there') {
+            console.log(`Hello ${name}`);
+          }
+        }
+        // 2. 使用箭头函数
+        class Obj {
+          constructor() {
+            this.getThis = () => this; // 箭头函数内部的this总是指向定义时所在的对象 箭头函数位于构造函数内部，它的定义生效的时候，是在构造函数执行的时候 这时，箭头函数所在的运行环境，肯定是实例对象，所以this会总是指向实例对象。
+          }
+        }
+        const myObj = new Obj();
+        myObj.getThis() === myObj
+        // 3. 利用Proxy代理 在get方法里面，绑定this
+        function selfish (target) {
+          const handler = {
+            get (target, key) {
+              target[key] = target[key].bind(target);
+              return target
+            }
+          };
+          const proxy = new Proxy(target, handler);
+          return proxy;
+        }
+        const logger = selfish(new Logger());
+      ```
 
-8. 类的静态方法：
+   4. 注意：在 Class 中要使用 this, 需要先调用 super() 才行. 为什么 ❓❓❓
+
+      ``` c
+      class Base {
+        k = 4;
+      }
+      class Derived extends Base {
+        constructor() {
+          console.log(this.k);
+          super(); // 'super' must be called before accessing 'this' in the constructor of a Derived class.
+        }
+      }
+
+      const d = new Derived(); // Uncaught ReferenceError: Must call super constructor in derived class before accessing 'this' or returning from derived constructor
+      ```
+
+7. 类的静态方法：
+
    1. 定义：类相当于实例的原型，所有在类中的方法都会被实例继承。如果在一个方法前加上static关键字，就表示该方法不会被实例继承，而是直接通过类调用
    2. 子类可继承父类的静态方法，而实例不可以。注意 子类 和 实例 不是一个对象哦
    3. 子类继承后可以调用父类的静态方法 static Fn(){}，通过super对象取得, 在子类中执行super.Fn()
    4. 实例调用静态方法回报错
    5. 类的静态方法里的this指向的是该类本身
-9. 类的静态属性： 在实例属性前面加上static就是静态属性，只能类来调用，不能用在实例上
+   6. 类的静态属性： 在实例属性前面加上static就是静态属性，只能类来调用，不能用在实例上
 
-    ```
-    class A{
-      static name = 'aa'  // 第一种写法(推荐)
-    }
-    A.age = 34 //第二种写法
-    ```
+      ``` c
+      class A{
+        static name = 'aa'  // 第一种写法(推荐)
+      }
+      A.age = 34 //第二种写法
+      ```
 
-10. 类的实例属性：在类中直接用等式写入的属性, 不需要let之类的声明, 在A的实例上可以读到,子类的实例上也可以
+   7. 类的实例属性：在类中直接用等式写入的属性, 不需要let之类的声明, 在A的实例上可以读到,子类的实例上也可以
 
-   ```
-   class A{
-     name = 'aa'
-   }
-   class B extends A{}
-   new B().name; //'aa'
-   ```
+      ``` c
+      class A{
+        name = 'aa'
+      }
+      class B extends A{}
+      new B().name; //'aa'
+      ```
 
-11. new.target: 在构造函数内部可以通过 new.target判断当前构造函数是不是用new 调用的
+8. new.target: 在构造函数内部可以通过 new.target判断当前构造函数是不是用new 调用的
     1. 如果是 new 构造函数的就会返回构造函数，否则返回undefined
     2. 如果子类继承父类，实现子类时，即使在父类的构造函数里打印，new.target的值也是子类
     3. 只能在构造函数里调用，否则报错
 
-      ```
+      ``` c
       class Person(name){
         if(new.target!==undefined) this.name = name;
         else throw new Error('必须使用new生成实例')
       }
       ```
 
-12. super：可以做对象or函数
+9. super：可以做对象or函数
     1. 作为对象：
-       1. 在静态方法中,super就是父类，子类继承后可以调用父类的静态方法 static Fn(){}，通过super对象取得, 在子类中执行super.Fn()
-       2. 在普通方法中,super就是父类的原型对象，super.p()就是Father.prototype.p()。
+       1. 在静态方法中使用,super就是父类，子类继承后可以调用父类的静态方法 static Fn(){}，通过super对象取得, 在子类中执行super.Fn()
+       2. 在普通方法中使用,super就是父类的原型对象，super.p()就是Father.prototype.p()。
           1. 在普通方法中由于super指向父类的原型对象，所以定义在父类实例上的方法或属性，是无法通过super调用的
 
-            ```
-            class A{
-              d(){return 1} //直接定义在类中的方法其实是定义在类的prototype对象上了
-              name = 'aa'; // A的实例属性
-            }
-            A.prototype.p = function(){return 2} // d跟p都在 A.prototype 上
-            class B extends A {
-              m(){
-                console.log(super.d()); // 1 这里的两个super都代表 A.prototype 
-                console.log(super.p()); // 2 这里的两个super都代表 A.prototype 
-                console.log(super.name); // undefined 那么是A的实例方法，super作为对象，在普通函数中无法通过super获取
+              ``` c
+              class A{
+                d(){return 1} //直接定义在类中的方法其实是定义在类的prototype对象上了
+                name = 'aa'; // A的实例属性
               }
-            }
-            new B().m();
-            new B().name; // ‘aa' 父类的实例属性可以直接通过子类实例获得，但是用super在普通函数中无法获得
-            ```
+              A.prototype.p = function(){return 2} // d跟p都在 A.prototype 上
+              class B extends A {
+                m(){
+                  console.log(super.d()); // 1 这里的两个super都代表 A.prototype 
+                  console.log(super.p()); // 2 这里的两个super都代表 A.prototype 
+                  console.log(super.name); // undefined 那么是A的实例方法，super作为对象，在普通函数中无法通过super获取
+                }
+              }
+              new B().m(); // 1; 2; undefined. 
+              new B().name; // ‘aa' 父类的实例属性可以直接通过子类实例获得，但是用super在普通函数中无法获得
+              ```
 
           2. 在普通方法中super是父类的prototype，调用super的方法时，super会绑定子类的this。
              1. 用super对属性赋值时，super就是子类this；
              2. 用super对属性取值或方法调用时，super就是父类的prototype
              3. 验证：
 
-              ```
+              ``` c
               class A{
                 constructor(){
                   this.x = 1; //x 是 A 的 实例属性，A.prototype.x 是undefined
@@ -2519,7 +2529,7 @@ function myTypeof(obj) {
     2. 作为函数：super是父类的构造函数，子类必须在也只能在constructor里调用它。
        1. super虽然代表父类的构造函数，但super()返回的是子类的实例，即super的内部this指向子类
 
-          ```
+          ``` c
           class A{}
           class B extends A{
             constrctor(){
@@ -2531,7 +2541,7 @@ function myTypeof(obj) {
 
        2. 直接继承Object时,比较特殊，无法通过super给父类Object的构造函数传参。因为ES6改变了Object构造函数的行为，一旦发现Object不是通过new Object()这种形式调用的，Object构造函数会忽略参数
 
-          ```
+          ``` c
           class A extends Object{
             constructor(){
               super(...arguments) //此时super调用父类Object的构造函数时会忽略参数
@@ -2544,8 +2554,8 @@ function myTypeof(obj) {
     3. 使用super的时候，必须显示指定是作为函数还是作为对象使用的，不然会报错 例如 console.log(super) // error
     4. 由于对象总是继承其他对象的，所以可以在任意一个对象中使用super关键字
 
-13. 获取父类的方法：Super = Object.getPrototypeOf(Sub);
-14. 类继承的两条继承链 ![类继承的两条继承链](assets/类继承的两条继承链.png)
+10. 获取父类的方法：Super = Object.getPrototypeOf(Sub);
+11. 类继承的两条继承链 ![类继承的两条继承链](assets/类继承的两条继承链.png)
     1. 子类的__proto__表示构造函数的继承，指向父类
     2. 子类的prototype的__proto__表示方法的继承，指向父类的prototype
 
@@ -2555,7 +2565,7 @@ function myTypeof(obj) {
 2. ES6 的继承实质完全不同！ 是先创造父类的实例对象this，然后子类通过调用super得到父类的this, 再用子类的构造函数修改this。 即子类实例的构建，是基于对父类的实例加工。必须先调用super才能返回父类实例
 3. 一个类没有自定义的构造函数时，系统给类默认添加的构造函数是这样的
 
-   ```
+   ``` c
    constrctor(...args){
      super(...args);
    }
@@ -2572,7 +2582,7 @@ function myTypeof(obj) {
 1. 用Es6实现：
    1. 利用Proxy:
 
-      ```
+      ``` c
       function extend(sup,base) {
         var descriptor = Object.getOwnPropertyDescriptor(
           base.prototype,"constructor"

@@ -670,7 +670,7 @@
          2. 在进入事件循环后实际执行时，如果到达times阶段的时刻没到1毫秒，那么就有可能会跳过times的执行，现象就是check阶段的回调反而先执行了。
          3. 示例：
 
-            ``` code
+            ``` c
             // 代码输出顺序不确定 1 2 或者 2 1
             setTimeout(() => console.log(1));
             setImmediate(() => console.log(2));
@@ -715,7 +715,7 @@
          3. 宏任务没有优先级之分：不同阶段的宏任务被放在不同的任务队列中，执行顺序就是按照事件循环的阶段顺序进行的，没有优先级的概念。
          4. 求输出
 
-            ``` code
+            ``` c
             // 刚进入循环时，由于50ms的延时，times阶段事件来不及执行
             setTimeout(() => console.log(1), 50);
             process.nextTick(() => console.log(2));
@@ -755,7 +755,7 @@
    1. 作用：定义要依赖的同级包的目录。被依赖的同级包只会被安装一次。
    2. 例子：假设现在有一个 helloWorld 工程,已经在其 package.json 的 dependencies 中声明了 packageA，有两个插件 plugin1 和 plugin2 他们也依赖 packageA，如果在插件中使用 dependencies 而不是 peerDependencies 来声明 packageA，那么 $ npm install 安装完 plugin1 和 plugin2 之后的依赖图是这样的：
 
-      ``` code
+      ``` c
          
          ├── helloWorld
          │   └── node_modules
@@ -771,7 +771,7 @@
    从上面的依赖图可以看出，helloWorld 本身已经安装了一次packageA，但是因为因为在
    plugin1 和 plugin2 中的 dependencies 也声明了 packageA，所以最后 packageA 会被安装三次，有两次安装是冗余的。如果在 plugin1 和 plugin2 的 package.json 中使用 peerDependency 来声明核心依赖库, 例如
 
-      ``` code
+      ``` c
          {
             "peerDependencies": {
                "packageA": "1.0.1"
@@ -791,7 +791,7 @@
 
       此时在系统中生成的依赖图为：此时 packageA 只会被安装一次
 
-      ``` code
+      ``` c
          ├── helloWorld
          │   └── node_modules
          │       ├── packageA

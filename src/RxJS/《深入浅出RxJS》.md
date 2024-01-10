@@ -25,7 +25,7 @@
    1. Tree-shaking 对 rxjs 不起作用。有些函数不管我们的应用代码用还是不用，都在 RxJS 内部已经被 Observable 这个类”引用“了
    2. Deep Link 深链：最好的方式是用一个代码文件专门导入rxjs相关功能，其他的文件再导入这个文件
 
-      ```code
+      ``` c
          import { Observable } from 'rxjs/Observable';
          import 'rxjs/add/observable/of'
       ```
@@ -61,7 +61,7 @@
 ### 实现 new Observable 
 1. code
 
-   ```code
+   ``` c
       import { Observable } from 'rxjs/Observable';
       //2-1. 而这个 onSubscribe 函数接受一个 observer 观察者 作为入参，obSubscribe 函数可以任意操作观察者对象，比如在函数体内会调用 observer 的 next 函数，从而把数据推给 observer。
       //2-2. onSubscribe 的被调用时机：是 subscribe 方法调用的时候，触发 onSubscribe

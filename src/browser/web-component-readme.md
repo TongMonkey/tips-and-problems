@@ -27,7 +27,7 @@
       3. 注意：这个 mode 模式控制并不是一个强安全机能，有其他能绕过它的方式可以打破封装。所以更多的，我们把它当成一种"表态"，表明这个主页面不允许访问 shadow DOM.
       4. 用法：
 
-         ``` code
+         ``` c
             // Will use this div element as the shadow host.
             <div id="host"></div>
             <span>I'm not in the shadow DOM</span>

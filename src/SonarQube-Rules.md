@@ -17,7 +17,7 @@
       6. Setting default value using selector operator.
 2. Extract the assinment of "..." from this expression
 
-   ``` code
+   ``` c
       let someBoolean = true;
       // 在子表达式中赋值很难被发现，使代码的可读性下降
       condifiton ? someFunc() : someBoolean = false;
