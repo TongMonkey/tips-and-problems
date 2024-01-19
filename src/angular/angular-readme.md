@@ -2723,7 +2723,7 @@
 
          2. 当输入值的内存引用地址没有变，即使内容变化了，也不会引起 change detection, 这是预期行为， 因为对象比较的就是内存地址。所以在开发过程中，要注意对象的赋值问题。
       6. Change Detection & Pipe vs function: ❓❓❓
-   6. 疑问：
+   6. Q&A：
       1. markForCheck VS detectChanges 的区别是什么: 作用不同。detectChanges 是用来 checks the change detector and its children, 是干活儿的。 markForCheck 是用来 marks all ChangeDetectionStrategy ancestors as to be checked. 是来安排活儿的。
    7. 注意：
       1. change detection 可能会引起减速，所以不能运行太频繁。
@@ -2955,9 +2955,6 @@
       9. MicroTask extends Task; MacroTask extends Task; EventTask extends Task;
       10. const zone: ZoneType;
 
-      ``` c
-      
-      ```
 
 3. NgZone:
    1. 定义：既然 Zone.js 可以监控 同步+异步 操作， Angular 额外提供了一个 service 取名叫 NgZone. 这个 NgZone service 会 create a zone named angular , 当满足下面两个条件，会自动触发 change detection.是一种信号机制，Angular用它来检测应用程序的状态何时可能改变。它捕捉异步操作，如setTimeout、网络请求和事件监听器。Angular 借助 Zone.js 用来识别这些情况，检测可能发生变化的地方，并自动运行 change detection.
@@ -3048,5 +3045,5 @@
       1. NgZone 怎么做的，分为 2 个 steps: 
          1. View Checking: Synchronization of the component view with the data model.
          2. Re-Render process(optional): Automatically re-execute the View Checking when application state might change. 如果 ngZone: 'noop' 这一步就没有了
-   6. 疑问：
-      1. 怎么判断应不应该检测变化呢，比如一个树状图，异步回调后要刷新某个节点，这样应该检测变化嘛，页面状态并么有改变？？
+      2. 疑问：
+         1. 怎么判断应不应该检测变化呢，比如一个树状图，异步回调后要刷新某个节点，这样应该检测变化嘛，页面状态并么有改变

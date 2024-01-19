@@ -110,8 +110,62 @@
    4. npm update 更新包 注意，如果包的主版本变了，代表着引入了重大的更改，npm update并不会更新到新的主版本那一版，避免引起太多问题
    5. npm install 下载包并且更新package-lock.json
    6. npm uninstall
-4. 常用包
+4. 常用 flag:
+   1. --legacy-peer-deps: 在NPM v7中，现在默认安装peerDependencies。在很多情况下，这会导致版本冲突，从而中断安装过程。--legacy-peer-deps标志是在v7中引入的，目的是绕过peerDependency自动安装；它告诉 NPM 忽略项目中引入的各个modules之间的相同modules但不同版本的问题并继续安装，保证各个引入的依赖之间对自身所使用的不同版本modules共存
+5. 常用包
    1. nodemon: 是一种工具，可以自动检测到目录中的文件更改时通过重新启动应用程序来调试基于node.js的应用程序。
+6. package.json 里的 depandency
+   1. dependencies 全局依赖目录
+   2. devDependencies 开发环境依赖目录
+   3. peerDependencies 同级依赖目录：
+      1. 作用：定义要依赖的同级包的目录。被依赖的同级包只会被安装一次。
+      2. Default: 从 npm 7 开始，默认就会按照 peerDependencies 的方式下载了。
+      3. 例子：假设现在有一个 helloWorld 工程,已经在其 package.json 的 dependencies 中声明了 packageA，有两个插件 plugin1 和 plugin2 他们也依赖 packageA，如果在插件中使用 dependencies 而不是 peerDependencies 来声明 packageA，那么 $ npm install 安装完 plugin1 和 plugin2 之后的依赖图是这样的：
+
+         ``` c
+            
+            ├── helloWorld
+            │   └── node_modules
+            │       ├── packageA
+            │       ├── plugin1
+            │       │   └── nodule_modules
+            │       │       └── packageA
+            │       └── plugin2
+            │       │   └── nodule_modules
+            │       │       └── packageA
+         ```
+
+      从上面的依赖图可以看出，helloWorld 本身已经安装了一次packageA，但是因为因为在
+      plugin1 和 plugin2 中的 dependencies 也声明了 packageA，所以最后 packageA 会被安装三次，有两次安装是冗余的。如果在 plugin1 和 plugin2 的 package.json 中使用 peerDependency 来声明核心依赖库, 例如
+
+         ``` c
+            {
+               "peerDependencies": {
+                  "packageA": "1.0.1"
+               }
+            }
+            {
+               "peerDependencies": {
+                  "packageA": "1.0.1"
+               }
+            }
+            {
+               "dependencies": {
+                  "packageA": "1.0.1"
+               }
+            }
+         ```
+
+         此时在系统中生成的依赖图为：此时 packageA 只会被安装一次
+
+         ``` c
+            ├── helloWorld
+            │   └── node_modules
+            │       ├── packageA
+            │       ├── plugin1
+            │       └── plugin2
+         ```
+
 
 ### 流
 
@@ -747,54 +801,3 @@
 1. 使用Node.js搭建 BFF 层 Backend For Frontend
 2. 使用Node.js + Next.js 实现 SSR
 
-### package.json 里的 depandency
-
-1. dependencies 全局依赖目录
-2. devDependencies 开发环境依赖目录
-3. peerDependencies 同级依赖目录：
-   1. 作用：定义要依赖的同级包的目录。被依赖的同级包只会被安装一次。
-   2. 例子：假设现在有一个 helloWorld 工程,已经在其 package.json 的 dependencies 中声明了 packageA，有两个插件 plugin1 和 plugin2 他们也依赖 packageA，如果在插件中使用 dependencies 而不是 peerDependencies 来声明 packageA，那么 $ npm install 安装完 plugin1 和 plugin2 之后的依赖图是这样的：
-
-      ``` c
-         
-         ├── helloWorld
-         │   └── node_modules
-         │       ├── packageA
-         │       ├── plugin1
-         │       │   └── nodule_modules
-         │       │       └── packageA
-         │       └── plugin2
-         │       │   └── nodule_modules
-         │       │       └── packageA
-      ```
-
-   从上面的依赖图可以看出，helloWorld 本身已经安装了一次packageA，但是因为因为在
-   plugin1 和 plugin2 中的 dependencies 也声明了 packageA，所以最后 packageA 会被安装三次，有两次安装是冗余的。如果在 plugin1 和 plugin2 的 package.json 中使用 peerDependency 来声明核心依赖库, 例如
-
-      ``` c
-         {
-            "peerDependencies": {
-               "packageA": "1.0.1"
-            }
-         }
-         {
-            "peerDependencies": {
-               "packageA": "1.0.1"
-            }
-         }
-         {
-            "dependencies": {
-               "packageA": "1.0.1"
-            }
-         }
-      ```
-
-      此时在系统中生成的依赖图为：此时 packageA 只会被安装一次
-
-      ``` c
-         ├── helloWorld
-         │   └── node_modules
-         │       ├── packageA
-         │       ├── plugin1
-         │       └── plugin2
-      ```

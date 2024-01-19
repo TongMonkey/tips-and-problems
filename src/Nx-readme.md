@@ -626,27 +626,6 @@
 
 ### Node Standalone ❓❓❓
 
-### Module federation 模块联邦  ❓❓❓
-
-1. 定义：Module federation 模块联合是一种可以将代码分割成更小的可部署模块的方法，这些模块可以在应用程序之间在运行时共享和使用。Module Federation is a method in which code can be split into smaller deployable modules that can be shared and consumed at runtime between applications.
-2. Webpack: 自从在Webpack中添加ModuleFederationPlugin以来，它近年来变得越来越流行。Nx 通过 Webpack 添加了对模块联合的开箱即用支持，使其更易于使用、更简单，并利用了一些只能在 monorepo 中实现的独特优势。
-3. 架构：
-   1. host:
-      1. 定义：A host is an application that consumes federated modules from remote applications at runtime.
-      2. 当您编写主机应用程序时，您从远程导入该模块，就好像它是构建的一部分一样，但在构建时，Webpack 知道该模块仅在运行时存在，并且仅在它向相应的远程应用程序来获取 JS 包。然后，联合模块将被执行，就好像它始终是host应用程序的一部分一样。
-   2. remote: A remote is an application that exposes a federated module that can be fetched over the network at runtime.
-   3. federated module：定义：A federated module is any valid JavaScript module that is exposed by a remote application with the aim that it will be consumed by a host application.
-4. Common pitfalls 常见陷阱 ❓❓❓
-5. Nx support: Nx 为 React 和 Angular 的模块联合提供开箱即用的支持。有许多功能可以在为您的应用程序开发模块联合架构时提供帮助 ❓❓❓
-   1. Generators - to aid in scaffolding remotes, hosts and federated module
-   2. Executors - to aid in building your applications with Module Federation and for great DX when developing locally
-   3. Type Safety - allowing for type-safety between hosts and remotes to catch issues early and to take advantage of autocompletion in IDEs
-   4. Versioning of Libraries - to aid in preventing some common issues regarding incompatible package versions being used by federated modules
-   5. Scaling DX - techniques to ensure a smooth DX regardless of the number of remotes in the workspace
-6. Use Cases
-   1. Faster Builds
-   2. Independent Deployability
-
 ### Nx Executors
 
 ### Nx Generators
@@ -678,3 +657,24 @@
 4. Yarn vs NPM vs PNPM
 
 ## Nx VS Tuiborepo
+
+## Module federation 模块联邦  ❓❓❓
+
+1. 定义：Module federation 模块联合是一种可以将代码分割成更小的可部署模块的方法，这些模块可以在应用程序之间在运行时共享和使用。Module Federation is a method in which code can be split into smaller deployable modules that can be shared and consumed at runtime between applications.
+2. Webpack: 自从在Webpack中添加ModuleFederationPlugin以来，它近年来变得越来越流行。Nx 通过 Webpack 添加了对模块联合的开箱即用支持，使其更易于使用、更简单，并利用了一些只能在 monorepo 中实现的独特优势。
+3. 架构：❓❓❓
+   1. host:
+      1. 定义：A host is an application that consumes federated modules from remote applications at runtime.
+      2. 当您编写主机应用程序时，您从远程导入该模块，就好像它是构建的一部分一样，但在构建时，Webpack 知道该模块仅在运行时存在，并且仅在它向相应的远程应用程序来获取 JS 包。然后，联合模块将被执行，就好像它始终是host应用程序的一部分一样。
+   2. remote: A remote is an application that exposes a federated module that can be fetched over the network at runtime.
+   3. federated module：定义：A federated module is any valid JavaScript module that is exposed by a remote application with the aim that it will be consumed by a host application.
+4. Common pitfalls 常见陷阱 ❓❓❓
+5. Nx support: Nx 为 React 和 Angular 的模块联合提供开箱即用的支持。有许多功能可以在为您的应用程序开发模块联合架构时提供帮助 ❓❓❓
+   1. Generators - to aid in scaffolding remotes, hosts and federated module
+   2. Executors - to aid in building your applications with Module Federation and for great DX when developing locally
+   3. Type Safety - allowing for type-safety between hosts and remotes to catch issues early and to take advantage of autocompletion in IDEs
+   4. Versioning of Libraries - to aid in preventing some common issues regarding incompatible package versions being used by federated modules
+   5. Scaling DX - techniques to ensure a smooth DX regardless of the number of remotes in the workspace
+6. Use Cases
+   1. Faster Builds
+   2. Independent Deployability

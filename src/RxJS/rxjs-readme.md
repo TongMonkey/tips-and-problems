@@ -59,6 +59,43 @@
 
 ### Subject
 
+1. 创建时不需要初始值
+2. 不会保留当前值
+3. 只会返回新值，靠 next 方法触发
+
+   ``` c
+      var subject = new rxjs.Subject();
+      subject.next(1); //Subjects will not output this value
+      subject.subscribe({
+         next: (v) => console.log('observerA: ' + v)
+      });
+      subject.subscribe({
+         next: (v) => console.log('observerB: ' + v)
+      });
+      subject.next(2);
+      subject.next(3);
+      // observerA: 2
+      // observerB: 2
+      // observerA: 3
+      // observerB: 3
+   ```
+
+### BehaviorSubject
+
+1. 创建的时候需要初始值
+2. 订阅后会返回 当前值：初始值或新值
+3. 获取当前值用 .value 方法
+4. 设置新值用 next 方法触发
+
+   ``` c
+      let bs = new rxjs.BehaviorSubject(0);
+      bs.subject( v => console.log(v) );
+      bs.next(1); 
+      bs.value();
+      // 0
+      // 1
+   ```
+
 ### Schedular
 
 1. 定义：
