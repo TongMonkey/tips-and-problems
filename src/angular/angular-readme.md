@@ -2282,6 +2282,10 @@
    3. Template variable scope：❓❓❓
    4. Accessing in a nested template
 
+### Routing & Navigation
+
+1. NavigationExtras
+
 ### Directive 指令: Custom HTML syntax 本质就是一个自定义的 HTML 元素语法
 
 1. 定义：指令是angular 中给 elements 添加额外行为的 class。本质是 Class, 添加在 elements 上.

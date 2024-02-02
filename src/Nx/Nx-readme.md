@@ -1,9 +1,8 @@
-# Nx
+# Nx library
 
-## Monorepos
+## Monorepo
 
 1. 定义：
-2. 
 
 ## Nx基础
 
@@ -29,7 +28,7 @@
    4. Integrate with modern tools
    5. Controllable update process
 
-### Nx 定义
+### Nx
 
 1. 文档 <https://nx.dev/>
 2. 定义：Nx 是一个功能强大的开源构建系统，提供用于提高开发人员生产力、优化 CI 性能和维护代码质量的工具和技术。
@@ -56,7 +55,7 @@
    4. Nx Cloud通过添加远程缓存和分布式任务执行来帮助扩展 CI 上的项目。它还通过与 GitHub、GitLab 和 BitBucket 集成并提供可搜索的结构化日志来改善开发人员的人体工程学。请访问nx.app了解更多信息。
    5. Nx Console是VSCode、IntelliJ 和 VIM的扩展。它提供代码自动完成、交互式生成器、工作区可视化、强大的重构等等。
 
-### Nx & Monorepos
+### Monorepos
 
 1. 定义：A monorepo or a mono repository is a single repository that stores all of the code and assets for all of your projects, rather than each product or library being stored in its own source control.
 2. 相关概念：
@@ -101,7 +100,7 @@
       3. 原文：Nx provides local caching and support for distributed caching of command executions. With distributed caching, when someone on your team runs a command, everyone else gets access to those artifacts to speed up their command executions, bringing them down from minutes to seconds. Nx helps you scale your development to massive applications and libraries even more with distributed task execution and incremental builds.
 6. 用 Nx 拓展 Organization ❓❓❓
 
-### Package-Based Monorepo 基于包的 Monorepo
+### Package-Based Monorepo
 
 1. 创建一个新的工作区: `npx create-nx-workspace@latest package-based --preset=npm` 会自动生成
    1. nx.json
@@ -204,7 +203,7 @@
    2. 跳过缓存：重复构建会直接从缓存中拿结果，不想这样可以加上 --skip-nx-cache 的 flag `npx nx run-many -t build --skip-nx-cache`
    3. 仅对改变了的包构建：`npx nx affected -t build`
 
-### Integrated Monorepo 集成存储库
+### Integrated Monorepo
 
 1. Create a new workspace: `npx create-nx-workspace@latest myorg --preset=ts`
 2. Create a package: 
@@ -282,12 +281,13 @@
 3. 创建一个 angular standalone 项目
    1. 命令：`npx create-nx-workspace@latest myngapp --preset=angular-standalone` 取名为 myngapp
       1. 生成文件 nx.json: 在这里我们可以微调 Nx 的工作方式、定义可缓存操作、我们的任务管道以及 Nx 生成器的默认值。
-      2. 生成文件 project.json: Nx 使用此文件来定义可以运行的目标，类似于 Angular CLI 使用该angular.json文件的方式。
+      2. 此时 rootProject/src 下只有 app 一个文件夹，注意这里是 app，就表示单数，single-project
+      3. 生成文件 project.json: Nx 使用此文件来定义可以运行的目标，类似于 Angular CLI 使用该angular.json文件的方式。
          1. 配置文档：<https://nx.dev/reference/project-configuration>
          2. project.json VS angular.json:
             1. 文档：<https://nx.dev/concepts/more-concepts/nx-and-angular> ❓❓❓
    2. 启动项目: `nx serve`
-      1. 运行语法：![nx 命令语法](./assets/nx-run-target-syntax.svg)
+      1. 运行语法：![nx 命令语法](../assets/nx-run-target-syntax.svg)
       2. 所有在 package.json 中的 scripts, 例如 start, build, test 或者任何自定义的脚本命令， 都是在 project.json 中的 targets 里定义的。每个 target 都包含一个配置对象，告诉 Nx 如何运行该 target。
          1. 示例：
 
@@ -518,13 +518,19 @@
 
 ### Angular Monorepo
 
-1. 创建一个工作空间：`npx create-nx-workspace@latest angular-monorepo --preset=angular-monorepo`
-2. Applicaiton name: angular-store
-3. 注意，root-workspace 下有 nx.json + package.json, 无 project.json; 在 apps/angular-store/ 中有project.json, 无 package.json.
-4. Serve the App: 在 workspace-level 执行 `nx serve angular-store`，这个命令是在 project.json 中维护的。例如 serve command 中
-   1. executor 组成格式："executor": "@angular-devkit/build-angular:dev-server" 是 `<plugin>:<executor-name>`。其中 plugin 是一个包含 Nx plugin 的 NPM 包。 executor-name 指向的是运行这个 task 的那个 function.
-   2. options: 是额外可以选择性传进去的属性 properties and flags.
-   3. 示例：
+1. CLI 创建一个工作空间：`npx create-nx-workspace@latest angular-monorepo --preset=angular-monorepo` 
+   1. angular-monorepo 是整个 repo 的 root name。
+2. 有了 workspace 之后，CLI 会提示 命名 Applicaiton name: 例如 angular-store。
+   1. angular-store 只是一个 app 的 name.
+   2. 位置：放在 angular=monorepo/apps/ 下。
+   3. apps 下面可以放 多个 apps.
+   4. 此时还没有 libs 文件夹。
+3. Serve the App: 在 workspace-level 执行 `nx serve angular-store`，
+   1. serve 等命令是在 app-level 的 project.json 中维护的。
+   2. 此时只是有了这个 app, 但没有引入任何内容。是个空壳。 Nx 默认放了一个 welcome 页面
+   3. executor 组成格式："executor": "@angular-devkit/build-angular:dev-server" 是 `<plugin>:<executor-name>`。其中 plugin 是一个包含 Nx plugin 的 NPM 包。 executor-name 指向的是运行这个 task 的那个 function.
+   4. options: 是额外可以选择性传进去的属性 properties and flags.
+   5. 示例：
 
       ``` c
       {
@@ -552,8 +558,11 @@
       }
       ```
 
-5. Add another application: `npx nx g @nx/angular:app inventory --directory=apps/inventory --dry-run` app 的名字是 inventory, 位置也是在 apps/ folder 下。这个时候，可以在控制台看到哪些文件会被创建出来，但实际的文件列表没有变化，这是因为用了 ‘dayRun' flag， that means no change were made. 就是其实并不真的会做出改变。真正创建，把这个 flag 移除。
-6. Create local libraries:
+   6. Q&A：
+      1. 遇到错误：Inner Error: ReferenceError: structuredClone is not defined。解决办法，当前node 版本是16， 这个 structuredClone 要求 node version 17+.
+
+4. Add another application: `npx nx g @nx/angular:app inventory --directory=apps/inventory --dry-run` app 的名字是 inventory, 位置也是在 apps/ folder 下。这个时候，可以在控制台看到哪些文件会被创建出来，但实际的文件列表没有变化，这是因为用了 ‘dayRun' flag， that means no change were made. 就是其实并不真的会做出改变。真正创建，把这个 flag 移除。
+5. Create local libraries:
    1. 命令：在 libs 里创建 libraries. 此时会在 libs/ folder 下创建三个 folder. 每个 folder 包含 lib/ folder + index.ts 用以 exprot public APIs。
 
       ``` c
@@ -580,7 +589,7 @@
       ```
 
    3. 在 products lib 中创建一个 component: `nx g @nx/angular:component product-list --project=products --standalone --export`, 最终生成的路径是：`angular-monorepo/lib/products/src/lib/product-list/`.此时 products/src/lib/ folder 下有两个文件夹，product-list + products, 这时，index.ts 里应该有两个 export 来导出 API 了。
-7. Use libs in apps: 
+6. Use libs in apps: 
    1. 通过 routes: 在apps/app-store 里使用 libs/pruducts. 运行命令 `nx serve angular-store` 访问 localhost:4200/products
 
       ``` c
@@ -619,10 +628,11 @@
       // 执行命令 nx serve inventory 可以看到 product-list ui.
       ```
 
-8. Nx graph: `nx graph`. 
+7. Nx graph: `nx graph`.
    1. 结果：![nx graph](./assets/nx-graph-result.png)
    2. 对比：通过 route 可能引用的用 虚线连接了，在组件里直接引用的用了实线
-9. Imposing Constraints with Module Boundary Rules 跟 Angular Standalone 里一样。
+8. Imposing Constraints with Module Boundary Rules 跟 Angular Standalone 里一样。
+9.  注意，root-workspace 下有 nx.json + package.json, 无 project.json; 在 apps/angular-store/ 中有project.json, 无 package.json.
 
 ### Node Standalone ❓❓❓
 
