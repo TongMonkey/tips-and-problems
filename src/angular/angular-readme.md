@@ -321,7 +321,7 @@
                2. 背景：以往我们想在一个组件A中引用另一个组件B时，必须依赖 @ngModule 并在 @ngModule-declarations array 里声明这个组件B，这就导致我们始终无法摆脱 ngModule. 有了 standalone 后，将组件A 和 组件B 都声明成独立组件，就可以在 @componentA-imports array 里直接引入B
                3. 用法：
                   1. 在对应的 component 的 decorator 里新增设置 `standalone: true`; 就可以将该组件标记为独立组件
-                  2. 将依赖导入 import the dependency components, services, directives, pipes, etc. 
+                  2. 将依赖导入 import the dependency components, services, directives, pipes, etc.
                      1. 这些依赖也应该是 standalone: true 的；
 
                         ``` c
@@ -1308,7 +1308,7 @@
          1. 用法：{{ obj_expression | async }} 支持重命名 {{ obj_expression | async as newName1}} 这个 newName1 可以是一个本地的变量
          2. 描述：The async pipe subscribes to an Observable or Promise and returns the latest value it has emitted. When a new value is emitted, the async pipe marks the component to be checked for changes. When the component gets destroyed, the async pipe unsubscribes automatically to avoid potential memory leaks. When the reference of the expression changes, the async pipe automatically unsubscribes from the old Observable or Promise and subscribes to the new one.
          3. 描述翻译：异步管道订阅一个Observable或Promise，并返回它所发出的最新值。当一个新的值被发射出来时，异步管道会标记该组件以检查是否有变化。当组件被销毁时，异步管道会自动取消订阅以避免潜在的内存泄漏。当表达式的引用发生变化时，异步管道会自动取消订阅旧的Observable或Promise，并订阅新的。
-         4. obj 可接受的值类型：Observable<T> | Subscribable<T> | Promise<T>、
+         4. obj 可接受的值类型：`Observable<T> | Subscribable<T> | Promise<T>`
          5. 示例：
 
             ```dash
@@ -1642,10 +1642,16 @@
 
 5. 服务
 
-### 路由
+### 路由 Routing & Navigation
 
 1. 定义：
-2. 注册：
+2. 传参：
+   1. RouterModule.forRoot
+      1. withComponentInputBinding
+      2. bindToComponentInputs
+3. Multiple outlets: <https://blog.angular-university.io/angular2-router/>
+4. Angular ActivatedRoute VS Angular Router 的区别是什么 ❓❓❓
+5. 注册：
    1. RouterModule.forRoot([]): This establishes the routes for the root of our application 这就为我们的应用程序的根建立了路由。
    2. RouterModule.forChild([])
 
@@ -1658,7 +1664,7 @@
       })
    ```
 
-3. 配置路由 Configuring Routes:
+6. 配置路由 Configuring Routes:
    1. 数组里的每一个对象，就是一个 Route path 必须属性：就是要在 URL 中使用的路径片段。
       1. 传参：例如 path:'abc' URL: 'www.baidu.com/abc'. 如果要传递参数，就用'/:parameterName'的形式传递
       2. 默认路由： path：'' 默认重定向到 redirectTo 所指向的路径，路径匹配方式由 pathMatch 配置
@@ -1675,7 +1681,7 @@
       ]
    ```
 
-4. 使用：当哪个 Route is activated, 就会显示那个路由对应的 Component
+7. 使用：当哪个 Route is activated, 就会显示那个路由对应的 Component
    1. 首先，在项目的 index.html 的 header 中，需要一个 `<base href='/' />` 标签元素。( Angular CLI 已经帮我们做了这一步 )。 href 会决定 Routers 如何合并 URLs, 比如当前设置的'/' 就会直接在用 path 在原来的 URL 后面拼接
    2. 放置路由展示位置： `<router-outlet></router-outlet>` 写在哪，路由就在哪里生效
    3. 触发 Activate a Router：
@@ -1710,7 +1716,7 @@
             }
          ```
 
-5. 获取路由参数：获取参数的 key 就是 Route 里 /:parameterName 的字符串 parameterName
+8. 获取路由参数：获取参数的 key 就是 Route 里 /:parameterName 的字符串 parameterName
 
    ```dash
       // {path: 'bbb/:id' , component: BbbComponent} // key: 'id'
@@ -1726,8 +1732,8 @@
       })
    ```
 
-6. 子路由：利用children注册，然后在父页面里也设置一个 `<router-outlet></router-outlet>`用来防止子路由渲染
-7. 传参方式：两种传参互不影响
+9. 子路由：利用children注册，然后在父页面里也设置一个 `<router-outlet></router-outlet>`用来防止子路由渲染
+10. 传参方式：两种传参互不影响
    1. query: (推荐，因为不会有顺序的坑)
       1. 传递：
 
@@ -1759,7 +1765,7 @@
          ```
 
       4. 参数顺序：params 在router里注册的先后顺序，与传参数组里的顺序 是严格对应的
-8. Guards 守卫：本质是 Service
+11. Guards 守卫：本质是 Service
    1. 四大守卫：Boolean类型时，当返回 true 则可以激活路由，返回 false 则不行
       1. CanActivate: to guard navigation to a route
       2. CanDeactivate: to guard navigation away from the current route
@@ -1807,6 +1813,7 @@
             },
          ])
       ```
+12. NavigationExtras 是什么 ❓❓❓
 
 ### 特殊的选择器 ❓❓❓
 
@@ -2075,14 +2082,31 @@
       4. next 对象：在`next.handle()`中，next 代表了拦截器链中的下一个拦截器。The next interceptor in the chain of interceptors.
       5. 最后一个 next 拦截器：链中的最后一个拦截器是 HttpClient backend handler, 负责真正向服务端发送请求和接受请求
       6. 拦截器的工作流：每一个拦截器通过调用 `next.handle()` 将请求传递给下一个拦截器。大部分拦截器都会这样做，最终流向后端处理拦截器。但其实，也可以不调用这个方法，就会使拦截器链短路，实现绕过这个链条，返回一个Observable和自己造的服务端响应的效果。
-   3. 拦截器的顺序：按照定义的顺序 发送时 A-B-C, 响应时 C-B-A. The last interceptor in the process is always the HttpBackend that handles communication with the server. !['HttpClient-interceptor-order'](../assets/HttpClient-interceptor-order.png)
-   4. Immutable HttpRequest and HttpResponse: 这两个都是 readonly instance. 原因是，在每次请求后，都有可能retry, 为了保证每次重试的上游 request Observable 是 original 的，就要保证在流动的过程中不能被更改。
-   5. 注意：
+   3. 在 module 里配置拦截器列表：
+
+      ``` c
+      // @NgModule 或 @Component 中 
+      @NgModule({
+         provides: [
+            {
+               provide: HTTP_INTERCEPTORS,
+               useClass: FileSyncServiceInterceptor,
+               multi: true,
+            },
+            {
+               provide: HTTP_INTERCEPTORS,
+               useClass: FileSyncErrorInterceptor,
+               multi: true,
+            },
+         ]
+      })
+      ```
+
+   4. 拦截器的顺序：按照定义的顺序依此执行。发送时 A-B-C, 响应时 C-B-A. The last interceptor in the process is always the HttpBackend that handles communication with the server. !['HttpClient-interceptor-order'](../assets/HttpClient-interceptor-order.png)
+   5. Immutable HttpRequest and HttpResponse: 这两个都是 readonly instance. 原因是，在每次请求后，都有可能retry, 为了保证每次重试的上游 request Observable 是 original 的，就要保证在流动的过程中不能被更改。
+   6. 注意：
       1. 所以在写拦截器时，非必要不修改经过的事件(request & response). 如果非要改变，使用 clone 方法克隆 url/body 等 用于传给 next.handle
       2. 如果想清除 request body, 需要明确地设置`req.clone({ body: null})`, 如果不复写或者设置为 undefined, 都将被认为成‘不修改’
-      3.
-
-   6.
 
 8. Angular Proxy  ???
    1. <https://www.bilibili.com/video/BV1Qa41167H1/?spm_id_from=pageDriver>
@@ -2101,6 +2125,8 @@
 4. template 对应的是 component 的view模版
 5. ng-template 是 template 内部可以复用的小的 template
 6. ngTemplateOutlet 复用模版， context可以传入参数
+
+### ngTemplateOutlet ❓❓❓
 
 ### angular matierial - cdk - portal 动态
 
@@ -2188,8 +2214,6 @@
 5. 打包模块：npx nx build `${applicationName}`
 6. 配置 pipeline: 链接 `https://nx.dev/angular-standalone-tutorial/4-task-pipelines#configuring-task-pipelines` ❓❓❓
 
-
-
 ### Binding 绑定
 
 #### Property binding 属性绑定
@@ -2256,7 +2280,7 @@
 
       2. $event 是什么： ❓❓❓
          1. 定义：$event 变量包含了 AppDemoComponent.nameChange 事件 的 data.
-         2. 
+         2.
    2. ngModel: `<input [(ngModel)]="size"/>`
 3. 要求：组件的 @Input 和 @Output 必须符合模式，即 @Output 的名字必须是 `${@Input name} + Change` 模式，例如 @Input 的名字是 name, @Output 名字必须是 nameChange.
 
@@ -2282,9 +2306,6 @@
    3. Template variable scope：❓❓❓
    4. Accessing in a nested template
 
-### Routing & Navigation
-
-1. NavigationExtras
 
 ### Directive 指令: Custom HTML syntax 本质就是一个自定义的 HTML 元素语法
 
@@ -2342,7 +2363,7 @@
             3. ControlValueAccessor: ❓❓❓
             4. DefaultalueAccessor: ❓❓❓
          4. ngNonBindable：可以阻止元素编译或者绑定子元素，例如 `<divngNonBindable>{{1 + 1}}</divngNonBindable>` 中的值不会展示为2， 而是原始的 1+1, 比如要展示一段代码片段，这个指令就很有用。
-         5. ngTemplateGuard_**: 
+         5. ngTemplateGuard_**:
             1. 定义：A type guard function narrows the expected type of an input expression to a subset of types that might be passed to the directive within the template at run time.
             2. 用法：❓❓❓
          6. ngTemplateContextGuard: 把值从 directive 中往 template 中传递，通过提供一个 static ngTemplateContextGuard function. ❓❓❓
@@ -2423,7 +2444,7 @@
       1. 定义：用来修改 DOM elements layout, add or remove.
       2. Built-in structural directives:
          1. NgIf:
-            1. 支持 shorthand：*ngIf="name" 等同于 *ngIf="name as n", 在孩子节点中使用 n 变量
+            1. 支持 shorthand：*ngIf="name" 等同于*ngIf="name as n", 在孩子节点中使用 n 变量
          2. NgFor:
             1. Angular提供的内部变量：
                1. let item of list
@@ -2646,7 +2667,7 @@
             ```
 
    3. Inject Context 注入环境上下文 ❓❓❓
-      1. 
+      1.
       2. 查找路径：当前层级 injector 没找到，就去上一层找
    4. 文档 Using an InjectionToken object 这一节 ❓❓❓
 
@@ -2750,7 +2771,7 @@
       5. Zone.js 可以创建在异步操作中持续存在的上下文，并为异步操作提供生命周期钩子。Zone.js can create contexts that persist across asynchronous operations as well as provide lifecycle hooks for asynchronous operations.
       6. Zone execution context：
          1. A zone is an execution context that persists across async tasks. 是一种跨越异步任务而持续存在的上下文。在异步操作中，在下一个 loop 执行的函数可能会丢失当前的执行上下文的 this，zone 提供了一个新的 zone context 上下文取代 this，想获取这个 zone context, 调用 `Zone.current`。
-         2. Callback Wrapping: 
+         2. Callback Wrapping:
             1. 为了实现 zone execution context persists across async tasks, 当未来某个通过 async API 而执行的工作也能获得这个 context，必须 capture and restore the current zone 必须捕获和存储当前的 zone context.
             2. 示例：b 运行在 BGC zone 中，此时设置了一个 setTimeout, 为了能让 callback C 也能使用相同的 context, zone 会做两件事
                1. Capture the current zone.
@@ -2787,11 +2808,11 @@
       9. Composability 组合性：
          1. Root Zone: 在浏览器运行的一开始，就是运行在一个 special root zone 中。这个 root zone 被配置得就跟 platform (比如 browder as platform)一样，使任何 non-zone-aware 感知不到 zone 的现存代码都能按照预期的方式运行。
          2. chilren zones: All zones are children of the root zone. 所有的 zones 都是 root zone 的 children.
-         3. fork : 通过 `parent.fork()` 会创建一个 child zone, 挂在该 parent zone 下面。 
+         3. fork : 通过 `parent.fork()` 会创建一个 child zone, 挂在该 parent zone 下面。
          4. Composability: 也就是说，zone 是具有继承关系的。官方习惯把这种关系叫做 zone 的可组合性。
          5. child zone 的能力：
-            1. 可以把拦截器委托给上级 zone，并且选择性地添加自己的 hooks, 这些 hooks 可以在 wrapCallback 执行 之前 or 之后 执行。Delegate the interception to a parent zone, and optionally add before and after wrapCallback hooks. 
-            2. 可以自行处理请求，不委托授权给 parent zone. Process the request itself without delegation. 
+            1. 可以把拦截器委托给上级 zone，并且选择性地添加自己的 hooks, 这些 hooks 可以在 wrapCallback 执行 之前 or 之后 执行。Delegate the interception to a parent zone, and optionally add before and after wrapCallback hooks.
+            2. 可以自行处理请求，不委托授权给 parent zone. Process the request itself without delegation.
             3. child 委托给 parent 是怎么实现的: 每个 child zone 都保存了其 parent zone 的对象；每个 parent zone 也能监听到 child zone 的事件。
             4. 为什么 parent zone 能监听到 child zone 的事件：通过 monkey patch, 在初始化的时候对相关 APIs 做了改动，将普通的浏览器异步方法，封装成 zone.js 的异步方法。同时，由于这些任务中定义了很多钩子函数，导致 zone.js 中可以完全监控这些异步任务的整个生命周期。
          6. 好处：各自 zone 中保持其要关注的点 clean.
@@ -2959,10 +2980,9 @@
       9. MicroTask extends Task; MacroTask extends Task; EventTask extends Task;
       10. const zone: ZoneType;
 
-
 3. NgZone:
    1. 定义：既然 Zone.js 可以监控 同步+异步 操作， Angular 额外提供了一个 service 取名叫 NgZone. 这个 NgZone service 会 create a zone named angular , 当满足下面两个条件，会自动触发 change detection.是一种信号机制，Angular用它来检测应用程序的状态何时可能改变。它捕捉异步操作，如setTimeout、网络请求和事件监听器。Angular 借助 Zone.js 用来识别这些情况，检测可能发生变化的地方，并自动运行 change detection.
-      1. When a sync or async function is executed 
+      1. When a sync or async function is executed
       2. When there is no microTask schedule ❓❓❓ 为啥必须是没有微任务的时候才能 change detection?
    2. 用途：
       1. 检测变化：比如某些第三方库没有被 Zone 处理，也需要监控值的改变，就可以用 zone.run 方法使其运行在 Angular zone 上下文中，更新检测也会被正确地触发。
@@ -3046,8 +3066,10 @@
       ```
 
    5. 源码：❓❓❓
-      1. NgZone 怎么做的，分为 2 个 steps: 
+      1. NgZone 怎么做的，分为 2 个 steps:
          1. View Checking: Synchronization of the component view with the data model.
          2. Re-Render process(optional): Automatically re-execute the View Checking when application state might change. 如果 ngZone: 'noop' 这一步就没有了
       2. 疑问：
          1. 怎么判断应不应该检测变化呢，比如一个树状图，异步回调后要刷新某个节点，这样应该检测变化嘛，页面状态并么有改变
+
+### `inject(*)` 是怎么实现的？

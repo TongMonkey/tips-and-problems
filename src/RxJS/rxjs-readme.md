@@ -373,5 +373,10 @@
    of("a", 1, true, {}, []).subscribe(console.log)
    ```
 
-### 怎么写 Observable 对象的 UT 单元测试 ❓❓❓
+### Marble 之间 frame 是什么
 
+
+### 怎么写 Observable 对象的 UT 单元测试
+
+1. Jest-Marble
+2. 

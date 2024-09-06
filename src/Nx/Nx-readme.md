@@ -1,9 +1,5 @@
 # Nx library
 
-## Monorepo
-
-1. 定义：
-
 ## Nx基础
 
 ### 前提概念
@@ -11,22 +7,6 @@
 1. Workspace: 工作空间是一种在单个 repo 中设置多个软件包，并允许它们以依赖关系的形式交互的模式互动. Workspaces are a model of setting up multiple packages in a single repo and allowing them to interact with each other as dependencies.
 2. Task: 表示完成的某一个工作。比如运行一个 script 命令，本质上是运行了某个东西，就可以说是某个 task. 比如 build task.
 3. Application VS Library: <https://nx.dev/concepts/more-concepts/applications-and-libraries>
-
-### CLIs
-
-1. 执行 Lint 验证：`nx run-many -t lint`
-2. 查看所有插件：`nx list`
-3. 查看某个 plugin 具有的能力(like generators): `npx nx list @nx/angular`
-
-### Nx CLI vs Angular CLI
-
-1. 历史：Nx 曾经是 Angular CLI 中的 一个拓展 extension ，现在发展成了可与多个框架配合使用的完全独立的 fully standalone CLI.
-2. Nx CLI 比 Angular CLI 的好处：
-   1. Cache any target
-   2. Run only tasks affected by a code change
-   3. Split a large angular.json into multiple project.json files
-   4. Integrate with modern tools
-   5. Controllable update process
 
 ### Nx
 
@@ -54,6 +34,27 @@
    3. Devkit是一组用于构建 Nx 插件的实用程序。
    4. Nx Cloud通过添加远程缓存和分布式任务执行来帮助扩展 CI 上的项目。它还通过与 GitHub、GitLab 和 BitBucket 集成并提供可搜索的结构化日志来改善开发人员的人体工程学。请访问nx.app了解更多信息。
    5. Nx Console是VSCode、IntelliJ 和 VIM的扩展。它提供代码自动完成、交互式生成器、工作区可视化、强大的重构等等。
+
+### 常用 CLIs
+
+1. 安装：`npm add --global nx@latest`
+2. 在一个现成的项目中使用Nx: `npx nx@latest init` 这个操作会同时下载一个 nx 的 npm 包 + 创建一个 nx.json 文件用来配置 nx.
+3. 升级 nx 版本：`npx nx migrate latest` 这个命令会创建一个 migrations.json 文件包含所有要执行更新的脚本，要执行更新，运行 `npx nx migrate --run-migrations`.
+   1. 官方建议：为了防止一些可能的错误，建议每次升级都最多只升级一个主版本号 * 多次升级 
+   2. 强制要求：使用Angular 时，每次只升级一个主版本就是强制要求而不是建议了！
+4. 执行 Lint 验证：`nx run-many -t lint`
+5. 查看所有插件：`nx list`
+6. 查看某个 plugin 具有的能力(like generators): `npx nx list @nx/angular`
+
+### Nx CLI vs Angular CLI
+
+1. 历史：Nx 曾经是 Angular CLI 中的 一个拓展 extension ，现在发展成了可与多个框架配合使用的完全独立的 fully standalone CLI.
+2. Nx CLI 比 Angular CLI 的好处：
+   1. Cache any target
+   2. Run only tasks affected by a code change
+   3. Split a large angular.json into multiple project.json files
+   4. Integrate with modern tools
+   5. Controllable update process
 
 ### Monorepos
 

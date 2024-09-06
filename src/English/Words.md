@@ -1,9 +1,10 @@
 # English
 
-## Express
+## Guide Express
 
-### Words
+### Usages
 
+``` English
 - JavaScript is an essential language for building modern web applications
 - Essential 灵活的
 - Data validation and processing. 数据验证和处理
@@ -21,4 +22,11 @@
 - Concurrent 并发(adj, n)
 - A lambda function run asynchronously is commonly referred to as a "callback."
 - Is commonly referred to ... 通常指的是...
-- 
+```
+
+### 2024.02.02
+
+``` English
+- AAA is ***, with the goal of doing BBB. 某某是个.. 其目的是... 
+
+```

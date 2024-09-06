@@ -1,5 +1,6 @@
 ## Node.js
 
+
 ### 基本操作
 
 1. 怎么用node执行代码
@@ -114,58 +115,80 @@
    1. --legacy-peer-deps: 在NPM v7中，现在默认安装peerDependencies。在很多情况下，这会导致版本冲突，从而中断安装过程。--legacy-peer-deps标志是在v7中引入的，目的是绕过peerDependency自动安装；它告诉 NPM 忽略项目中引入的各个modules之间的相同modules但不同版本的问题并继续安装，保证各个引入的依赖之间对自身所使用的不同版本modules共存
 5. 常用包
    1. nodemon: 是一种工具，可以自动检测到目录中的文件更改时通过重新启动应用程序来调试基于node.js的应用程序。
-6. package.json 里的 depandency
-   1. dependencies 全局依赖目录
-   2. devDependencies 开发环境依赖目录
-   3. peerDependencies 同级依赖目录：
-      1. 作用：定义要依赖的同级包的目录。被依赖的同级包只会被安装一次。
-      2. Default: 从 npm 7 开始，默认就会按照 peerDependencies 的方式下载了。
-      3. 例子：假设现在有一个 helloWorld 工程,已经在其 package.json 的 dependencies 中声明了 packageA，有两个插件 plugin1 和 plugin2 他们也依赖 packageA，如果在插件中使用 dependencies 而不是 peerDependencies 来声明 packageA，那么 $ npm install 安装完 plugin1 和 plugin2 之后的依赖图是这样的：
+6. package.json
+   1. Depandency
+      1. dependencies 全局依赖目录
+      2. devDependencies 开发环境依赖目录
+      3. peerDependencies 同级依赖目录：
+         1. 作用：定义要依赖的同级包的目录。被依赖的同级包只会被安装一次。
+         2. Default: 从 npm 7 开始，默认就会按照 peerDependencies 的方式下载了。
+         3. 例子：假设现在有一个 helloWorld 工程,已经在其 package.json 的 dependencies 中声明了 packageA，有两个插件 plugin1 和 plugin2 他们也依赖 packageA，如果在插件中使用 dependencies 而不是 peerDependencies 来声明 packageA，那么 $ npm install 安装完 plugin1 和 plugin2 之后的依赖图是这样的：
 
-         ``` c
-            
-            ├── helloWorld
-            │   └── node_modules
-            │       ├── packageA
-            │       ├── plugin1
-            │       │   └── nodule_modules
-            │       │       └── packageA
-            │       └── plugin2
-            │       │   └── nodule_modules
-            │       │       └── packageA
-         ```
+            ``` c
+               
+               ├── helloWorld
+               │   └── node_modules
+               │       ├── packageA
+               │       ├── plugin1
+               │       │   └── nodule_modules
+               │       │       └── packageA
+               │       └── plugin2
+               │       │   └── nodule_modules
+               │       │       └── packageA
+            ```
 
-      从上面的依赖图可以看出，helloWorld 本身已经安装了一次packageA，但是因为因为在
-      plugin1 和 plugin2 中的 dependencies 也声明了 packageA，所以最后 packageA 会被安装三次，有两次安装是冗余的。如果在 plugin1 和 plugin2 的 package.json 中使用 peerDependency 来声明核心依赖库, 例如
+         从上面的依赖图可以看出，helloWorld 本身已经安装了一次packageA，但是因为因为在
+         plugin1 和 plugin2 中的 dependencies 也声明了 packageA，所以最后 packageA 会被安装三次，有两次安装是冗余的。如果在 plugin1 和 plugin2 的 package.json 中使用 peerDependency 来声明核心依赖库, 例如
 
-         ``` c
-            {
-               "peerDependencies": {
-                  "packageA": "1.0.1"
+            ``` c
+               {
+                  "peerDependencies": {
+                     "packageA": "1.0.1"
+                  }
                }
-            }
-            {
-               "peerDependencies": {
-                  "packageA": "1.0.1"
+               {
+                  "peerDependencies": {
+                     "packageA": "1.0.1"
+                  }
                }
-            }
-            {
-               "dependencies": {
-                  "packageA": "1.0.1"
+               {
+                  "dependencies": {
+                     "packageA": "1.0.1"
+                  }
                }
-            }
-         ```
+            ```
 
-         此时在系统中生成的依赖图为：此时 packageA 只会被安装一次
+            此时在系统中生成的依赖图为：此时 packageA 只会被安装一次
 
-         ``` c
-            ├── helloWorld
-            │   └── node_modules
-            │       ├── packageA
-            │       ├── plugin1
-            │       └── plugin2
-         ```
+            ``` c
+               ├── helloWorld
+               │   └── node_modules
+               │       ├── packageA
+               │       ├── plugin1
+               │       └── plugin2
+            ```
 
+   2. scripts
+      1. Lifecycle Scripts:
+         1. "prepublish": This script runs before the package is packed and published, and is used to prepare the package for distribution.
+         2. "prepare": This script runs both during local development and when the package is installed as a dependency of another package. It is used to prepare the package for use, such as by building or compiling the code.
+         3. "preinstall": This script runs before the package is installed and is used to perform any necessary setup tasks before dependencies are installed.
+         4. "postinstall": This script runs after the package is installed and is used to perform any necessary setup tasks after dependencies are installed.
+         5. "preuninstall": This script runs before the package is uninstalled and is used to perform any necessary cleanup tasks before dependencies are removed.
+         6. "postuninstall": This script runs after the package is uninstalled and is used to perform any necessary cleanup tasks after dependencies are removed.
+         7. "preversion": This script runs before the version of the package is updated and is used to perform any necessary tasks before the version is changed.
+         8. "postversion": This script runs after the version of the package is updated and is used to perform any necessary tasks after the version is changed.
+
+### npx
+
+1. 定义： Node package Execute, 是 node 的官方包执行器。随 npm 5.2.0 第一次出现
+2. 语法：npx pkg-name
+3. 执行过程：当执行 npx 的时候，会先到本地 node_modules/.bin和环境变量$PATH 下找对应的包，找到包后再找要执行的command。如果没找到命令，不会去远程下载。但如果没找到包，意味着本地还没有安装该包，npx 就会临时安装一个最新版然后执行它。
+4. 好处：
+   1. 临时安装的可执行包，不会全局安装，不用担心长期的污染。
+   2. 临时安装的模块被缓存到 .npm/_npx 目录中。当使用 npx 运行命令时， 它会先从缓存中查到已安装的包，如果缓存中有该包的旧版本，它会使用缓存中的旧版本，而不会自动更新到最新版本。
+   3. 如果要强制安装最新版本，需要添加 --ignore-existing 命令行
+   4. 如果本地已经全局安装了某个包，但还是想使用远程最新模块，也用 --ignore-existing 这个参数
 
 ### 流
 
@@ -800,4 +823,3 @@
 
 1. 使用Node.js搭建 BFF 层 Backend For Frontend
 2. 使用Node.js + Next.js 实现 SSR
-
