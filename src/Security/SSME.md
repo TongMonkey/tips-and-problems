@@ -5,7 +5,7 @@
 ## SSME Role
 
 1. Definition：Security Subjec tMatter Expert 安全主题专家
-2. Duty: Execute all zutomation test (SAST, DAST, etc.) at the beginning of every month, update manual artifacts (TM, CCC, etc) on demand.
+2. Duty: Execute all automation test (SAST, DAST, etc.) at the beginning of every month, update manual artifacts (TM, CCC, etc) on demand.
 
 ### Defination
 
@@ -26,8 +26,6 @@
 3. CSA 和 SSME 和 dev, 在同步会议上一起 review 所有的项目，确定修改问题的 deadline.
 4. dev 必须完成所有的 non-compliance 问题，并通知 CSA
 5. CSA 通过 SLM 追踪平台二次确认安全限制已经被修复和更新
-
-
 
 ## CSQP
 

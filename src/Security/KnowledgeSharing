@@ -1,0 +1,48 @@
+# 12.5
+
+## Knowledge Sharing
+
+### SSME Role
+
+1. Definition：Security Subject Matter Expert 安全主题专家
+
+### Overview
+
+1. CSQP: Cloud Security Qualification Process 云安全资格认证流程
+   1. SAQP：Cloud Security Qualification Process
+      1. Container Scan ( Trivy image scan )
+      2. DAST：Dynamic Application Security Testing 动态应用程序安全测试
+      3. SAST：Static Application Security Testing 静态应用程序安全测试
+      4. WhiteSource
+      5. WebRoot
+      6. SSL
+      7. Web Header
+   2. NAQP：Network Application Qualification Process 网络应用资格审查流程
+2. FlexNet:
+3. QPExpress
+
+### CSQP
+
+1. Before going live in production, developers must submit cloud-hosted applications to the Cloud Security Qualification Process
+
+### SAQP
+
+1. 
+
+### Container Scan ( Trivy image scan )
+
+1. 
+
+### DAST
+
+### SAST
+
+1. Sonarqube:
+
+### Web header (Website)
+
+### NAQP
+
+1. The Network Application Qualification Process(NAQP) is a mandatory process used in SINet(Schlummberger Internal Network) to ensure smooth network application deployment and customer satisfaction. The objective is to test network applications before deployment in order to see if they have acceptable behavior on SINet and also to see their impact on the SINet infrastructure and other applications already deployed on SINet. The process can also be applied to an application already deployed, by analyzing its performance and assist in any performance improvements.网络应用程序认证流程 (NAQP) 是 SINet（斯伦贝谢内部网络）中用于确保网络应用程序顺利部署和客户满意度的强制性流程。目的是在部署之前测试网络应用程序，以查看它们在 SINet 上的行为是否可接受，以及它们对 SINet 基础设施和已部署在 SINet 上的其他应用程序的影响。该流程还可以应用于已部署的应用程序，通过分析其性能并协助进行任何性能改进。
+2. Workflow:
+   1. ❓❓❓
