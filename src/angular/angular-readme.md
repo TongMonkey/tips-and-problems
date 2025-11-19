@@ -76,9 +76,79 @@
 3. 调用时机 两种
    1. 在项目启动之前就调用：An Angular module can be loaded eagerly when the application starts
    2. 可以被路由以懒加载的方式异步加载。 Can be lazy loaded asynchtonously by the router.
+4. Module.forRoot() && Module.forChild()
+   1. Module.forRoot()
+      1. 定义：forRoot() 函数通常用于配置模块的全局服务和单例实例。它主要用于在根模块（AppModule）中配置服务提供者，而在特性模块中使用 forChild() 函数来配置子模块的路由或服务。
+      2. 当你创建一个 Angular 库或模块时，可能需要在应用启动时配置一些全局的单例服务或设置。这时候就可以使用 forRoot() 函数：
+         1. 单例服务：确保服务在整个应用中只有一个实例。
+         2. 全局配置：允许传入配置选项来初始化模块。
+      3. 重写 forRoot 函数示例：
 
-4. #### Shared Module 共享模块
+         ``` code
+            // config.module.ts
+            import { NgModule, ModuleWithProviders } from '@angular/core';
+            import { ConfigService } from './config.service';
 
+            @NgModule({
+               providers: [ConfigService]
+            })
+            export class ConfigModule {
+               // 接受一个参数 settings，用于传递配置
+               static forRoot(settings: any): ModuleWithProviders<ConfigModule> {  // 返回一个 ModuleWithProviders 对象，指定模块和提供者
+                  return {
+                     ngModule: ConfigModule,
+                     providers: [
+                        ConfigService,
+                        { provide: 'CONFIG_SETTINGS', useValue: settings }
+                     ]
+                  };
+               }
+            }
+
+
+            // app.module.ts
+            import { NgModule } from '@angular/core';
+            import { BrowserModule } from '@angular/platform-browser';
+            import { AppComponent } from './app.component';
+            import { ConfigModule } from './config.module';
+
+            @NgModule({
+               declarations: [
+                  AppComponent
+               ],
+               imports: [
+                  BrowserModule,
+                  ConfigModule.forRoot({ apiEndpoint: 'https://api.example.com' })
+               ],
+               bootstrap: [AppComponent]
+            })
+            export class AppModule { }
+
+            // app.component.ts
+            import { Component, Inject, OnInit } from '@angular/core';
+            import { ConfigService } from './config.service';
+
+            @Component({
+               selector: 'app-root',
+               template: '<h1>Welcome to Angular App</h1>',
+            })
+            export class AppComponent implements OnInit {
+               constructor(
+                  private configService: ConfigService,
+                  @Inject('CONFIG_SETTINGS') private configSettings: any
+               ) {}
+
+               ngOnInit() {
+                  console.log('Config Settings:', this.configSettings);
+                  // 或者使用 ConfigService 获取配置
+                  this.configService.setSettings(this.configSettings);
+                  console.log('Config Settings from Service:', this.configService.getSettings());
+               }
+            }
+         ```
+
+   2. Module.forChild()
+5. Shared Module 共享模块
    1. 定义：共享模块中放置的是 Angular 应用中模块级别的需要共享的组件或者逻辑
    2. 用途：可以把常用的指令、管道和组件放进一个模块中，然后在应用中其它需要这些的地方导入该模块
    3. 创建
@@ -1228,7 +1298,7 @@
 
 2. 结构指令
    1. 定义：修改 DOM 节点从而修改布局，使用 * 作为指令前缀
-   2. 分类
+   2. v16 以下：
       1. *ngIf / else + 'ng-template #template'
          1. 作用：根据条件渲染或者移除 DOM 节点
          2. 本质：相当于给html的标签设置一个`[ngIf]="true/false"`的属性
@@ -1270,6 +1340,13 @@
                </ng-template>
             ```
 
+   3. V18 语法： ❓❓❓
+      1. @if
+      2. @else-if
+      3. @else
+      4. @for
+      5. @let
+      6. @defer
 3. 自定义指令 ❓❓❓
    1. <https://www.bilibili.com/video/BV1mQ4y1m7o6/?spm_id_from=pageDriver>
    2. 定义：自定义指令以操作 DOM
@@ -1302,53 +1379,30 @@
 ### 管道 Pipe
 
 1. 定义：Detect changes and update the display. 检测值的变化，更新显示内容。本质是一个管道用来 transform 传输数据，支持链式管道，从左到右，逐个执行。
-2. 自带的管道
-   1. ![管道分类](../assets/Angular_Pipe.png)
-      1. async pipe: 从一个异步单元中解锁一个值。
-         1. 用法：{{ obj_expression | async }} 支持重命名 {{ obj_expression | async as newName1}} 这个 newName1 可以是一个本地的变量
-         2. 描述：The async pipe subscribes to an Observable or Promise and returns the latest value it has emitted. When a new value is emitted, the async pipe marks the component to be checked for changes. When the component gets destroyed, the async pipe unsubscribes automatically to avoid potential memory leaks. When the reference of the expression changes, the async pipe automatically unsubscribes from the old Observable or Promise and subscribes to the new one.
-         3. 描述翻译：异步管道订阅一个Observable或Promise，并返回它所发出的最新值。当一个新的值被发射出来时，异步管道会标记该组件以检查是否有变化。当组件被销毁时，异步管道会自动取消订阅以避免潜在的内存泄漏。当表达式的引用发生变化时，异步管道会自动取消订阅旧的Observable或Promise，并订阅新的。
-         4. obj 可接受的值类型：`Observable<T> | Subscribable<T> | Promise<T>`
-         5. 示例：
+2. Angular Built-in 管道
+   1. Angular 在 @angular/common package 里包含了一些管道
 
-            ```dash
-            @Component({
-               selector: 'async-promise-pipe',
-               template: `<div>
-                  <code>promise|async</code>:
-                  <button (click)="clicked()">{{ arrived ? 'Reset' : 'Resolve' }}</button>
-                  <span>Wait for it... {{ greeting | async }}</span>
-               </div>`
-            })
-               export class AsyncPromisePipeComponent {
-               greeting: Promise<string>|null = null;
-               arrived: boolean = false;
+      ``` code
+         Name Description
+         AsyncPipe Read the value from a Promise or an RxJS Observable.
+         CurrencyPipe Transforms a number to a currency string, formatted according to locale rules.
+         DatePipe Formats a Date value according to locale rules.
+         DecimalPipe Transforms a number into a string with a decimal point, formatted according to locale rules.
+         I18nPluralPipe Maps a value to a string that pluralizes the value according to locale rules.
+         I18nSelectPipe Maps a key to a custom selector that returns a desired value.
+         JsonPipe Transforms an object to a string representation via JSON.stringify, intended for debugging.
+         KeyValuePipe Transforms Object or Map into an array of key value pairs.
+         LowerCasePipe Transforms text to all lower case.
+         PercentPipe Transforms a number to a percentage string, formatted according to locale rules.
+         SlicePipe Creates a new Array or String containing a subset (slice) of the elements.
+         TitleCasePipe Transforms text to title case.
+         UpperCasePipe Transforms text to all upper case.
+      ```
 
-               private resolve: Function|null = null;
-
-               constructor() {
-                  this.reset();
-               }
-
-               reset() {
-                  this.arrived = false;
-                  this.greeting = new Promise<string>((resolve, reject) => {
-                     this.resolve = resolve;
-                  });
-               }
-
-               clicked() {
-                  if (this.arrived) {
-                     this.reset();
-                  } else {
-                     this.resolve!('hi there!');
-                     this.arrived = true;
-                  }
-               }
-            }
-            ```
-
-   2.
+   2. 优先级：
+      1. pipe 的优先级 低于 二元运算符，`+, -, *, /, %, &&, ||,  ??` 例: {{ firstName + lastName | uppercase }} 不用加括号，也是先计算 + 运算，再传值给 pipe
+      2. Pipe 的优先级 高于 三元运算符. 例：{{ isAdmin ? 'Access granted' : 'Access denied' | uppercase }} 就相当于 {{ isAdmin ? 'Access granted' : ('Access denied' | uppercase) }}。所以要加括号 {{ (isAdmin ? 'Access granted' : 'Access denied') | uppercase }}
+   3. 示例：
 
       ```dash
       <div>{{ books$ | async }}</div> 
@@ -1644,27 +1698,111 @@
 
 ### 路由 Routing & Navigation
 
-1. 定义：
-2. 传参：
-   1. RouterModule.forRoot
-      1. withComponentInputBinding
-      2. bindToComponentInputs
-3. Multiple outlets: <https://blog.angular-university.io/angular2-router/>
-4. Angular ActivatedRoute VS Angular Router 的区别是什么 ❓❓❓
-5. 注册：
-   1. RouterModule.forRoot([]): This establishes the routes for the root of our application 这就为我们的应用程序的根建立了路由。
-   2. RouterModule.forChild([])
+1. 把路由配置单独放到一个配置模块：
+   1. CustomizedModule
 
-   ``` c
-      // app.module.ts
-      @NgModule({
-         imports: [
-            RouterModule.forRoot( [] ) // 传入的 [] 是 routers array 导航数组
-         ]
-      })
-   ```
+      ```code
+         import { NgModule } from '@angular/core';
+         import { RouterModule, Routes } from '@angular/router';
+         import { CustomComponent } from './custom.component';
 
-6. 配置路由 Configuring Routes:
+         const routes: Routes = [
+            { path: 'custom', component: CustomComponent }
+         ];
+
+         @NgModule({
+            imports: [RouterModule.forChild(routes)],
+            exports: [RouterModule] // 重新导出了 RouterModule 
+         })
+         export class CustomizedModule { }
+      ```
+
+   2. 为什么导出 RouteModule:
+      1. 让导入并使用了 CustomizedModule 的其他模块，可以使用 RouterModule, 同时 CustomizedModule 里的 components 也可以使用 RouterModule 的相关功能，比如 指令 RouterLink 和 RouterOutlet
+   3. 导入顺序：推荐把路由模块放在 imports 数组的最后。
+      1. 避免懒加载模块冲突：在使用懒加载模块时，RouterModule 放在最后可以确保所有其他模块的加载和配置完成后，再进行路由解析。这有助于避免懒加载模块和主模块之间的冲突。
+      2. 确保路由解析的顺序：Angular 在解析路由时，会按照 imports 数组中的顺序来解析模块。将 RouterModule 放在最后，可以确保在解析路由之前，所有依赖的模块都已经加载和配置好
+      3. 避免路由路径覆盖：如果在 RouterModule 之前导入的模块中也有路由配置，可能会导致路由路径被覆盖或者冲突。将 RouterModule 放在最后可以减少这种风险。
+
+         ``` code
+            import { NgModule } from '@angular/core';
+            import { BrowserModule } from '@angular/platform-browser';
+            import { FormsModule } from '@angular/forms';
+            import { AppComponent } from './app.component';
+            import { AppRoutingModule } from './app-routing.module';
+            import { HeroesModule } from './heroes/heroes.module';
+
+            @NgModule({
+            imports: [
+               BrowserModule,
+               FormsModule,
+               HeroesModule, // 业务模块
+               AppRoutingModule  // 注意：导航模块在业务模块之后导入
+            ],
+            declarations: [
+               AppComponent
+            ],
+            bootstrap: [ AppComponent ]
+            })
+            export class AppModule { }
+         ```
+
+2. ActivatedRoute：一个 Service, 用来获取当前被激活的 Route 里的信息
+   1. 主要功能：
+      1. 获取路由参数：可以获取当前路由的参数（如路径参数和查询参数）。
+      2. 获取路由数据：可以获取与当前路由关联的数据对象。
+      3. 获取路由片段：可以获取当前路由的片段信息。
+      4. 监听路由变化：可以订阅路由变化事件，以便在路由参数或数据变化时做出响应。
+
+         ``` code
+            constructor(
+               private route: ActivatedRoute,
+            ) {}
+            ngOnInit() {
+               // 用流来获取参数
+               this.hero$ = this.route.paramMap.pipe(
+                  switchMap((params: ParamMap) =>
+                     this.service.getHero(params.get('id')!))
+               );
+
+               // 用非流获取
+               const id = this.route.snapshot.paramMap.get('id')!;
+            }
+         ```
+
+3. Router: 一个 Service, 是 Angular 路由机制的核心部分，负责管理应用的导航和 URL 操作
+   1. 主要功能：
+      1. 导航到指定路由：可以编程式地导航到应用中的不同路由。
+      2. 生成 URL 链接：可以生成相对于当前路由或绝对路径的 URL 链接。
+      3. 订阅导航事件：可以订阅导航事件，获取导航的开始、结束、取消等状态。
+      4. 访问路由配置：可以访问和操作应用的路由配置。
+
+         ``` code
+            import { Component } from '@angular/core';
+            import { Router } from '@angular/router';
+
+            @Component({
+               selector: 'app-navigation',
+               template: '<button (click)="navigate()">Go to Example</button>'
+            })
+            export class NavigationComponent {
+               constructor(private router: Router) {}
+               navigate() {
+                  // 编程式导航到指定路由
+                  this.router.navigate(['/example', { id: 1 }]);
+               }
+            }
+         ```
+
+4. ActivatedRoute 和 Router 的关系
+   1. 互补功能：Router 负责管理和控制路由的导航，而 ActivatedRoute 提供了当前激活路由的信息。两者互补，共同实现了完整的路由功能。
+   2. 协同工作：在导航到新路由时，Router 会更新 ActivatedRoute 的信息。开发者可以使用 Router 进行导航，同时使用 ActivatedRoute 获取新的路由信息。
+   3. 依赖关系：ActivatedRoute 是与当前激活的路由关联的，因此每次导航时，ActivatedRoute 的实例会更新以反映新的
+5. 传参：❓❓❓
+   1. withComponentInputBinding
+   2. bindToComponentInputs
+6. Multiple outlets: <https://blog.angular-university.io/angular2-router/>
+7. 配置路由 Routes Configurations:
    1. 数组里的每一个对象，就是一个 Route path 必须属性：就是要在 URL 中使用的路径片段。
       1. 传参：例如 path:'abc' URL: 'www.baidu.com/abc'. 如果要传递参数，就用'/:parameterName'的形式传递
       2. 默认路由： path：'' 默认重定向到 redirectTo 所指向的路径，路径匹配方式由 pathMatch 配置
@@ -1681,8 +1819,8 @@
       ]
    ```
 
-7. 使用：当哪个 Route is activated, 就会显示那个路由对应的 Component
-   1. 首先，在项目的 index.html 的 header 中，需要一个 `<base href='/' />` 标签元素。( Angular CLI 已经帮我们做了这一步 )。 href 会决定 Routers 如何合并 URLs, 比如当前设置的'/' 就会直接在用 path 在原来的 URL 后面拼接
+8. router-outlet：当哪个 Route is activated, 就会显示那个路由对应的 Component
+   1. 首先，在项目的 index.html 的 header 中，需要一个 `<base href='/' />` 标签元素。( Angular CLI 已经帮我们做了这一步 )。 href 会决定 Routers 如何合并 URLs, 比如当前设置的'/' 就会直接在用 path 在原来的 根路径 后面拼接 比如 ` https://www.example.com/subdirectory/page.html ` 页面中含有 `<a href="images/photo.jpg">Photo</a>` 那么这个图片的基准地址是 `https://www.example.com/images/photo.jpg`
    2. 放置路由展示位置： `<router-outlet></router-outlet>` 写在哪，路由就在哪里生效
    3. 触发 Activate a Router：
       1. 使用 routerLink 指令：来指定该元素对应的 Router 的 path.  注意！指令要用 【方括号】括起来，
@@ -1716,7 +1854,7 @@
             }
          ```
 
-8. 获取路由参数：获取参数的 key 就是 Route 里 /:parameterName 的字符串 parameterName
+9. 获取路由参数：获取参数的 key 就是 Route 里 /:parameterName 的字符串 parameterName
 
    ```dash
       // {path: 'bbb/:id' , component: BbbComponent} // key: 'id'
@@ -1732,9 +1870,9 @@
       })
    ```
 
-9. 子路由：利用children注册，然后在父页面里也设置一个 `<router-outlet></router-outlet>`用来防止子路由渲染
-10. 传参方式：两种传参互不影响
-   1. query: (推荐，因为不会有顺序的坑)
+10. 子路由：利用children注册，然后在父页面里也设置一个 `<router-outlet></router-outlet>`用来防止子路由渲染
+11. 传参方式：两种传参互不影响
+12. query: (推荐，因为不会有顺序的坑)
       1. 传递：
 
          ```dash
@@ -1745,7 +1883,7 @@
       2. path变成：`/menuDetail?id=3&name=abc`
       3. 接收：在目标页面 引用ActivatedRoute并 作为构造函数的入参被使用. 然后通过 `this.ActivatedRoute实例.*`得到相关信息，可以用它的 `this.ActivatedRoute实例.snapshot.queryParams` 接受参数
       4. 参数顺序：要求不严格
-   2. params
+13. params
       1. 传递：
 
          ```dash
@@ -1765,20 +1903,82 @@
          ```
 
       4. 参数顺序：params 在router里注册的先后顺序，与传参数组里的顺序 是严格对应的
-11. Guards 守卫：本质是 Service
-   1. 四大守卫：Boolean类型时，当返回 true 则可以激活路由，返回 false 则不行
-      1. CanActivate: to guard navigation to a route
-      2. CanDeactivate: to guard navigation away from the current route
-      3. Resolve: to prefetch data before activating a route
-      4. CanLoad: to prevent asynchronous routing
-   2. 定义：可以通过 Angular-CLI 快捷创建 ng g g folder/name
+14. NavigationExtras 是什么 ❓❓❓
+
+#### RouterModule.forRoot && RouterModule.forChild
+
+1. RouterModule.forRoot(routes)：
+   1. 定义：是一个用于配置应用程序的“顶级”路由器并导入根路由配置的方法。forRoot 是一个静态方法，它会返回一个包含已配置路由器的模块。
+   2. 在哪用：通常在根模块（通常是 AppModule）中使用，以确保路由器配置只在应用程序的顶层模块中应用一次,只有单一实例。
+   3. return：返回一个模块，其中包含已配置的路由器，这个模块需要在根模块中导入。
+   4. 做了什么：
+      1. 配置路由器: 它接受一个路由配置数组（routes），定义应用程序的各个路由及其对应的组件。这个数组指定了应用程序路由的路径和组件映射。
+      2. 注册路由提供者: forRoot 会注册路由相关的提供者（providers），使得路由器服务（Router）和相关指令（如 RouterLink、RouterOutlet 等）在整个应用程序中可用。
+      3. 导入路由模块: 它返回一个模块，其中包含已配置的路由器，这个模块需要在根模块中导入。
+      4. 确保单一实例: forRoot 只在根模块中调用一次，以确保路由器服务有一个单一实例。如果在其他特性模块中需要配置路由，则应该使用 RouterModule.forChild(routes) 方法，该方法用于配置子路由。
+   5. 示例：
+
+      ``` code
+         // 定义根路由模块
+         import { NgModule } from '@angular/core';
+         import { RouterModule, Routes } from '@angular/router';
+         import { HomeComponent } from './home/home.component';
+
+         const routes: Routes = [
+            { path: 'home', component: HomeComponent },
+            { path: '', redirectTo: '/home', pathMatch: 'full' }
+         ];
+
+         @NgModule({
+            imports: [RouterModule.forRoot(routes)], // 配置根路由，返回值用在 imports 数组中
+            exports: [RouterModule] // 导出 RouterModule，使其在整个应用程序中可用
+         })
+         export class AppRoutingModule {}
+
+         // 使用根路由模块
+         @NgModule({
+            declarations: [
+               AppComponent,
+               HomeComponent,
+            ],
+            imports: [
+               BrowserModule,
+               AppRoutingModule // 导入 AppRoutingModule，启用路由配置
+            ],
+            providers: [],
+            bootstrap: [AppComponent]
+         })
+         export class AppModule {}
+      ```
+
+   6. 重写 forRoot 函数
+      1. 
+2. RouterModule.forChild(routes)：
+   1. 定义：用于配置特性模块的路由
+   2. 在哪用：在各特性模块中使用，所以在整个项目中，可以有多个 forChild
+   3. return: 它返回一个模块，其中包含已配置的路由器，这个模块需要在特性模块中导入。
+   4. 注意：forChild 方法不会重复注册路由器服务（Router）和相关指令（如 RouterLink、RouterOutlet），因为这些已经在根模块中通过 forRoot 注册过了。
+   5. 做了什么
+      1. 配置特性模块的路由：它接受一个路由配置数组（routes），定义特性模块的各个路由及其对应的组件。这个数组指定了特性模块路由的路径和组件映射。
+      2. 导入路由模块：它返回一个模块，其中包含已配置的路由器，这个模块需要在特性模块中导入。
+
+#### Route Guards 路由守卫
+
+   1. 定义：在 Angular 中，路由守卫（Route Guards）是一种用于控制路由访问的机制。它们允许你在导航到某个路由之前进行一些检查或操作，从而决定是否允许用户访问该路由。路由守卫通常用于实现认证和授权逻辑，确保用户只有在满足特定条件时才能访问某些页面。
+   2. 五大守卫：
+      1. CanActivate: 用于在导航到某个路由之前进行检查。如果 CanActivate 返回 true，则导航继续；如果返回 false，则导航取消。
+      2. CanActivateChild: 类似于 CanActivate，但它用于检查子路由的访问权限。
+      3. CanDeactivate: 用于在离开某个路由之前进行检查。如果 CanDeactivate 返回 true，则导航继续；如果返回 false，则导航取消。通常用于提示用户保存更改或确认离开页面。
+      4. CanLoad: 用于在懒加载模块之前进行检查。如果 CanLoad 返回 true，则模块加载并导航继续；如果返回 false，则取消模块加载。
+      5. Resolve: 用于在路由激活之前获取一些数据，并将数据提供给组件。Resolve 守卫返回一个数据对象，该对象会被路由器添加到导航后的路由数据中。
+   3. 用法：可以通过 Angular-CLI 快捷创建 ng g g folder/name
 
       ```dash
-         // product-detail.guard.ts
+         // 定义一个守卫 product-detail.guard.ts
          import { Injectable } from '@angular/core'; 
          import { ActivateRoute，CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, UrlTree } from "@angular/router';
 
-         // 本质是 Service
+         // 用来标注该守卫是可以被注入的
          @Injectable({  
             providedIn: 'root' 
          }) 
@@ -1799,11 +1999,8 @@
                return true; 
             }
          }
-      ```
 
-   3. 使用：
-
-      ```dash
+         // 使用
          RouterModule.forRoot([
             {path: 'aaa' , component: AaaComponent},
             {
@@ -1813,7 +2010,6 @@
             },
          ])
       ```
-12. NavigationExtras 是什么 ❓❓❓
 
 ### 特殊的选择器 ❓❓❓
 
@@ -1842,7 +2038,10 @@
    4. 必须组合：它只能与其他选择器组合使用
    5. 参考链接：<https://tinytip.co/tips/angular-host-context/#:~:text=The%20Angular%20%3Ahost-context%20%28%29%20selector%20allows%20you%20to,of%20your%20component%20up%20to%20the%20document%20root>.
 
-### ::ng-deep 是什么 ❓❓❓
+### ::ng-deep 是什么
+
+1. 定义：::ng-deep 是一种用于在 Component Style 中实现样式穿透的伪选择器。
+2. 作用：由于 angular 组件存在 View Encapsulation 样式封装机制，组件之间各自“自治”，使用 ::ng-deep 可以穿透子组件的样式封装，
 
 ### Content Projectioin 内容投影 && 三种嵌入视图
 
@@ -2113,10 +2312,6 @@
 
 ### 内容投影的变更检测是跟着父组件还是子组件 ❓❓❓
 
-### ng-container
-
-两个结构化指令不能出现在一个标签上
-
 ### ng-template VS template ❓❓❓
 
 1. 辅助结构化指令语法糖
@@ -2234,12 +2429,13 @@
 
 #### Attribute binding
 
-1. 定义：用来直接给 attribute 赋值
-2. 用法：attr.属性名 用 [] 方括号 括起来，再用一个结果是 string 类型的表达式进行赋值
+1. 定义：用来直接给 attribute 赋值. 比如给一个 HTML 对象绑定一个不属于 DOM 的自定义属性，可以给它 绑定到 attr 上
+2. 用法：attr.属性名 用 [] 方括号 括起来，再用一个结果是 string 类型的表达式进行赋值. 这里的值也可以用插值。
 3. example:
 
    ``` c
-      <button [attr.aria-label]="name"> {{name}} </button>
+      <button [attr.aria-label]="name is {{ name }}"> {{name}} </button>
+      <ul [attr.role='whatever' ]></ul>
    ```
 
 4. 注意：如果这个 expression 的结果是 undefined 或者 null, 这个 attribute 会被移除
@@ -2247,29 +2443,114 @@
 #### Class and Style binding
 
 1. class binding:
-   1. 支持多个class: !['class-binding'](../assets/angular-class-binding.png)
+   1. class 绑定的方式很灵活，
+
+      ```code
+         @Component({
+            template: `
+               <ul [class.expanded]="isExpanded">   // 通过判断 isExpanded 变量的 boolean 值来决定是否加上 .expanded 这个 class 样式
+
+               <ul [class]="listClasses"> ... </ul> 
+               <section [class]="sectionClasses"> ... </section>
+               <button [class]="buttonClasses"> ... </button>
+            `,
+            ...
+         })
+         // 样式可以是字符串，字符串用空格分隔、字符串数组、或者一个对象里面的class样式名做 key, boolean 值做 value 来决定是否使样式生效
+         export class UserProfile {
+            listClasses = 'full-width outlined'; 
+            sectionClasses = ['expandable', 'elevated'];
+            buttonClasses = {
+               highlighted: true,
+               embiggened: false,
+            };
+         }
+
+         // 渲染出来的样子是：
+         <ul class="full-width outlined"> ... </ul>
+         <section class="expandable elevated"> ... </section> // 数组的用空格分隔
+         <button class="highlighted"> ... </button> // 如果有多个true值的，也用空格分隔
+      ```
+
+   2. 自动整合：以上这些方式，还可以混合着用，Angular 会 intelligently combine
+   3. 样式顺序：Angular 不保证样式顺序，如果有冲突，它会按照样式优先级渲染。所以需要 developer 来控制。
+
 2. style binding:
-   1. 风格：
-      1. dash-case style: `<div [style.background-color]="expression"></div>`
-      2. camelCase style: `<div [style.backgroundColor]="expression"></div>`
-   2. 支持多个 styles, 有两种写法
-      1. A string list of styles such as `"width:*px; height: *px; ... "`
-      2. An object with style names as the keys and style values as the values such as `{ width: *px, height: *px, ...}`
+
+      ```code
+         @Component({
+            template: `
+               <ul [style]="listStyles"> ... </ul>
+               <section [style]="sectionStyles"> ... </section>
+            `,
+            ...  
+         })
+         export class UserProfile {
+            listStyles = 'display: flex; padding: 8px';
+            sectionStyles = {
+               border: '1px solid black',
+               'font-weight': 'bold',
+            };
+         }
+      ```
 
 #### Event binding
 
-1. 应用：
-   1. 联合键组合可以用'.'来间隔：`<input (keydown.shift.t)="onKeydown($event)" />` 同时按下 shift 和 t
-2. 注意：根据电脑的操作系统不同，有一些内置的按键组合可能会覆盖自定义的按键组合
+1. 定义：Template 里的每个事件监听，Angular 都提供了一个 $event 这个对象包含了对事件对象的引用。$event contains the refefence to the event object
+
+   ```code
+      @Component({
+         template: `
+            <input type="text" (keyup)="updateField($event)" />
+         `,
+         ...
+      })
+      export class AppComponent {
+         updateField(event: KeyboardEvent): void {
+            console.log(`The user pressed: ${event.key}`);
+         }
+      }
+   ```
+
+2. 捕捉具体事件：
+   1. 键盘事件：捕捉 key 事件
+
+      ``` code
+         @Component({
+            template: `
+               <input type="text" (keyup)="updateField($event)" />  //监听具体的键盘事件 方法1
+               <input type="text" (keyup.enter)="updateField($event)" />  //监听具体的键盘事件 方法2. 这里的 $event 也是 KeyboardEvent, 不会因为有无 .event 而改变
+            `,
+            ...
+         })
+         export class AppComponent {
+            updateField(event: KeyboardEvent): void {
+               if (event.key === 'Enter') { 
+                  console.log('The user pressed enter in the text field.');
+               }
+            }
+         }
+      ```
+
+   2. 联合键组合：'.'来间隔：`<input type="text" (keyup.shift.enter)="updateField($event)" />`。同时按下 shift 和 enter.  Angular 支持 alt, control, meta, and shift.
+3. 注意：
+   1. 根据电脑的操作系统不同，有一些内置的按键组合可能会覆盖自定义的按键组合
+   2. 自定义具体的 key and code. ❓❓❓ <https://v18.angular.dev/guide/templates/event-listeners#using-key-modifiers>
+
+      ``` code
+         <!-- Matches alt and left shift -->
+         <input type="text" (keydown.code.alt.leftshift)="updateField($event)" />
+      ```
 
 #### Two-way binding 双向绑定
 
-1. 定义：双向绑定提供了一个组件间共享数据的方式：监听事件，然后同时地更新父母组件和孩子组件中的值
+1. 定义：双向绑定是一种可以实现 同时 绑定一个值给 element 元素 + element 也可以改变值并传递回来 的方式
 2. 用法：
-   1. 用 `[()]` 包裹变量名，例如: `<app-demo [(name)]="nameValue"></app-demo>`
-      1. 用法的本质：是 property binding 和 event binding 的联合快捷写法。拆开写是这样：
+   1. 用 `[()]` 包裹变量名，
+   2. 示例: `<app-demo [(name)]="nameValue"></app-demo>`
+   3. [()]的本质：是 property binding [] 和 event binding () 的联合快捷写法。拆开写是这样：
 
-         ``` c
+         ``` code
          // AppParentComponent.ts
          <app-demo [name]="nameValue" (nameChange)="nameValue=$event"></app-demo>
 
@@ -2278,11 +2559,84 @@
          @Output() nameChange = new EventEmitter<string>();
          ```
 
-      2. $event 是什么： ❓❓❓
-         1. 定义：$event 变量包含了 AppDemoComponent.nameChange 事件 的 data.
-         2.
-   2. ngModel: `<input [(ngModel)]="size"/>`
-3. 要求：组件的 @Input 和 @Output 必须符合模式，即 @Output 的名字必须是 `${@Input name} + Change` 模式，例如 @Input 的名字是 name, @Output 名字必须是 nameChange.
+3. 表单之间的双向绑定 Form Control:
+   1. 使用 ngModel:
+
+      ``` code
+         import { Component } from '@angular/core';
+         import { FormsModule } from '@angular/forms';
+         @Component({
+            standalone: true,
+            imports: [FormsModule],
+            template: `
+               <main>
+                  <h2>Hello {{ firstName }}!</h2>
+                  <input type="text" [(ngModel)]="firstName" />
+               </main>
+            `
+         })
+         export class AppComponent {
+            firstName = 'Ada';
+         }
+      ```
+
+   2. Angular 的 built-in 模块 FormsModule 专门处理表单的双向绑定。只需要确保这三个步骤：
+      1. Import the FormsModule from @angular/forms
+      2. Use the ngModel directive with the two-way binding syntax (e.g., [(ngModel)])
+      3. Assign it the state that you want it to update (e.g., firstName)
+
+4. 组件之间的双向绑定
+   1. 父母组件 & 孩子组件
+
+      ``` code
+      // ./app.component.ts
+      import { Component } from '@angular/core';
+      import { CounterComponent } from './counter/counter.component';
+      @Component({
+         selector: 'app-root',
+         standalone: true,
+         imports: [CounterComponent],
+         template: `
+            <main>
+               <h1>Counter: {{ initialCount }}</h1>
+               <app-counter [(count)]="initialCount"></app-counter>
+            </main>
+         `,
+      })
+      export class AppComponent {
+         initialCount = 18;
+      }
+
+      // './counter/counter.component.ts';
+      import { Component, EventEmitter, Input, Output } from '@angular/core';
+      @Component({
+         selector: 'app-counter',
+         standalone: true,
+         template: `
+            <button (click)="updateCount(-1)">-</button>
+            <span>{{ count }}</span>
+            <button (click)="updateCount(+1)">+</button>
+         `,
+      })
+      export class CounterComponent {
+         @Input() count: number;
+         @Output() countChange = new EventEmitter<number>();
+         updateCount(amount: number): void {
+            this.count += amount;
+            this.countChange.emit(this.count);
+         }
+      }
+      ```
+
+   2. 绑定的必要语法：
+      1. 在孩子组件里必须：
+         1. An @Input() property
+         2. A corresponding @Output() event emitter that has the exact same name as the input property plus "Change" at the end. The emitter must also emit the same type as the input property.
+         3. A method that emits to the event emitter with the updated value of the @Input().
+      2. 在父母组件里必须：
+         1. Wrap the @Input() property name in the two-way binding syntax.
+         2. Specify the corresponding property to which the updated value is assigned
+5. 要求：组件的 @Input 和 @Output 必须符合模式，即 @Output 的名字必须是 `${@Input name} + Change` 模式，例如 @Input 的名字是 name, @Output 名字必须是 nameChange.
 
 ### Template 模板
 
@@ -2306,12 +2660,15 @@
    3. Template variable scope：❓❓❓
    4. Accessing in a nested template
 
+### Directive 指令
 
-### Directive 指令: Custom HTML syntax 本质就是一个自定义的 HTML 元素语法
-
-1. 定义：指令是angular 中给 elements 添加额外行为的 class。本质是 Class, 添加在 elements 上.
-2. 分类：
-   1. Components: 组件就是一个跟 template 一起使用的 directive.
+1. 定义：指令是 Angular 设置的一种 Class 类, 放在 element 上可以添加额外的 behavior. Directives are classes that add additional behavior to elements in your Angular applications.
+2. Angular built-in directives:
+   1. Components：
+   2. Attribute directives
+   3. Structural directives
+3. 分类：
+   1. Components: 组件就是一个跟 template 一起使用的 directive.❓❓❓
    2. Attribute directives:
       1. 定义：属性指令监听和改变 HTML elements/components/attributes/properties 的行为。
       2. Build-in attribute directive:
@@ -2442,7 +2799,34 @@
 
    3. Structural directives:
       1. 定义：用来修改 DOM elements layout, add or remove.
-      2. Built-in structural directives:
+      2. 原理：结构指令实际上是作用在 `<ng-template></ng-template>` 上的指令，用星号加名字 `*name` 的格式作为这个指令的缩写，Angular 在编译的时候，会把 `*` 星号自动编译成 ng-template 包围的 element 格式
+         1. 示例：
+
+            ``` code
+               // SelectDirective
+
+               <!-- Shorthand syntax: -->
+               <p class="data-view" *select="let data from source">The data is: {{data}}</p>
+
+               <!-- Long-form syntax: -->
+               <ng-template select let-data [selectFrom]="source">
+                  <p class="data-view">The data is: {{data}}</p>
+               </ng-template>
+            ```
+
+         2. 渲染规则：
+            1. Only the data is available, the structure directive is available.
+            2. Angular's ng-template element defines a template that doesn't render anything by default.
+            3. If you just wrap elements in an ng-template without applying a structural directive, those elements will not be rendered.
+            4. In a nutshell: 结构指令是等待有数据后，才变成 available 的。而 ng-template 是一个默认不会渲染任何东西的 template. 只有加上了可用的结构指令，才会渲染。
+         3. 缩写的规则：*select="let data from source"
+            1. let data 定义了一个 template 变量 date。如果之后没有赋值，那么这个变量默认绑定到 template context property $implicit ❓❓❓
+            2. from 是个 key to map to datasource with is bound to the express source
+            3. source 是模板表达式 template express
+         4. 限制：
+            1. 当使用缩写的结构指令，一个 element 上就只能放置一个结构指令
+
+      3. Built-in structural directives:
          1. NgIf:
             1. 支持 shorthand：*ngIf="name" 等同于*ngIf="name as n", 在孩子节点中使用 n 变量
          2. NgFor:
@@ -2468,41 +2852,36 @@
                ```
 
          3. NgSwitch:
-      3. Custom structural directives:
-         1. 命令行 ng generate directive unless
-         2. The UnlessDirective creates an embedded view from the Angular-generated `<ng-template>` and inserts that view in a view container adjacent to the directive's original `<p>` host element.TemplateRef helps you get to the `<ng-template>` contents and ViewContainerRef accesses the view container
+      4. Custom structural directives:
+         1. 命令行 ng generate directive select
+         2. 创建 connection to datasource ❓❓❓
 
-            ``` c
-               import { Directive, Input, TemplateRef, ViewContainerRef } from '@angular/core';
-
+            ``` code
+               import {Directive, TemplateRef, ViewContainerRef} from '@angular/core';
                @Directive({
-                  selector: '[appUnless]',
+                  standalone: true,
+                  selector: '[select]', // 指令的 selector 是用方括号括起来的
                })
-               export class UnlessDirective {
-                  private hasView = false;
-
-                  @Input() set appUnless(condition: boolean) {
-                     if (!condition && !this.hasView) {
-                        this.viewContainer.createEmbeddedView(this.templateRef);
-                        this.hasView = true;
-                     } else {
-                        this.viewContainer.clear();
-                        this.hasView = false;
-                     }
-                  }
+               export class SelectDirective {
                   constructor(
-                     private templateRef: TemplateRef<any>,
-                     private viewContainer: ViewContainerRef
+                     private templateRef: TemplateRef, 
+                     private ViewContainerRef: ViewContainerRef
                   ) {}
-               }
 
-               // 应用
-               <button (click)="condition = !condition">切换 condition 条件</button>
-               <div *appUnless="condition">Test unless when false</div>
-               <div *appUnless="!condition">Test unless when true</div>
+                  @Input({required: true}) selectFrom!: DataSource;
+
+                  async ngOnInit() {
+                     const data = await this.selectFrom.load();
+                     this.viewContainerRef.createEmbeddedView(this.templateRef, {
+                        // Create the embedded view with a context object that contains
+                        // the data via the key `$implicit`.
+                        $implicit: data,
+                     });
+                  }
+               }
             ```
 
-      4. 承载指令的元素
+      5. 承载指令的元素
          1. DOM elements
          2. ng-template:
             1. 实质：Angulartranslates the instruction into an ng-templat4e around the host element, then uses this template repeatedly to create a new set of elements and bindings for each item in the list.
@@ -2524,24 +2903,13 @@
             2. 现象：所有跟 ngFor 有关的东西，都转移到了 这个 ng-template 上
             3. 注意：用 ng-template 包围，并不会真的创建一个 real DOM element. 这个元素里面的内容默认并不会渲染。所以如果用 ng-template 包围了一些元素，但没有使用 结构化指令，那这些元素并不会被渲染。
          3. `<ng-container *ngIf='condition'>...</ng-container>`: 当没有元素适合承接指令时，就可以用 ng-container
-   4. 用法：Directive composition API ❓❓❓
-      1. 在template 中写：`<admin-menu menuBehavior></admin-menu>`
-      2. 在 decorator 中写，这种叫 host directives：与上面写法相似，但有不同 ❓❓❓
+4. Directive composition API❓❓❓ <https://v18.angular.dev/guide/directives/directive-composition-api>
+   1. 定义：The directive composition API lets you apply directives to a component's host element from within the component TypeScript class.
+   2. 在 component 上添加指令：
+   3. 在指令上添加指令：
+5. 注意：不允许同一个 DOM element 上同时有多个个 directive. 因为无法确定两个指令的优先顺序。It is not allowed to apply multiple directives to the same plain HTML element.
 
-         ``` c
-            @Component({
-               standalone: true, // 能使用 host directives 的组件必须是 standalone: true
-               selector: 'admin-menu',
-               template: 'admin-menu.html',
-               hostDirectives: [MenuBehavior],
-            })
-            export class AdminMenu { }
-         ```
-
-3. 注意：不允许同一个 DOM element 上同时有多个个 directive. 因为无法确定两个指令的优先顺序。It is not allowed to apply multiple directives to the same plain HTML element.
-4. Directive composition API ❓❓❓
-
-### Dependency Injection / DI 依赖注入 ❓❓❓
+### Dependency Injection / DI 依赖注入 ❓❓❓ <https://v18.angular.dev/guide/directives/directive-composition-api#dependency-injection>
 
    1. 定义：
    2. 4个核心概念：
@@ -2551,7 +2919,7 @@
          2. useExisting
          3. useFactory
             1. 定义：useFactory 可以指定一个函数，它的调用返回值将会作为依赖被注入
-            2. 用处：支持动态地取得并注入一些 app 运行后才能得到的数据，
+            2. 用处：支持动态地取得并注入一些 app 运行后才能得到的数据
             3. 用法：
 
                ``` c
@@ -3073,3 +3441,7 @@
          1. 怎么判断应不应该检测变化呢，比如一个树状图，异步回调后要刷新某个节点，这样应该检测变化嘛，页面状态并么有改变
 
 ### `inject(*)` 是怎么实现的？
+
+## V18
+
+### NgOptimizedImage directive

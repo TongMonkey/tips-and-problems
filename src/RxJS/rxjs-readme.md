@@ -1,6 +1,6 @@
-## RxJs
+# RxJs
 
-### 相关基础
+## 相关基础
 
 1. 背景： Reactive Extensions (RX)
 2. 定义： RxJS 是使用 Observables 的响应式编程的库，它使编写异步或基于回调的代码更容易。
@@ -11,7 +11,7 @@
    2. 流动性 Flow: 提供了一套流程操作符来控制事件流程 例如 throttleTime filter delay debounceTime take takeUntil distinct distinctUntilChanged
    3. 值 Values: 对于流经 observalbles 的值， 可以对其进行转换， 例如 map scan pluck pairwise sample 等
 
-### 核心类
+## 核心类
 
 1. Observable (可观察对象): 一组未来值或事件的集合。
 2. Observer (观察者): 一个回调函数的集合，它知道如何去监听由 Observable 提供的值，即接受观察结果
@@ -21,7 +21,7 @@
    1. 方法 asObservable: 投射 subject 实例为一个observable 对象
 6. Schedulers (调度器): 用来控制并发并且是中央集权的调度员，允许我们在发生计算时进行协调, 以控制事件并发情况，例如 setTimeout 或 requestAnimationFrame 或其他。
 
-### Observable
+## Observable
 
 1. 定义：
 2. Observable & Event Loop:
@@ -53,47 +53,94 @@
       Timeout Callback
    ```
 
-### Observer
+## Observer
 
-### operator
+## operator
 
-### Subject
+1. skipWhile:
+   1. 定义：用于跳过数据源中满足条件的值，一旦遇到第一个不满足跳过条件的值，则从这个值开始，发出后面所有的值。
+   2. 常用场景：跳过初始的无关值、跳过特定的起始条件等
+   3. 示例：
 
-1. 创建时不需要初始值
-2. 不会保留当前值
-3. 只会返回新值，靠 next 方法触发
+      ``` code
+         import { of } from 'rxjs';
+         import { skipWhile } from 'rxjs/operators';
 
-   ``` c
-      var subject = new rxjs.Subject();
-      subject.next(1); //Subjects will not output this value
-      subject.subscribe({
-         next: (v) => console.log('observerA: ' + v)
-      });
-      subject.subscribe({
-         next: (v) => console.log('observerB: ' + v)
-      });
-      subject.next(2);
-      subject.next(3);
-      // observerA: 2
-      // observerB: 2
-      // observerA: 3
-      // observerB: 3
-   ```
+         const source$ = of(1, 2, 3, 4, 5);
+         const result$ = source$.pipe(
+            skipWhile(value => value < 3)
+         );
+
+         result$.subscribe(value => console.log(value));
+         // 输出:
+         // 3
+         // 4
+         // 5
+      ```
+
+## Subject
+
+1. 定义：Subject 是一个特殊类型的 Observable，它可以让多个订阅者同时接收相同的数据流。这种特性被称为“多播”.
+2. 单播 vs 多播
+   1. 单播（Unicast）：普通的 Observable 是单播的，每个订阅者都会收到独立的数据流。
+   2. 多播（Multicast）：Subject 是多播的，所有订阅者共享同一个数据流
+3. Subject vs Observable：
+   1. 普通的 Observable 是单播：每次订阅都会创建一个新的执行流，
+   2. Subject 是多播：则会共享同一个执行流给所有订阅者
+   3. 相同点：都是只会收到订阅后发出的值。
+4. Subject 实例：
+   1. 创建：const subject = new Subject(); 注意 subject 没有初始值。订阅之后，
+   2. 把实例转化为普通的 observable: const observable = subject.asObservable();
+   3. 应用：在某些服务中，会在 getter 方法中直接把 subject_instance 实例暴露出去，也有时会转成普通可观察对象再暴露 subject_instance.asObservable()。它们的区别是前者可以通过.next .error .complete 等方法操纵这个 subject 
+
+      ``` c
+         import { Injectable } from '@angular/core';
+         import { Subject } from 'rxjs';
+
+         @Injectable({
+            providedIn: 'root'
+         })
+         export class MyService {
+            private subject = new Subject<string>();
+
+            // 返回 Subject 实例
+            get mySubject(): Subject<string> {
+               return this.subject;
+            }
+            // 返回只读的 Observable
+            get myObservable(): Observable<string> {
+               return this.subject.asObservable();
+            }
+         }
+
+         // 在别处发布数据
+         publishData(data: string) {
+            // 可以的，相当于 this.subject.next(data)
+            this.mySubject().next(data); 
+
+            // 不可以的，转化过后的普通 observable 只能读，不能写
+            this.myObservable().next(data);
+         }
+      ```
 
 ### BehaviorSubject
 
-1. 创建的时候需要初始值
-2. 订阅后会返回 当前值：初始值或新值
-3. 获取当前值用 .value 方法
-4. 设置新值用 next 方法触发
+1. 定义：BehaviorSubject 是 Subject 的一种变体，它会保存最新的值，并且当新的订阅者订阅时，会立即发送给它们
+2. BehaviorSubject vs Subject
+   1. BehaviorSubject 创建的时候需要初始值, 而 Subject 不需要
+   2. BehaviorSubject 会保存最新的值，并且当新的订阅者订阅时，会立即收到当前值，通过 实例.value获取。 而 Subject 的订阅者只会收到订阅后发出的值
+   3. 发出值：都是用 .next(value) 来触发
+3. 订阅后会返回 当前值：初始值或新值
 
-   ``` c
-      let bs = new rxjs.BehaviorSubject(0);
-      bs.subject( v => console.log(v) );
-      bs.next(1); 
-      bs.value();
-      // 0
-      // 1
+   ``` code
+      // 创建
+      const behaviorSubject = new BehaviorSubject<number>(0); // 初始值为 0
+      // 订阅时会先立刻收到一个0
+      behaviorSubject.subscribe(value => console.log(`Subscriber current is: ${value}`));
+      // 发出值 之后会收到 1。此时 behaviorSubject.value 的当前值变为 1
+      behaviorSubject.next(1);
+      // 获取最新值获取当前值用 .value 属性
+      behaviorSubject.value
    ```
 
 ### Schedular

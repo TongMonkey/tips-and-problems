@@ -178,6 +178,19 @@
          6. "postuninstall": This script runs after the package is uninstalled and is used to perform any necessary cleanup tasks after dependencies are removed.
          7. "preversion": This script runs before the version of the package is updated and is used to perform any necessary tasks before the version is changed.
          8. "postversion": This script runs after the version of the package is updated and is used to perform any necessary tasks after the version is changed.
+   3. engines:
+      1. 作用: engines 字段用于指定项目所支持的包管理器及其版本要求。这有助于确保开发人员使用正确的工具和版本来安装和管理项目的依赖
+      2. Demo:
+
+         ``` code
+
+            "engines": {
+               "npm": "please-use-pnpm", // 作用: 指示开发人员不要使用 npm 来安装项目依赖，而是使用 pnpm。这里的值 "please-use-pnpm" 是一种提醒或警告，表示项目不支持 npm
+               "yarn": "please-use-pnpm", // 作用: 指示开发人员不要使用 yarn 来安装项目依赖，而是使用 pnpm。这里的值 "please-use-pnpm" 是一种提醒或警告，表示项目不支持 yarn
+               "pnpm": ">= 9.0.0" //作用: 指示开发人员使用 pnpm 来安装项目依赖，并且要求 pnpm 的版本至少为 9.0.0。这有助于确保开发人员使用正确的包管理器版本，以避免兼容性问题
+            }
+            
+         ```
 
 ### npx
 

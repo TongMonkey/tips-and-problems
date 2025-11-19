@@ -4,9 +4,9 @@
 
 ### 定义
 
-1. ESLint 是一个用来检测 js code 的 tool, 目的是避免错误
-2. 安装前提：必须安装了 Node
-3. CLI:
+1. ESLint 是一个用于 JavaScript 和 TypeScript 代码的静态分析工具
+2. 安装前提：必须安装了 Node。 因为 ESLint 是一个 Node.js 应用程序，需要 Node.js 的运行环境才能执行
+4. CLI:
    1. 创建配置文件：为一个项目初始化安装和配置 ESLint: `npm init @eslint/config`. 这个命令有个前提，就是必须有 package.json 文件，否则会报错提示你先运行 npm init 或者 yarn init 来创建一个。初始化后，将会产生一个配置文件名为 `.eslintrc.{js, yml, json}`
    2. 想安装某个指定的配置，可以用 -- config conf1,config2 或者 -- config conf1, -- config conf2 这样的后缀，来指定要安装的 package name. 例如:
 
@@ -17,6 +17,64 @@
 
    3. 想单独检测某个文件：`npx eslint file.js` 或者 `yarn run eslint file.js`
    4. 检测时使其自动修复的命令是: ❓❓❓
+
+### 配置文件
+
+1. .eslintrc.json
+   1. 作用：
+
+      ``` code
+         {
+            "root": true, // 作用: 指定当前配置文件为根配置文件，ESLint 在解析配置时不会再向上级目录查找其他配置文件
+            "ignorePatterns": ["**/*"], // 作用: 指定 ESLint 忽略的文件和目录的模式。这里指定为忽略所有文件和目录（"**/*"），通常用于暂时禁用 ESLint 检查
+            "plugins": ["@nx"], // 作用: 指定要使用的 ESLint 插件。这里使用了 @nx 插件，通常用于 Nx 工作空间中的特定规则和配置
+            "extends": ["plugin:@slb-rcis/wpf/nx-standard"], // 作用: 继承其他 ESLint 配置文件或插件的规则。这里继承了 @slb-rcis/wpf/nx-standard 插件的配置，通常包含标准的 Nx 工作空间规则
+            "overrides": [
+               {
+                  "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+                  "rules": {
+                  "@nx/enforce-module-boundaries": [
+                     "error",
+                     {
+                        "enforceBuildableLibDependency": true,
+                        "allow": [],
+                        "depConstraints": [
+                        {
+                           "sourceTag": "*",
+                           "onlyDependOnLibsWithTags": ["*"]
+                        }
+                        ]
+                     }
+                  ]
+                  }
+               },
+               {
+                  "files": ["*.ts", "*.tsx"],
+                  "parserOptions": {
+                  "project": ["tsconfig.base.json"]
+                  },
+                  "rules": {
+                  "@typescript-eslint/no-non-null-assertion": "off",
+                  "@typescript-eslint/no-explicit-any": "off"
+                  }
+               },
+               {
+                  "files": ["*.component.html"],
+                  "rules": {
+                  "@angular-eslint/template/label-has-associated-control": "off",
+                  "@angular-eslint/template/click-events-have-key-events": "off",
+                  "@angular-eslint/template/interactive-supports-focus": "off"
+                  }
+               }
+            ]
+         }
+
+      ```
+
+2. .eslintrc.js
+3. .eslintrc.yaml
+4. 或 package.json 里的 eslintConfig 字段
+5. .eslintrc.json 要忽略的文件列表配置
 
 ### Rules
 

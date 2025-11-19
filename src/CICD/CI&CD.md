@@ -132,3 +132,41 @@
 ### Docker containers
 
 ### Dockerfile
+
+1. 作用：Dockerfile 用于构建和部署一个 Angular 项目
+2. 示例：
+
+   ``` code
+      // 指定了构建阶段使用的基础镜像。这里使用的是 node:20-alpine3.20 镜像，这是一种轻量级的 Node.js 镜像，基于 Alpine Linux
+      FROM node:20-alpine3.20 AS builder
+
+      // 设置工作目录为 /usr/build。后续的所有操作都将在这个目录进行
+      WORKDIR /usr/build
+
+      // 定义了三个构建参数：IMAGE_VERSION、PRISM_BCP_NPMRC_PWD 和 PRISM_NPMRC_PWD。这些参数可以在构建镜像时传递值
+      ARG IMAGE_VERSION
+      ARG PRISM_BCP_NPMRC_PWD
+      ARG PRISM_NPMRC_PWD
+
+      // 将当前目录下的所有文件复制到容器的工作目录 /usr/build
+      COPY . .
+
+      // 全局安装指定版本的 pnpm 包管理器（版本 9.15.5）
+      RUN npm install -g pnpm@9.15.5
+      // 使用 pnpm 安装项目的依赖项，并确保使用锁定的版本（--frozen-lockfile 选项）
+      RUN pnpm install --frozen-lockfile
+      // 运行项目的构建脚本 pipeline:build，并传递 IMAGE_VERSION 作为参数。这个命令通常会构建项目并生成生产环境的输出文件
+      RUN npm run pipeline:build -- $IMAGE_VERSION
+
+
+      // 指定第二阶段使用的基础镜像。这里使用的是 nginx:1.21.6-alpine 镜像，这是一种轻量级的 Nginx 镜像，基于 Alpine Linux
+      FROM nginx:1.21.6-alpine
+
+      // 从第一阶段的构建镜像中复制 Nginx 配置文件（/usr/build/nginx.conf）到第二阶段的 Nginx 容器中的配置目录（/etc/nginx/nginx.conf）
+      COPY --from=builder /usr/build/nginx.conf /etc/nginx/nginx.conf
+
+      // 从第一阶段的构建镜像中复制构建输出文件（/usr/build/dist/apps/）到第二阶段的 Nginx 容器中的 HTML 目录（usr/share/nginx/html/）。这样 Nginx 就可以提供这些静态文件
+      COPY --from=builder /usr/build/dist/apps/ usr/share/nginx/html/
+
+      // 总结上文流程：这个 Dockerfile 使用了多阶段构建来优化镜像大小和构建流程。第一阶段使用 Node.js 镜像来安装依赖项并构建 Angular 应用。第二阶段使用 Nginx 镜像来部署应用，并提供构建输出的静态文件。通过这种方式，可以确保最终的镜像中只包含必要的文件和运行时环境，从而减少镜像的大小和复杂性
+   ```

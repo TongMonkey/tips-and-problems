@@ -58,6 +58,12 @@
    1. `<number>name` 用一对尖括号包裹类型放在变量前面
    2. `name as number` 使用 as 关键词
 
+
+### 类型应用
+
+1. readonly win: (Window & typeof globalThis) | null
+   * 这是一个交集类型（intersection type），表示一个同时具有 Window 和 globalThis 类型的对象。实际上，在浏览器中，window 对象确实同时具有这两种类型的属性和方法。
+
 ### Class
 
 1. 定义：TS offers full support for the Class in ES6.
@@ -74,6 +80,29 @@
 4. TS 是什么时候决定她们的 visibility 的？
    1. 是 Compilation time, 不是 Runtime.
 
+### 修饰符
+
+### 关键字标识符
+
+1. override: 用于明确表示一个方法在子类中是对父类方法的重写。这有助于提高代码的可读性和安全性，确保在子类中重写的方法确实存在于父类中。如果父类中没有相应的方法，TypeScript 编译器会抛出错误. 如果没有会被报错：“This member cannot have an 'override' modifier because it is not declared in the base class”
+
+   ``` code
+      class Parent {
+         greet(): void {
+            console.log("Hello from Parent!");
+         }
+      }
+
+      class Child extends Parent {
+         override greet(): void {
+            console.log("Hello from Child!");
+         }
+      }
+
+      const child = new Child();
+      child.greet(); // 输出: "Hello from Child!"
+   ```
+
 ### Type
 
 1. `Type<T>` 是啥 ❓❓❓
@@ -84,15 +113,79 @@
 
 ### 编译项目的方式
 
-1. with command line. `tsc --project`
+1. with command line. `tsc --project` ❓❓❓
 2. with compile file: tsconfig.json
+
+### tsconfig.base.json
+
+1. 作用：通常用于大型 TypeScript 项目或多项目仓库中，它包含了共享的 TypeScript 编译配置，可以被其他 tsconfig 文件继承。这个文件有助于集中管理常见的编译选项，减少重复配置，提高配置的可维护性和一致性
+
+   ``` code
+      {
+         "compileOnSave": false, // 保存文件时，是否自动重新编译项目
+         "compilerOptions": { // 这个对象包含 TypeScript 编译器的各种配置选项
+            "rootDir": ".", // 指定项目的根目录。所有输入文件的路径都会相对于这个目录进行解析。在这里 “.” 它设置为当前目录
+            "baseUrl": ".", // 配置模块解析的基路径。在这里 “.” 它设置为当前目录。这通常用于配置 paths 选项，使得模块路径可以相对于 baseUrl 来解析
+            "isolatedModules": false, //设置为 false 表示 TypeScript 编译器不会对每个文件单独进行编译。这通常用于与 Babel 或其他工具联合使用时，确保 TypeScript 的类型检查能够跨文件进行
+            "target": "ES2022",
+            "useDefineForClassFields": false,
+            "paths": {
+               "@sdo/entitlement": ["libs/entitlement/src/index.ts"],
+               "@sdo/shared": ["libs/shared/src/index.ts"]
+            }
+         },
+         "extends": "@slb-rcis/eslint-plugin-wpf/tsconfig.base.json"
+      }
+   ```
+
+2. Detailed:
+   1. "baseUrl" 配合 “path" 使用
+
+      ``` code
+         // 示例项目结构
+         my-project/
+         ├── src/
+         │   ├── app/
+         │   │   └── app.module.ts
+         │   ├── utils/
+         │   │   └── helpers.ts
+         │   └── index.ts
+         └── tsconfig.json
+
+         {
+            "compilerOptions": {
+               "baseUrl": "./src" //作用: baseUrl 设置为 ./src，表示所有模块解析的基准路径是 src 目录
+            }
+         }
+         {
+            "compilerOptions": {
+               "baseUrl": "./src",
+               "paths": {
+                  "@app/*": ["app/*"],
+                  "@utils/*": ["utils/*"]
+               }
+            }
+         }
+         // 使用路径别名导入
+         import { helperFunction } from '@utils/helpers';
+         import { AppModule } from '@app/app.module';
+
+      ```
+
+   2. isolated Modules：false
+      1. 作用: 控制是否对每个文件进行独立编译。设置为 false 表示不会对每个文件进行独立编译，而是按照整个项目进行编译. 
+      2. 默认值是 false, 表示适用于标准 TypeScript 编译流程
+      3. 优点：对于大型项目，传统的编译流程可能会更高效，因为编译器可以进行跨文件优化和类型检查
+      4. 值为 true 时：设置 isolatedModules 为 true 的情况通常是当你使用 Babel 等编译工具，而不是 TypeScript 编译器进行编译。Babel 等工具通常对每个文件单独编译，不进行跨文件检查和优化
+      5. 跨文件检查和优化：是指编译器能够在多个文件之间进行类型检查、引用检查和依赖关系分析，从而确保整个项目的代码一致性和正确性。这种检查和优化有助于发现潜在的错误，提高代码质量和性能
 
 ### tsconfig.json
 
-1. 位置：tsconfig.json 文件在哪个目录，就表示这个目录是 ts 项目的 root 目录。
-2. 作用：用来指定当前项目的 root 路径和编译器选项配置 compiler options.
-3. jsconfig.json: 跟 tsconfig.json 两个的作用差不多.
-4. 配置选项
+1. 作用：是 Typescript 项目的配置文件，用于指定 compiler options 编译选项和项目结构，指定当前项目的 root 路径
+2. 位置：tsconfig.json 文件在哪个目录，就表示这个目录是 ts 项目的 root 目录
+3. jsconfig.json: 跟 tsconfig.json 两个的作用差不多
+4. 一个项目里有几个 tsconfig.json 文件？
+5. 配置选项
    1. compilerOptions: 编译器选项
    2. files: 指定一个可以在项目中包含的文件白名单。这些文件如果找不到就会报错。
    3. include: 指定一组文件名或者模式的数组，匹配的文件将会参与编译。文件的路径是文件相对于 tsconfig.json 的目录结构解析的。
@@ -102,36 +195,56 @@
    7. module: 用来指定编译器如何处理模块。esnext 表示使用最新版本的ECMAScript.
    8. lib: 用来指定默认要包含的一组 API，比如浏览器环境就需要 DOM.
 
-   ``` c
-      compilerOptions: {
-         module: "esnext",
-         sourceMap: true,
-         removeComments: true,
-         outFile: "../../build/tsc.js",
-         outDir: "dist",
-         rootDir: ".",
-         declaration: false,
-         moduleResolugtion: "node",
-         emitDecoratorMetadata: true,
-         experimentalDecorators: true,
-         importHelpers: true,
-         isolatedModules: true,
-         target: "es2015",
-         resolveJsonModule: true,
-         lib: ["es2020", "dom"],
-         strictNullChecks: true,
-         paths: {
-            "@slb-rcis/wpf-app-skeleton": [
-               "libs/wpf-app-skeleton/src/index.ts"
-            ],
-            "@slb-rcis/wpf-app-skeleton/shared": [
-               "libs/wpf-app-skeleton/shared/src/index.ts"
-            ]
+   ``` code
+      {
+         "extends": "../../tsconfig.base.json", //作用：继承另一个 tsconfig.json 文件的配置。这使得项目可以共享一些通用配置，而不需要重复定义
+         "files": [], //作用：显式列出要编译的文件。这里是一个空数组，表示没有单独列出文件，通常是通过 include 和 exclude 来控制要编译的文件
+         "include": [],
+         "exclude": [],
+         "references": [ //作用：设置项目间的依赖关系，这对于大型项目或多包项目很有用。它引用了两个其他的 tsconfig 文件，表示当前项目依赖于这两个项目
+            {
+               "path": "./tsconfig.lib.json"
+            },
+            {
+               "path": "./tsconfig.spec.json"
+            }
+         ],
+         "compilerOptions": { //作用：设置 TypeScript 编译器的选项
+            "target": "ES2022", //指定编译输出的 JavaScript 版本，这里是 ES2022
+            "forceConsistentCasingInFileNames": true, //强制文件名一致的大小写
+            "strict": true, //启用所有严格类型检查选项
+            "noImplicitOverride": true, //强制方法必须明确使用 override 关键字
+            "noPropertyAccessFromIndexSignature": true, //禁止通过索引签名来访问属性，即“点操作符”来访问索引签名
+            "noImplicitReturns": true, //如果函数没有显式返回值，TypeScript 会报错
+            "noFallthroughCasesInSwitch": true, //防止 switch 语句中的 case 语句穿透
+            "useDefineForClassFields": false //控制是否使用 define 属性来声明类字段。设置为 false 时，TypeScript 不会使用 define 属性声明类字段，而是使用传统的方式
          },
-      },
-      compileOnSave: false,
-      files: []，
-      include: ["src/**/*"],
-      exclude: ["**/*.spec.ts"],
-      extends: "@tsconfig/node18/tsconfig.json",
+         "angularCompilerOptions": { //作用: 设置 Angular 编译器的选项
+            "enableI18nLegacyMessageIdFormat": false, //设置为 false 时，禁用遗留的 i18n 消息 ID 格式
+            "strictInjectionParameters": true, //设置为 true 时，启用严格的依赖注入参数检查
+            "strictInputAccessModifiers": true, //设置为 true 时，启用严格的输入访问修饰符检查
+            "strictTemplates": true //设置为 true 时，启用严格的模板检查
+         }
+      }
    ```
+
+6. Details
+   1. "noPropertyAccessFromIndexSignature": true, //禁止通过索引签名来访问属性，即禁止“点操作符”来访问索引签名
+
+      ``` code
+         interface MyObject {
+            [key: string]: number;
+         }
+         // when "noPropertyAccessFromIndexSignature": true
+         const obj: MyObject = { a: 1, b: 2 };
+         console.log(obj.a); // 编译错误: Property 'a' comes from an index signature, so it must be accessed with ['a']
+         console.log(obj['a']); // 输出: 1
+      ```
+
+### 在 angular 项目中，有几个 tsconfig.json 文件？
+
+1. tsconfig.josn: 在根目录下的主配置文件, 通常包含通用的编译选项
+2. tsconfig.app.json: 用于在 Angular 项目中定义特定于应用程序的 TypeScript 编译选项。它继承和扩展了全局的 tsconfig.json 配置文件，提供了更细粒度的控制，用于设置应用程序级别的编译选项和文件包含规则。它通常位 project 的目录下.
+3. tsconfig.spec.json: 用于配置单元测试代码的编译选项。它通常位于项目的 src 目录下
+4. tsconfig.e2e.json: 用于配置端到端测试代码的编译选项。它通常位于项目的 e2e 目录下
+5. tsconfig.worker.json: 如果项目中使用了 Web Workers，可以添加这个配置文件来单独配置 Web Workers 的编译选项
