@@ -8,7 +8,12 @@
 2. Task: 表示完成的某一个工作。比如运行一个 script 命令，本质上是运行了某个东西，就可以说是某个 task. 比如 build task.
 3. Application VS Library: <https://nx.dev/concepts/more-concepts/applications-and-libraries>
 
-### Nx
+### Nx informaton
+
+1. Nx is written with Rust programming language
+2. 
+
+### Nx guide
 
 1. 文档 <https://nx.dev/>
 2. 定义：Nx 是一个功能强大的开源构建系统，提供用于提高开发人员生产力、优化 CI 性能和维护代码质量的工具和技术。
@@ -17,7 +22,7 @@
    1. 高效运行任务：Nx 并行运行任务，并根据任务之间的依赖关系对任务进行排序
    2. 本地/远程缓存：通过在本地和远程进行缓存，可以节省时间，避免不必要的 re-run 任务重运行
    3. 自动对依赖更新：如果您利用 Nx 插件，您将获得其他功能，例如代码生成和自动升级代码库和依赖项的工具。
-   4. 打造您自己的：Nx 具有高度可定制性和可扩展性
+   4. 打造您自己的：Nx 具有高度可定制性和可扩展性https://teams.microsoft.com/l/message/19:5117771b42c647868d1fcb17d10d1d36@thread.tacv2/1762322750264?tenantId=41ff26dc-250f-4b13-8981-739be8610c21&groupId=ba178f47-45ee-4d6b-86cc-4f7cbcc37a61&parentMessageId=1762322750264&teamName=RCIS&channelName=RCIS%20Release%20Notes&createdTime=1762322750264
 5. 用处：
    1. 加速现有项目的本地和 CI 构建和测试（无论是单一存储库还是独立应用程序）
    2. 快速构建新项目（使用 Nx 插件），而无需配置任何较低级别的构建工具
